@@ -1,0 +1,9 @@
+To install the Keycloak subsystem:
+
+1) Build Keycloak subsystem with Maven
+2) Set your JBOSS_HOME environment variable (required for the cli script)
+3) Start your local WildFly instance
+4) cd to this "installer" directory
+5) java -jar $JBOSS_HOME/bin/client/jboss-cli-client.jar --file=install.cli
+
+You don't need to restart WildFly.

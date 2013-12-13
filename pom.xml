@@ -25,7 +25,8 @@
         <mysql.version>5.1.25</mysql.version>
         <slf4j.version>1.6.1</slf4j.version>
         <jboss.version>7.1.1.Final</jboss.version>
-        <wildfly.version>8.0.0.CR1</wildfly.version>
+        <wildfly.version>8.0.0.Beta1</wildfly.version>
+        <jboss-logging-tools.version>1.2.0.Beta1</jboss-logging-tools.version>
     </properties>
 
     <url>http://keycloak.org</url>
@@ -333,6 +334,33 @@
                 <version>${keycloak.apache.httpcomponents.version}</version>
             </dependency>
              -->
+            <dependency>
+                <groupId>org.wildfly</groupId>
+                <artifactId>wildfly-controller</artifactId>
+                <version>${wildfly.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.wildfly</groupId>
+                <artifactId>wildfly-server</artifactId>
+                <version>${wildfly.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.wildfly</groupId>
+                <artifactId>wildfly-ee</artifactId>
+                <version>${wildfly.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.wildfly</groupId>
+                <artifactId>wildfly-subsystem-test</artifactId>
+                <version>${wildfly.version}</version>
+                <type>pom</type>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.jboss.logging</groupId>
+                <artifactId>jboss-logging-processor</artifactId>
+                <version>${jboss-logging-tools.version}</version>
+            </dependency>
         </dependencies>
     </dependencyManagement>
 
