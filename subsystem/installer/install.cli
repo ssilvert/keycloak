@@ -1,0 +1,4 @@
+connect
+module add --name=org.keycloak.subsystem --resources=../target/keycloak-subsystem.jar --module-xml=../src/main/resources/module/main/module.xml
+/extension=org.keycloak.subsystem/:add(module=org.keycloak.subsystem)
+/subsystem=keycloak/:add
