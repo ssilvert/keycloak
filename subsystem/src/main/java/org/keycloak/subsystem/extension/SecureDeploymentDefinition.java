@@ -16,6 +16,9 @@
  */
 package org.keycloak.subsystem.extension;
 
+import java.util.ArrayList;
+import java.util.List;
+import org.jboss.as.controller.AttributeDefinition;
 import org.jboss.as.controller.PathElement;
 import org.jboss.as.controller.ReloadRequiredRemoveStepHandler;
 import org.jboss.as.controller.SimpleAttributeDefinition;
@@ -24,6 +27,7 @@ import org.jboss.as.controller.SimpleResourceDefinition;
 import org.jboss.as.controller.operations.common.GenericSubsystemDescribeHandler;
 import org.jboss.as.controller.operations.validation.StringLengthValidator;
 import org.jboss.as.controller.registry.ManagementResourceRegistration;
+import org.jboss.dmr.ModelNode;
 import org.jboss.dmr.ModelType;
 
 /**
@@ -33,18 +37,47 @@ import org.jboss.dmr.ModelType;
  */
 public class SecureDeploymentDefinition extends SimpleResourceDefinition {
 
-    protected static final SimpleAttributeDefinition REALM_URL =
-            new SimpleAttributeDefinitionBuilder("realm-url", ModelType.STRING, false)
-                    .setXmlName("realm-url")
-                    .setAllowExpression(true)
-                    .setValidator(new StringLengthValidator(1, Integer.MAX_VALUE, false, true))
-                    .build();
+    public static final String TAG_NAME = "secure-deployment";
+
+    protected static final AttributeDefinition RESOURCE =
+            new SimpleAttributeDefinitionBuilder("resource", ModelType.STRING, true)
+            .setXmlName("resource")
+            .setAllowExpression(true)
+            .setValidator(new StringLengthValidator(1, Integer.MAX_VALUE, true, true))
+            .build();
+    protected static final SimpleAttributeDefinition DISABLE_TRUST_MANAGER =
+            new SimpleAttributeDefinitionBuilder("use-resource-role-mappings", ModelType.BOOLEAN, true)
+            .setXmlName("use-resource-role-mappings")
+            .setAllowExpression(true)
+            .setDefaultValue(new ModelNode(false))
+            .build();
+    protected static final SimpleAttributeDefinition BEARER_ONLY =
+            new SimpleAttributeDefinitionBuilder("bearer-only", ModelType.BOOLEAN, true)
+            .setXmlName("bearer-only")
+            .setAllowExpression(true)
+            .setDefaultValue(new ModelNode(false))
+            .build();
+
+    protected static final List<AttributeDefinition> DEPLOYMENT_ONLY_ATTRIBUTES = new ArrayList<AttributeDefinition>();
+    static {
+        DEPLOYMENT_ONLY_ATTRIBUTES.add(RESOURCE);
+        DEPLOYMENT_ONLY_ATTRIBUTES.add(DISABLE_TRUST_MANAGER);
+        DEPLOYMENT_ONLY_ATTRIBUTES.add(BEARER_ONLY);
+    }
+
+    protected static final List<AttributeDefinition> ALL_ATTRIBUTES = new ArrayList<AttributeDefinition>();
+    static {
+        ALL_ATTRIBUTES.addAll(DEPLOYMENT_ONLY_ATTRIBUTES);
+        ALL_ATTRIBUTES.addAll(SharedAttributeDefinitons.ATTRIBUTES);
+    }
+
+    private static SecureDeploymentWriteAttributeHandler attrHandler = new SecureDeploymentWriteAttributeHandler(ALL_ATTRIBUTES);
 
     public SecureDeploymentDefinition() {
         super(PathElement.pathElement("secure-deployment"),
                 KeycloakExtension.getResourceDescriptionResolver("secure-deployment"),
-                AddSecureDeploymentHandler.INSTANCE,
-                ReloadRequiredRemoveStepHandler.INSTANCE);
+                SecureDeploymentAddHandler.INSTANCE,
+                SecureDeploymentRemoveHandler.INSTANCE);
     }
 
     @Override
@@ -56,6 +89,8 @@ public class SecureDeploymentDefinition extends SimpleResourceDefinition {
     @Override
     public void registerAttributes(ManagementResourceRegistration resourceRegistration) {
         super.registerAttributes(resourceRegistration);
-        resourceRegistration.registerReadWriteAttribute(REALM_URL, null, new SecureDeploymentWriteAttributeHandler(REALM_URL));
+        for (AttributeDefinition attrDef : ALL_ATTRIBUTES) {
+            resourceRegistration.registerReadWriteAttribute(attrDef, null, attrHandler);
+        }
     }
 }

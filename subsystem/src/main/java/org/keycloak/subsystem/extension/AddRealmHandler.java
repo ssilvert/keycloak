@@ -19,6 +19,7 @@ package org.keycloak.subsystem.extension;
 
 import java.util.List;
 import org.jboss.as.controller.AbstractAddStepHandler;
+import org.jboss.as.controller.AttributeDefinition;
 import org.jboss.as.controller.OperationContext;
 import org.jboss.as.controller.OperationFailedException;
 import org.jboss.as.controller.ServiceVerificationHandler;
@@ -53,8 +54,13 @@ public class AddRealmHandler extends AbstractAddStepHandler {
             throw new OperationFailedException("Unexpected operation for add realm. operation=" + operation.toString());
         }
 
-        for (SimpleAttributeDefinition attrib : RealmDefinition.ATTRIBUTES) {
+        for (AttributeDefinition attrib : RealmDefinition.ALL_ATTRIBUTES) {
             attrib.validateAndSet(operation, model);
+        }
+
+        if (!RealmDefinition.validateTruststoreSetIfRequired(model.clone())) {
+            //TODO: externalize message
+            throw new OperationFailedException("truststore and truststore-password must be set if both ssl-not-required and disable-trust-maanger are false.");
         }
     }
 

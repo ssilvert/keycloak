@@ -3,8 +3,8 @@
             xmlns="urn:jboss:domain:keycloak:1.0"
             elementFormDefault="qualified"
             attributeFormDefault="unqualified"
-            version="1.0">
-
+            version="1.1">
+    
     <!-- The subsystem root element -->
     <xs:element name="subsystem" type="subsystemType"/>
 
@@ -35,12 +35,12 @@
         <xs:element name="truststore" type="xs:string" minOccurs="0" maxOccurs="1"/>
         <xs:element name="truststore-password" type="xs:string" minOccurs="0" maxOccurs="1"/>
         <xs:element name="connection-pool-size" type="xs:integer" minOccurs="0" maxOccurs="1"/>
- <!--       <xs:choice maxOccurs="unbounded" minOccurs="0">
+        <xs:choice maxOccurs="unbounded" minOccurs="0">
             <xs:element name="secure-deployment" maxOccurs="unbounded" minOccurs="0" type="secure-deployment-type"/>
-        </xs:choice> -->
+        </xs:choice>
     </xs:complexType>
 
- <!--   <xs:complexType name="secure-deployment-type">
+    <xs:complexType name="secure-deployment-type">
         <xs:attribute name="name" type="xs:string" use="required">
             <xs:annotation>
                 <xs:documentation>The name of the deployment.</xs:documentation>
@@ -51,7 +51,7 @@
                 <xs:documentation>doc me!!!!</xs:documentation>
             </xs:annotation>
         </xs:element>
-    </xs:complexType> -->
+    </xs:complexType>
     <xs:simpleType name="boolean-element-type">
         <xs:restriction base="xs:boolean"/>
     </xs:simpleType>
