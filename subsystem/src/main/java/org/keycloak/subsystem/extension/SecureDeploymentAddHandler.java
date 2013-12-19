@@ -19,11 +19,10 @@ package org.keycloak.subsystem.extension;
 
 import java.util.List;
 import org.jboss.as.controller.AbstractAddStepHandler;
+import org.jboss.as.controller.AttributeDefinition;
 import org.jboss.as.controller.OperationContext;
 import org.jboss.as.controller.OperationFailedException;
-import org.jboss.as.controller.PathAddress;
 import org.jboss.as.controller.ServiceVerificationHandler;
-import org.jboss.as.controller.descriptions.ModelDescriptionConstants;
 import org.jboss.dmr.ModelNode;
 
 import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.ADD;
@@ -36,16 +35,16 @@ import org.jboss.msc.service.ServiceName;
  *
  * @author Stan Silvert ssilvert@redhat.com (C) 2013 Red Hat Inc.
  */
-public class AddSecureDeploymentHandler extends AbstractAddStepHandler {
+public class SecureDeploymentAddHandler extends AbstractAddStepHandler {
 
-    public static AddSecureDeploymentHandler INSTANCE = new AddSecureDeploymentHandler();
+    public static SecureDeploymentAddHandler INSTANCE = new SecureDeploymentAddHandler();
 
-    private AddSecureDeploymentHandler() {}
+    private SecureDeploymentAddHandler() {}
 
     @Override
     protected void populateModel(ModelNode operation, ModelNode model) throws OperationFailedException {
         System.out.println("***************");
-        System.out.println("AddDeploymentHandler.populateModel");
+        System.out.println("SecureDeploymentAddHandler.populateModel");
         System.out.println("operation=" + operation.toString());
         System.out.println("model=" + model.toString());
         System.out.println("**************");
@@ -53,12 +52,15 @@ public class AddSecureDeploymentHandler extends AbstractAddStepHandler {
         if (!operation.get(OP).asString().equals(ADD)) {
             throw new OperationFailedException("Unexpected operation for add secure deployment. operation=" + operation.toString());
         }
-        SecureDeploymentDefinition.REALM_URL.validateAndSet(operation, model);
+
+        for (AttributeDefinition attr : SecureDeploymentDefinition.ALL_ATTRIBUTES) {
+            attr.validateAndSet(operation, model);
+        }
     }
 
     @Override
     protected void performRuntime(OperationContext context, ModelNode operation, ModelNode model, ServiceVerificationHandler verificationHandler, List<ServiceController<?>> newControllers) throws OperationFailedException {
-        System.out.println("*********** AddSecureDeploymentHandler.performRuntime ***********");
+        System.out.println("*********** SecureDeploymentAddHandler.performRuntime ***********");
         System.out.println("operation=" + operation.toString());
         System.out.println("model = " + model.toString());
         System.out.println("***************************************");

@@ -17,6 +17,7 @@
 
 package org.keycloak.subsystem.extension;
 
+import java.util.List;
 import org.jboss.as.controller.AbstractWriteAttributeHandler;
 import org.jboss.as.controller.AttributeDefinition;
 import org.jboss.as.controller.OperationContext;
@@ -29,6 +30,10 @@ import org.jboss.msc.service.ServiceName;
  * @author Stan Silvert ssilvert@redhat.com (C) 2013 Red Hat Inc.
  */
 public class SecureDeploymentWriteAttributeHandler extends AbstractWriteAttributeHandler<SecureDeploymentService> {
+
+    public SecureDeploymentWriteAttributeHandler(List<AttributeDefinition> definitions) {
+        this(definitions.toArray(new AttributeDefinition[definitions.size()]));
+    }
 
     public SecureDeploymentWriteAttributeHandler(AttributeDefinition... definitions) {
         super(definitions);

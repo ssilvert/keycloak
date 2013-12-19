@@ -16,6 +16,7 @@
  */
 package org.keycloak.subsystem.extension;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import org.jboss.as.controller.Extension;
 import org.jboss.as.controller.ExtensionContext;
@@ -37,14 +38,17 @@ import javax.xml.stream.XMLStreamConstants;
 import javax.xml.stream.XMLStreamException;
 import java.util.List;
 import static javax.xml.stream.XMLStreamConstants.END_ELEMENT;
+import org.jboss.as.controller.AttributeDefinition;
 import org.jboss.as.controller.PathAddress;
 import org.jboss.as.controller.ResourceDefinition;
 import org.jboss.as.controller.SimpleAttributeDefinition;
 import org.keycloak.subsystem.logging.KeycloakLogger;
 
 import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.ADD;
+import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.COMPOSITE;
 import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.OP;
 import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.OP_ADDR;
+import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.STEPS;
 import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.SUBSYSTEM;
 
 import org.jboss.as.controller.operations.common.Util;
@@ -94,7 +98,9 @@ public class KeycloakExtension implements Extension {
         final SubsystemRegistration subsystem = context.registerSubsystem(SUBSYSTEM_NAME, MANAGEMENT_API_MAJOR_VERSION,
                 MANAGEMENT_API_MINOR_VERSION, MANAGEMENT_API_MICRO_VERSION);
         ManagementResourceRegistration registration = subsystem.registerSubsystemModel(KEYCLOAK_SUBSYSTEM_RESOURCE);
-        registration.registerSubModel(REALM_DEFINITION);
+        ManagementResourceRegistration realmRegistration = registration.registerSubModel(REALM_DEFINITION);
+        realmRegistration.registerSubModel(SECURE_DEPLOYMENT_DEFINITION);
+
         subsystem.registerXMLElementWriter(PARSER);
     }
 
@@ -114,18 +120,29 @@ public class KeycloakExtension implements Extension {
             ModelNode addKeycloakSub = Util.createAddOperation(PathAddress.pathAddress(PATH_SUBSYSTEM));
             list.add(addKeycloakSub);
 
-            while (reader.hasNext() && reader.nextTag() != END_ELEMENT) {
+            while (reader.hasNext() && nextTag(reader) != END_ELEMENT) {
                 if (!reader.getLocalName().equals("realm")) {
                     throw ParseUtils.unexpectedElement(reader);
                 }
 
                 readRealm(reader, list);
 
-        /*        while (reader.hasNext() && reader.nextTag() != END_ELEMENT) {
+/*                while (reader.hasNext() && reader.nextTag() != END_ELEMENT) {
                     // move to next <realm> element
                     // TODO: find a more proper way to do this
-                } */
+                }*/
             }
+        }
+
+        // used for debugging
+        private int nextTag(XMLExtendedStreamReader reader) throws XMLStreamException {
+            int retVal = reader.nextTag();
+         /*   if (retVal == END_ELEMENT) {
+                System.out.println("</" + reader.getLocalName() + ">");
+            } else {
+                System.out.println("<" + reader.getLocalName() + ">");
+            } */
+            return retVal;
         }
 
         private void readRealm(XMLExtendedStreamReader reader, List<ModelNode> list) throws XMLStreamException {
@@ -139,43 +156,53 @@ public class KeycloakExtension implements Extension {
                 throw ParseUtils.missingRequired(reader, Collections.singleton("name"));
             }
 
+            ModelNode composite = new ModelNode();
+            composite.get(OP_ADDR).setEmptyList();
+            composite.get(OP).set(COMPOSITE);
+
             ModelNode addRealm = new ModelNode();
             addRealm.get(OP).set(ADD);
             PathAddress addr = PathAddress.pathAddress(PathElement.pathElement(SUBSYSTEM, SUBSYSTEM_NAME),
                     PathElement.pathElement("realm", name));
             addRealm.get(OP_ADDR).set(addr.toModelNode());
 
-            while (reader.hasNext() && reader.nextTag() != END_ELEMENT) {
-                addRealm.get(reader.getLocalName()).set(reader.getElementText());
+            List<ModelNode> deploymentsToAdd = new ArrayList<ModelNode>();
+            while (reader.hasNext() && nextTag(reader) != END_ELEMENT) {
+                String tagName = reader.getLocalName();
+                if (tagName.equals(SecureDeploymentDefinition.TAG_NAME)) {
+                    readDeployment(reader, addr, deploymentsToAdd);
+                    continue;
+                }
+
+                addRealm.get(tagName).set(reader.getElementText());
             }
 
-     /*       System.out.println("addRealmOp=" + addRealm.toString());
-            validateRequired(addRealm, "realm", "realm-public-key");
-            validateRequired(addRealm, "realm", "auth-url");
-            validateRequired(addRealm, "realm", "code-url"); */
-
-            list.add(addRealm);
-
-        }
-
-        private void validateRequired(ModelNode addOperation, String parentName, String elementName) throws XMLStreamException {
-            if (!addOperation.hasDefined(elementName)) {
-                throw new XMLStreamException(elementName + " is required for " + parentName);
+            if (!RealmDefinition.validateTruststoreSetIfRequired(addRealm)) {
+                //TODO: externalize the message
+                throw new XMLStreamException("truststore and truststore-password must be set if both ssl-not-required and disable-trust-maanger are false.");
             }
+
+            ModelNode steps = new ModelNode();
+            steps.add(addRealm);
+
+            for (ModelNode deployment : deploymentsToAdd) {
+                steps.add(deployment);
+            }
+
+            composite.get(STEPS).set(steps);
+            System.out.println("**** Read realm:");
+            System.out.println(composite.toString());
+            System.out.println("***************");
+
+            list.add(composite);
         }
 
-        private void readSecureDeployment(XMLExtendedStreamReader reader, List<ModelNode> list) throws XMLStreamException {
+        private void readDeployment(XMLExtendedStreamReader reader, PathAddress parent, List<ModelNode> deploymentsToAdd) throws XMLStreamException {
             String name = null;
-            String url = null;
             for (int i = 0; i < reader.getAttributeCount(); i++) {
                 String attr = reader.getAttributeLocalName(i);
                 if (attr.equals("name")) {
                     name = reader.getAttributeValue(i);
-                    continue;
-                }
-
-                if (attr.equals("realm-url")) {
-                    url = reader.getAttributeValue(i);
                     continue;
                 }
 
@@ -188,18 +215,15 @@ public class KeycloakExtension implements Extension {
 
             ModelNode addSecureDeployment = new ModelNode();
             addSecureDeployment.get(OP).set(ADD);
-            PathAddress addr = PathAddress.pathAddress(PathElement.pathElement(SUBSYSTEM, SUBSYSTEM_NAME),
-                    PathElement.pathElement("secure-deployment", name));
+            PathAddress addr = PathAddress.pathAddress(parent, PathElement.pathElement(SecureDeploymentDefinition.TAG_NAME, name));
             addSecureDeployment.get(OP_ADDR).set(addr.toModelNode());
 
-      /* what was this for????
-            ModelNode descriptionNode = new ModelNode();
-            descriptionNode.get("URL").set(url);
-       */
+            while (reader.hasNext() && nextTag(reader) != END_ELEMENT) {
+                String tagName = reader.getLocalName();
+                addSecureDeployment.get(tagName).set(reader.getElementText());
+            }
 
-            addSecureDeployment.get("realm-url").set(url);
-
-            list.add(addSecureDeployment);
+            deploymentsToAdd.add(addSecureDeployment);
         }
 
         /**
@@ -213,6 +237,9 @@ public class KeycloakExtension implements Extension {
         }
 
         private void writeRealms(XMLExtendedStreamWriter writer, SubsystemMarshallingContext context) throws XMLStreamException {
+            System.out.println("***** model to write=");
+            System.out.println(context.getModelNode().toString());
+            System.out.println("**********************");
             if (!context.getModelNode().get("realm").isDefined()) {
                 return;
             }
@@ -221,15 +248,27 @@ public class KeycloakExtension implements Extension {
                 writer.writeAttribute("name", realm.getName());
 
                 ModelNode realmElements = realm.getValue();
-                for (SimpleAttributeDefinition element : RealmDefinition.ATTRIBUTES) {
+                for (AttributeDefinition element : RealmDefinition.ALL_ATTRIBUTES) {
                     element.marshallAsElement(realmElements, writer);
                 }
-              /*  ModelNode realmElements = realm.getValue();
-                for (Property element : realmElements.asPropertyList()) {
-                    writer.writeStartElement(element.getName());
-                    writer.writeCharacters(element.getValue().asString());
+
+                ModelNode deployments = realmElements.get(SecureDeploymentDefinition.TAG_NAME);
+                if (!deployments.isDefined()) {
+                    continue;
+                }
+
+                for (Property deployment : deployments.asPropertyList()) {
+                    writer.writeStartElement(SecureDeploymentDefinition.TAG_NAME);
+                    writer.writeAttribute("name", deployment.getName());
+
+                    ModelNode deploymentElements = deployment.getValue();
+                    for (AttributeDefinition element : SecureDeploymentDefinition.ALL_ATTRIBUTES) {
+                        element.marshallAsElement(deploymentElements, writer);
+                    }
+
                     writer.writeEndElement();
-                } */
+                }
+
                 writer.writeEndElement();
             }
         }
