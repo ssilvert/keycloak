@@ -20,7 +20,6 @@ import java.util.ArrayList;
 import java.util.List;
 import org.jboss.as.controller.AttributeDefinition;
 import org.jboss.as.controller.PathElement;
-import org.jboss.as.controller.ReloadRequiredRemoveStepHandler;
 import org.jboss.as.controller.SimpleAttributeDefinition;
 import org.jboss.as.controller.SimpleAttributeDefinitionBuilder;
 import org.jboss.as.controller.SimpleResourceDefinition;
@@ -45,13 +44,13 @@ public class SecureDeploymentDefinition extends SimpleResourceDefinition {
             .setAllowExpression(true)
             .setValidator(new StringLengthValidator(1, Integer.MAX_VALUE, true, true))
             .build();
-    protected static final SimpleAttributeDefinition DISABLE_TRUST_MANAGER =
+    protected static final AttributeDefinition DISABLE_TRUST_MANAGER =
             new SimpleAttributeDefinitionBuilder("use-resource-role-mappings", ModelType.BOOLEAN, true)
             .setXmlName("use-resource-role-mappings")
             .setAllowExpression(true)
             .setDefaultValue(new ModelNode(false))
             .build();
-    protected static final SimpleAttributeDefinition BEARER_ONLY =
+    protected static final AttributeDefinition BEARER_ONLY =
             new SimpleAttributeDefinitionBuilder("bearer-only", ModelType.BOOLEAN, true)
             .setXmlName("bearer-only")
             .setAllowExpression(true)
@@ -74,8 +73,8 @@ public class SecureDeploymentDefinition extends SimpleResourceDefinition {
     private static SecureDeploymentWriteAttributeHandler attrHandler = new SecureDeploymentWriteAttributeHandler(ALL_ATTRIBUTES);
 
     public SecureDeploymentDefinition() {
-        super(PathElement.pathElement("secure-deployment"),
-                KeycloakExtension.getResourceDescriptionResolver("secure-deployment"),
+        super(PathElement.pathElement(TAG_NAME),
+                KeycloakExtension.getResourceDescriptionResolver(TAG_NAME),
                 SecureDeploymentAddHandler.INSTANCE,
                 SecureDeploymentRemoveHandler.INSTANCE);
     }
