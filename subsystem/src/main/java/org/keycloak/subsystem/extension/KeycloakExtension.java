@@ -72,6 +72,7 @@ public class KeycloakExtension implements Extension {
     private static final ResourceDefinition KEYCLOAK_SUBSYSTEM_RESOURCE = new KeycloakSubsystemDefinition();
     static final RealmDefinition REALM_DEFINITION = new RealmDefinition();
     static final SecureDeploymentDefinition SECURE_DEPLOYMENT_DEFINITION = new SecureDeploymentDefinition();
+    static final CredentialDefinition CREDENTIAL_DEFINITION = new CredentialDefinition();
 
     static StandardResourceDescriptionResolver getResourceDescriptionResolver(final String... keyPrefix) {
         StringBuilder prefix = new StringBuilder(SUBSYSTEM_NAME);
@@ -97,9 +98,11 @@ public class KeycloakExtension implements Extension {
         KeycloakLogger.ROOT_LOGGER.debug("Activating Keycloak Extension");
         final SubsystemRegistration subsystem = context.registerSubsystem(SUBSYSTEM_NAME, MANAGEMENT_API_MAJOR_VERSION,
                 MANAGEMENT_API_MINOR_VERSION, MANAGEMENT_API_MICRO_VERSION);
+
         ManagementResourceRegistration registration = subsystem.registerSubsystemModel(KEYCLOAK_SUBSYSTEM_RESOURCE);
         ManagementResourceRegistration realmRegistration = registration.registerSubModel(REALM_DEFINITION);
-        realmRegistration.registerSubModel(SECURE_DEPLOYMENT_DEFINITION);
+        ManagementResourceRegistration secureDeploymentRegistration = realmRegistration.registerSubModel(SECURE_DEPLOYMENT_DEFINITION);
+        secureDeploymentRegistration.registerSubModel(CREDENTIAL_DEFINITION);
 
         subsystem.registerXMLElementWriter(PARSER);
     }
@@ -127,21 +130,21 @@ public class KeycloakExtension implements Extension {
 
                 readRealm(reader, list);
 
-/*                while (reader.hasNext() && reader.nextTag() != END_ELEMENT) {
-                    // move to next <realm> element
-                    // TODO: find a more proper way to do this
-                }*/
+                /*                while (reader.hasNext() && reader.nextTag() != END_ELEMENT) {
+                 // move to next <realm> element
+                 // TODO: find a more proper way to do this
+                 }*/
             }
         }
 
         // used for debugging
         private int nextTag(XMLExtendedStreamReader reader) throws XMLStreamException {
             int retVal = reader.nextTag();
-         /*   if (retVal == END_ELEMENT) {
-                System.out.println("</" + reader.getLocalName() + ">");
-            } else {
-                System.out.println("<" + reader.getLocalName() + ">");
-            } */
+            /*   if (retVal == END_ELEMENT) {
+             System.out.println("</" + reader.getLocalName() + ">");
+             } else {
+             System.out.println("<" + reader.getLocalName() + ">");
+             } */
             return retVal;
         }
 
@@ -223,7 +226,15 @@ public class KeycloakExtension implements Extension {
                 addSecureDeployment.get(tagName).set(reader.getElementText());
             }
 
+            readCredential();
+
             deploymentsToAdd.add(addSecureDeployment);
+        }
+
+        public void readCredential() {
+            System.out.println("&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&");
+            System.out.println("&&&&&&& TODO: IMPLEMENT!!! &&&&&&&&");
+            System.out.println("&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&");
         }
 
         /**
@@ -243,6 +254,7 @@ public class KeycloakExtension implements Extension {
             if (!context.getModelNode().get("realm").isDefined()) {
                 return;
             }
+
             for (Property realm : context.getModelNode().get("realm").asPropertyList()) {
                 writer.writeStartElement("realm");
                 writer.writeAttribute("name", realm.getName());
@@ -257,31 +269,50 @@ public class KeycloakExtension implements Extension {
                     continue;
                 }
 
-                for (Property deployment : deployments.asPropertyList()) {
-                    writer.writeStartElement(SecureDeploymentDefinition.TAG_NAME);
-                    writer.writeAttribute("name", deployment.getName());
+                writeSecureDeployments(writer, deployments);
 
-                    ModelNode deploymentElements = deployment.getValue();
-                    for (AttributeDefinition element : SecureDeploymentDefinition.ALL_ATTRIBUTES) {
-                        element.marshallAsElement(deploymentElements, writer);
-                    }
+                writer.writeEndElement();
+            }
+        }
 
-                    writer.writeEndElement();
+        private void writeSecureDeployments(XMLExtendedStreamWriter writer, ModelNode deployments) throws XMLStreamException {
+            for (Property deployment : deployments.asPropertyList()) {
+                writer.writeStartElement(SecureDeploymentDefinition.TAG_NAME);
+                writer.writeAttribute("name", deployment.getName());
+
+                ModelNode deploymentElements = deployment.getValue();
+                for (AttributeDefinition element : SecureDeploymentDefinition.ALL_ATTRIBUTES) {
+                    element.marshallAsElement(deploymentElements, writer);
+                }
+
+                ModelNode credentials = deploymentElements.get(CredentialDefinition.TAG_NAME);
+                if (credentials.isDefined()) {
+                    writeCredentials(writer, credentials);
                 }
 
                 writer.writeEndElement();
             }
         }
 
-        private void writeSecureDeployments(XMLExtendedStreamWriter writer, SubsystemMarshallingContext context) throws XMLStreamException {
-            if (!context.getModelNode().get("secure-deployment").isDefined()) {
-                return;
-            }
-            for (Property deployment : context.getModelNode().get("secure-deployment").asPropertyList()) {
-                writer.writeStartElement("secure-deployment");
-                writer.writeAttribute("name", deployment.getName());
-                writer.writeAttribute("URL", deployment.getValue().get("URL").asString());
+        private void writeCredentials(XMLExtendedStreamWriter writer, ModelNode credentials) throws XMLStreamException {
+            for (Property credential : credentials.asPropertyList()) {
+                writer.writeStartElement(CredentialDefinition.TAG_NAME);
+                writer.writeAttribute("name", credential.getName());
+                String credentialValue = credential.getValue().get(CredentialDefinition.VALUE.getName()).asString();
+                writeCharacters(writer, credentialValue);
                 writer.writeEndElement();
+            }
+        }
+
+        // code taken from org.jboss.as.controller.AttributeMarshaller
+        private void writeCharacters(XMLExtendedStreamWriter writer, String content) throws XMLStreamException {
+            if (content.indexOf('\n') > -1) {
+                // Multiline content. Use the overloaded variant that staxmapper will format
+                writer.writeCharacters(content);
+            } else {
+                // Staxmapper will just output the chars without adding newlines if this is used
+                char[] chars = content.toCharArray();
+                writer.writeCharacters(chars, 0, chars.length);
             }
         }
     }
