@@ -21,8 +21,6 @@ import java.util.List;
 import org.jboss.as.controller.AbstractBoottimeAddStepHandler;
 import org.jboss.as.controller.OperationContext;
 import org.jboss.as.controller.OperationFailedException;
-import org.jboss.as.controller.PathAddress;
-import org.jboss.as.controller.PathElement;
 import org.jboss.as.controller.ServiceVerificationHandler;
 import org.jboss.as.server.AbstractDeploymentChainStep;
 import org.jboss.as.server.DeploymentProcessorTarget;

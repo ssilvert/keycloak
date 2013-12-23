@@ -4,7 +4,7 @@
             elementFormDefault="qualified"
             attributeFormDefault="unqualified"
             version="1.1">
-    
+
     <!-- The subsystem root element -->
     <xs:element name="subsystem" type="subsystemType"/>
 
@@ -26,18 +26,22 @@
                 <xs:documentation>The name of the realm.</xs:documentation>
             </xs:annotation>
         </xs:attribute>
-        <xs:element name="realm-public-key" type="xs:string" minOccurs="1" maxOccurs="1" use="required"/>
-        <xs:element name="auth-url" type="xs:string" minOccurs="1" maxOccurs="1" use="required"/>
-        <xs:element name="code-url" type="xs:string" minOccurs="1" maxOccurs="1" use="required"/>
-        <xs:element name="ssl-not-required" type="boolean-element-type" minOccurs="0" maxOccurs="1" />
-        <xs:element name="allow-any-hostname" type="boolean-element-type" minOccurs="0" maxOccurs="1" />
-        <xs:element name="disable-trust-manager" type="boolean-element-type" minOccurs="0" maxOccurs="1" />
-        <xs:element name="truststore" type="xs:string" minOccurs="0" maxOccurs="1"/>
-        <xs:element name="truststore-password" type="xs:string" minOccurs="0" maxOccurs="1"/>
-        <xs:element name="connection-pool-size" type="xs:integer" minOccurs="0" maxOccurs="1"/>
-        <xs:choice maxOccurs="unbounded" minOccurs="0">
-            <xs:element name="secure-deployment" maxOccurs="unbounded" minOccurs="0" type="secure-deployment-type"/>
-        </xs:choice>
+        <xs:complexContent>
+            <xs:extension base="override-element-type">
+                <xs:element name="realm-public-key" type="xs:string" minOccurs="1" maxOccurs="1" use="required"/>
+                <xs:element name="auth-url" type="xs:string" minOccurs="1" maxOccurs="1" use="required"/>
+                <xs:element name="code-url" type="xs:string" minOccurs="1" maxOccurs="1" use="required"/>
+                <xs:element name="ssl-not-required" type="xs:boolean" minOccurs="0" maxOccurs="1" />
+                <xs:element name="allow-any-hostname" type="xs:boolean" minOccurs="0" maxOccurs="1" />
+                <xs:element name="disable-trust-manager" type="xs:boolean" minOccurs="0" maxOccurs="1" />
+                <xs:element name="truststore" type="xs:string" minOccurs="0" maxOccurs="1"/>
+                <xs:element name="truststore-password" type="xs:string" minOccurs="0" maxOccurs="1"/>
+                <xs:element name="connection-pool-size" type="xs:integer" minOccurs="0" maxOccurs="1"/>
+                <xs:choice maxOccurs="unbounded" minOccurs="0">
+                    <xs:element name="secure-deployment" maxOccurs="unbounded" minOccurs="0" type="secure-deployment-type"/>
+                </xs:choice>
+            </xs:extension>
+        </xs:complexContent>
     </xs:complexType>
 
     <xs:complexType name="secure-deployment-type">
@@ -46,14 +50,40 @@
                 <xs:documentation>The name of the deployment.</xs:documentation>
             </xs:annotation>
         </xs:attribute>
-        <xs:element name="realm-url" maxOccurs="1"  minOccurs="1" type="xs:string" use="required">
-            <xs:annotation>
-                <xs:documentation>doc me!!!!</xs:documentation>
-            </xs:annotation>
-        </xs:element>
+        <xs:complexContent>
+            <xs:extension base="override-element-type">
+                <xs:element name="resource" type="xs:string" minOccurs="0" maxOccurs="1" use="required"/>
+                <xs:element name="use-resource-role-mappings" type="xs:boolean" minOccurs="0" maxOccurs="1" />
+                <xs:element name="bearer-only" type="xs:boolean" minOccurs="0" maxOccurs="1" />
+                <xs:element name="credential" maxOccurs="unbounded" minOccurs="0" type="xs:credential-type"/>
+            </xs:extension>
+        </xs:complexContent>
     </xs:complexType>
-    <xs:simpleType name="boolean-element-type">
-        <xs:restriction base="xs:boolean"/>
-    </xs:simpleType>
+
+    <xs:complexType name="credential-type">
+        <xs:attribute name="name" type="xs:string" use="required">
+            <xs:annotation>
+                <xs:documentation>The name of the credential.</xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+    </xs:complexType>
+
+    <xs:complexType name="override-element-type">
+        <xs:annotation>
+            <xs:documentation>
+                <![CDATA[
+                    These elements can be declared at the realm level and overridden at the secure-deployment level.
+                ]]>
+            </xs:documentation>
+        </xs:annotation>
+        <xs:element name="enable-cors" type="xs:boolean" minOccurs="0" maxOccurs="1"/>
+        <xs:element name="client-keystore" type="xs:string" minOccurs="0" maxOccurs="1"/>
+        <xs:element name="client-keystore-password" type="xs:string" minOccurs="0" maxOccurs="1"/>
+        <xs:element name="client-key-password" type="xs:string" minOccurs="0" maxOccurs="1"/>
+        <xs:element name="cors-max-age" type="xs:integer" minOccurs="0" maxOccurs="1"/>
+        <xs:element name="cors-allowed-headers" type="xs:string" minOccurs="0" maxOccurs="1"/>
+        <xs:element name="cors-allowed-methods" type="xs:string" minOccurs="0" maxOccurs="1"/>
+        <xs:element name="expose-token" type="xs:boolean" minOccurs="0" maxOccurs="1"/>
+    </xs:complexType>
 
 </xs:schema>
