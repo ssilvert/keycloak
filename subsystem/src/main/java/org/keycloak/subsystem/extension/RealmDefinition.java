@@ -39,6 +39,8 @@ import org.jboss.dmr.ModelType;
  */
 public class RealmDefinition extends SimpleResourceDefinition {
 
+    public static final String TAG_NAME = "realm";
+
     protected static final SimpleAttributeDefinition REALM_PUBLIC_KEY =
             new SimpleAttributeDefinitionBuilder("realm-public-key", ModelType.STRING, false)
             .setXmlName("realm-public-key")

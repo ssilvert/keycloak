@@ -20,7 +20,6 @@ import java.util.ArrayList;
 import java.util.List;
 import org.jboss.as.controller.AttributeDefinition;
 import org.jboss.as.controller.PathElement;
-import org.jboss.as.controller.SimpleAttributeDefinition;
 import org.jboss.as.controller.SimpleAttributeDefinitionBuilder;
 import org.jboss.as.controller.SimpleResourceDefinition;
 import org.jboss.as.controller.operations.common.GenericSubsystemDescribeHandler;
@@ -44,7 +43,7 @@ public class SecureDeploymentDefinition extends SimpleResourceDefinition {
             .setAllowExpression(true)
             .setValidator(new StringLengthValidator(1, Integer.MAX_VALUE, true, true))
             .build();
-    protected static final AttributeDefinition DISABLE_TRUST_MANAGER =
+    protected static final AttributeDefinition USE_RESOURCE_ROLE_MAPPINGS =
             new SimpleAttributeDefinitionBuilder("use-resource-role-mappings", ModelType.BOOLEAN, true)
             .setXmlName("use-resource-role-mappings")
             .setAllowExpression(true)
@@ -60,7 +59,7 @@ public class SecureDeploymentDefinition extends SimpleResourceDefinition {
     protected static final List<AttributeDefinition> DEPLOYMENT_ONLY_ATTRIBUTES = new ArrayList<AttributeDefinition>();
     static {
         DEPLOYMENT_ONLY_ATTRIBUTES.add(RESOURCE);
-        DEPLOYMENT_ONLY_ATTRIBUTES.add(DISABLE_TRUST_MANAGER);
+        DEPLOYMENT_ONLY_ATTRIBUTES.add(USE_RESOURCE_ROLE_MAPPINGS);
         DEPLOYMENT_ONLY_ATTRIBUTES.add(BEARER_ONLY);
     }
 
