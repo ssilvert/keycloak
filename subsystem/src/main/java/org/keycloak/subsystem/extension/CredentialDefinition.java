@@ -17,8 +17,6 @@
 package org.keycloak.subsystem.extension;
 
 import org.jboss.as.controller.AttributeDefinition;
-import org.jboss.as.controller.ModelOnlyAddStepHandler;
-import org.jboss.as.controller.ModelOnlyRemoveStepHandler;
 import org.jboss.as.controller.ModelOnlyWriteAttributeHandler;
 import org.jboss.as.controller.PathElement;
 import org.jboss.as.controller.SimpleAttributeDefinitionBuilder;
@@ -27,6 +25,8 @@ import org.jboss.as.controller.operations.common.GenericSubsystemDescribeHandler
 import org.jboss.as.controller.operations.validation.StringLengthValidator;
 import org.jboss.as.controller.registry.ManagementResourceRegistration;
 import org.jboss.dmr.ModelType;
+import org.keycloak.subsystem.wildfly.ModelOnlyAddStepHandler;
+import org.keycloak.subsystem.wildfly.ModelOnlyRemoveStepHandler;
 
 /**
  * Defines attributes and operations for a credential.
