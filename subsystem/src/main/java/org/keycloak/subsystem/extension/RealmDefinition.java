@@ -17,7 +17,9 @@
 package org.keycloak.subsystem.extension;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import org.jboss.as.controller.AttributeDefinition;
 import org.jboss.as.controller.ModelOnlyWriteAttributeHandler;
 import org.jboss.as.controller.PathElement;
@@ -62,8 +64,8 @@ public class RealmDefinition extends SimpleResourceDefinition {
     protected static final SimpleAttributeDefinition SSL_NOT_REQUIRED =
             new SimpleAttributeDefinitionBuilder("ssl-not-required", ModelType.BOOLEAN, true)
             .setXmlName("ssl-not-required")
-            .setAllowExpression(false)
-            .setDefaultValue(new ModelNode(true))
+            .setAllowExpression(true)
+            .setDefaultValue(new ModelNode(false))
             .build();
     protected static final SimpleAttributeDefinition ALLOW_ANY_HOSTNAME =
             new SimpleAttributeDefinitionBuilder("allow-any-hostname", ModelType.BOOLEAN, true)
@@ -93,7 +95,6 @@ public class RealmDefinition extends SimpleResourceDefinition {
             new SimpleAttributeDefinitionBuilder("connection-pool-size", ModelType.INT, true)
             .setXmlName("connection-pool-size")
             .setAllowExpression(true)
-            .setDefaultValue(new ModelNode(10))
             .setValidator(new IntRangeValidator(0))
             .build();
 
@@ -110,19 +111,26 @@ public class RealmDefinition extends SimpleResourceDefinition {
         REALM_ONLY_ATTRIBUTES.add(CONNECTION_POOL_SIZE);
     }
 
-    protected static final List<AttributeDefinition> ALL_ATTRIBUTES = new ArrayList<AttributeDefinition>();
+    protected static final List<SimpleAttributeDefinition> ALL_ATTRIBUTES = new ArrayList<SimpleAttributeDefinition>();
     static {
         ALL_ATTRIBUTES.addAll(REALM_ONLY_ATTRIBUTES);
         ALL_ATTRIBUTES.addAll(SharedAttributeDefinitons.ATTRIBUTES);
     }
 
-    private static final ModelOnlyWriteAttributeHandler realmAttrHandler = new ModelOnlyWriteAttributeHandler(ALL_ATTRIBUTES.toArray(new SimpleAttributeDefinition[0]));
+    private static final Map<String, SimpleAttributeDefinition> DEFINITION_LOOKUP = new HashMap<String, SimpleAttributeDefinition>();
+    static {
+        for (SimpleAttributeDefinition def : ALL_ATTRIBUTES) {
+            DEFINITION_LOOKUP.put(def.getXmlName(), def);
+        }
+    }
+
+    private static final RealmWriteAttributeHandler realmAttrHandler = new RealmWriteAttributeHandler(ALL_ATTRIBUTES.toArray(new SimpleAttributeDefinition[0]));
 
     public RealmDefinition() {
         super(PathElement.pathElement("realm"),
                 KeycloakExtension.getResourceDescriptionResolver("realm"),
-                AddRealmHandler.INSTANCE,
-                ReloadRequiredRemoveStepHandler.INSTANCE);
+                RealmAddHandler.INSTANCE,
+                RealmRemoveHandler.INSTANCE);
     }
 
     @Override
@@ -166,5 +174,9 @@ public class RealmDefinition extends SimpleResourceDefinition {
         }
 
         return attribute.isDefined() && !attribute.asString().isEmpty();
+    }
+
+    public static SimpleAttributeDefinition lookup(String name) {
+        return DEFINITION_LOOKUP.get(name);
     }
 }

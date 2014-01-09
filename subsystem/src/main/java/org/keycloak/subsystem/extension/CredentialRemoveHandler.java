@@ -1,5 +1,5 @@
 /*
- * Copyright 2013 Red Hat Inc. and/or its affiliates and other contributors
+ * Copyright 2014 Red Hat Inc. and/or its affiliates and other contributors
  * as indicated by the @author tags. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
@@ -20,29 +20,27 @@ package org.keycloak.subsystem.extension;
 import org.jboss.as.controller.AbstractRemoveStepHandler;
 import org.jboss.as.controller.OperationContext;
 import org.jboss.as.controller.OperationFailedException;
+import org.jboss.as.controller.PathAddress;
+import org.jboss.as.controller.descriptions.ModelDescriptionConstants;
 import org.jboss.dmr.ModelNode;
-
-import org.jboss.msc.service.ServiceName;
 
 /**
  *
- * @author Stan Silvert ssilvert@redhat.com (C) 2013 Red Hat Inc.
+ * @author Stan Silvert ssilvert@redhat.com (C) 2014 Red Hat Inc.
  */
-public class SecureDeploymentRemoveHandler extends AbstractRemoveStepHandler {
+public class CredentialRemoveHandler extends AbstractRemoveStepHandler {
 
-    public static SecureDeploymentRemoveHandler INSTANCE = new SecureDeploymentRemoveHandler();
+    public static CredentialRemoveHandler INSTANCE = new CredentialRemoveHandler();
 
-    private SecureDeploymentRemoveHandler() {}
+    private CredentialRemoveHandler() {}
 
     @Override
     protected void performRuntime(OperationContext context, ModelNode operation, ModelNode model) throws OperationFailedException {
-      /*  System.out.println("*********** SecureDeploymentRemoveHandler.performRuntime ***********");
-        System.out.println("operation=" + operation.toString());
-        System.out.println("model = " + model.toString());
-        System.out.println("***************************************");  */
+      /*  KeycloakAdapterConfigService service = KeycloakAdapterConfigService.find(context, operation);
 
-     /*   String secureDeploymentName = KeycloakAdapterConfigService.getDeploymentNameFromOperation(operation);
-        ServiceName serviceName = KeycloakAdapterConfigService.createServiceName(secureDeploymentName);
-        context.removeService(serviceName); */
+        String credentialName = PathAddress.pathAddress(operation.get(ModelDescriptionConstants.ADDRESS)).getLastElement().getValue();
+
+        service.removeCredential(credentialName); */
     }
+
 }

@@ -17,9 +17,12 @@
 package org.keycloak.subsystem.extension;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import org.jboss.as.controller.AttributeDefinition;
 import org.jboss.as.controller.PathElement;
+import org.jboss.as.controller.SimpleAttributeDefinition;
 import org.jboss.as.controller.SimpleAttributeDefinitionBuilder;
 import org.jboss.as.controller.SimpleResourceDefinition;
 import org.jboss.as.controller.operations.common.GenericSubsystemDescribeHandler;
@@ -27,6 +30,7 @@ import org.jboss.as.controller.operations.validation.StringLengthValidator;
 import org.jboss.as.controller.registry.ManagementResourceRegistration;
 import org.jboss.dmr.ModelNode;
 import org.jboss.dmr.ModelType;
+import static org.keycloak.subsystem.extension.RealmDefinition.ALL_ATTRIBUTES;
 
 /**
  * Defines attributes and operations for the Keycloak Subsystem
@@ -37,36 +41,43 @@ public class SecureDeploymentDefinition extends SimpleResourceDefinition {
 
     public static final String TAG_NAME = "secure-deployment";
 
-    protected static final AttributeDefinition RESOURCE =
+    protected static final SimpleAttributeDefinition RESOURCE =
             new SimpleAttributeDefinitionBuilder("resource", ModelType.STRING, true)
             .setXmlName("resource")
             .setAllowExpression(true)
             .setValidator(new StringLengthValidator(1, Integer.MAX_VALUE, true, true))
             .build();
-    protected static final AttributeDefinition USE_RESOURCE_ROLE_MAPPINGS =
+    protected static final SimpleAttributeDefinition USE_RESOURCE_ROLE_MAPPINGS =
             new SimpleAttributeDefinitionBuilder("use-resource-role-mappings", ModelType.BOOLEAN, true)
             .setXmlName("use-resource-role-mappings")
             .setAllowExpression(true)
             .setDefaultValue(new ModelNode(false))
             .build();
-    protected static final AttributeDefinition BEARER_ONLY =
+    protected static final SimpleAttributeDefinition BEARER_ONLY =
             new SimpleAttributeDefinitionBuilder("bearer-only", ModelType.BOOLEAN, true)
             .setXmlName("bearer-only")
             .setAllowExpression(true)
             .setDefaultValue(new ModelNode(false))
             .build();
 
-    protected static final List<AttributeDefinition> DEPLOYMENT_ONLY_ATTRIBUTES = new ArrayList<AttributeDefinition>();
+    protected static final List<SimpleAttributeDefinition> DEPLOYMENT_ONLY_ATTRIBUTES = new ArrayList<SimpleAttributeDefinition>();
     static {
         DEPLOYMENT_ONLY_ATTRIBUTES.add(RESOURCE);
         DEPLOYMENT_ONLY_ATTRIBUTES.add(USE_RESOURCE_ROLE_MAPPINGS);
         DEPLOYMENT_ONLY_ATTRIBUTES.add(BEARER_ONLY);
     }
 
-    protected static final List<AttributeDefinition> ALL_ATTRIBUTES = new ArrayList<AttributeDefinition>();
+    protected static final List<SimpleAttributeDefinition> ALL_ATTRIBUTES = new ArrayList<SimpleAttributeDefinition>();
     static {
         ALL_ATTRIBUTES.addAll(DEPLOYMENT_ONLY_ATTRIBUTES);
         ALL_ATTRIBUTES.addAll(SharedAttributeDefinitons.ATTRIBUTES);
+    }
+
+    private static final Map<String, SimpleAttributeDefinition> DEFINITION_LOOKUP = new HashMap<String, SimpleAttributeDefinition>();
+    static {
+        for (SimpleAttributeDefinition def : ALL_ATTRIBUTES) {
+            DEFINITION_LOOKUP.put(def.getXmlName(), def);
+        }
     }
 
     private static SecureDeploymentWriteAttributeHandler attrHandler = new SecureDeploymentWriteAttributeHandler(ALL_ATTRIBUTES);
@@ -90,5 +101,9 @@ public class SecureDeploymentDefinition extends SimpleResourceDefinition {
         for (AttributeDefinition attrDef : ALL_ATTRIBUTES) {
             resourceRegistration.registerReadWriteAttribute(attrDef, null, attrHandler);
         }
+    }
+
+    public static SimpleAttributeDefinition lookup(String name) {
+        return DEFINITION_LOOKUP.get(name);
     }
 }

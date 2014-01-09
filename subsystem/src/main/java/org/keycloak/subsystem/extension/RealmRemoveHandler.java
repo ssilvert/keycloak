@@ -22,27 +22,24 @@ import org.jboss.as.controller.OperationContext;
 import org.jboss.as.controller.OperationFailedException;
 import org.jboss.dmr.ModelNode;
 
-import org.jboss.msc.service.ServiceName;
-
 /**
  *
  * @author Stan Silvert ssilvert@redhat.com (C) 2013 Red Hat Inc.
  */
-public class SecureDeploymentRemoveHandler extends AbstractRemoveStepHandler {
+public class RealmRemoveHandler extends AbstractRemoveStepHandler {
 
-    public static SecureDeploymentRemoveHandler INSTANCE = new SecureDeploymentRemoveHandler();
+    public static RealmRemoveHandler INSTANCE = new RealmRemoveHandler();
 
-    private SecureDeploymentRemoveHandler() {}
+    private RealmRemoveHandler() {}
 
     @Override
     protected void performRuntime(OperationContext context, ModelNode operation, ModelNode model) throws OperationFailedException {
-      /*  System.out.println("*********** SecureDeploymentRemoveHandler.performRuntime ***********");
+        System.out.println("*********** RealmRemoveHandler.performRuntime ***********");
         System.out.println("operation=" + operation.toString());
         System.out.println("model = " + model.toString());
-        System.out.println("***************************************");  */
+        System.out.println("***************************************");
 
-     /*   String secureDeploymentName = KeycloakAdapterConfigService.getDeploymentNameFromOperation(operation);
-        ServiceName serviceName = KeycloakAdapterConfigService.createServiceName(secureDeploymentName);
-        context.removeService(serviceName); */
+        KeycloakAdapterConfigService ckService = KeycloakAdapterConfigService.find(context);
+        ckService.removeRealm(operation);
     }
 }

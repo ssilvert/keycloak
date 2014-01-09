@@ -47,8 +47,8 @@ public class CredentialDefinition extends SimpleResourceDefinition {
     public CredentialDefinition() {
         super(PathElement.pathElement(TAG_NAME),
                 KeycloakExtension.getResourceDescriptionResolver(TAG_NAME),
-                new ModelOnlyAddStepHandler(VALUE),
-                ModelOnlyRemoveStepHandler.INSTANCE);
+                new CredentialAddHandler(VALUE),
+                CredentialRemoveHandler.INSTANCE);
     }
 
     @Override

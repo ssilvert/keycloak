@@ -43,11 +43,11 @@ public class SecureDeploymentAddHandler extends AbstractAddStepHandler {
 
     @Override
     protected void populateModel(ModelNode operation, ModelNode model) throws OperationFailedException {
-        System.out.println("***************");
+      /*  System.out.println("***************");
         System.out.println("SecureDeploymentAddHandler.populateModel");
         System.out.println("operation=" + operation.toString());
         System.out.println("model=" + model.toString());
-        System.out.println("**************");
+        System.out.println("**************"); */
         // TODO: localize exception. get id number
         if (!operation.get(OP).asString().equals(ADD)) {
             throw new OperationFailedException("Unexpected operation for add secure deployment. operation=" + operation.toString());
@@ -65,15 +65,7 @@ public class SecureDeploymentAddHandler extends AbstractAddStepHandler {
         System.out.println("model = " + model.toString());
         System.out.println("***************************************");
 
-        String secureDeploymentName = SecureDeploymentService.getDeploymentNameFromOperation(operation);
-        SecureDeploymentService service = new SecureDeploymentService(secureDeploymentName, model);
-
-        ServiceName serviceName = SecureDeploymentService.createServiceName(secureDeploymentName);
-        ServiceController<SecureDeploymentService> controller = context.getServiceTarget()
-                .addService(serviceName, service)
-                .addListener(verificationHandler)
-                .setInitialMode(Mode.ACTIVE)
-                .install();
-        newControllers.add(controller);
+        KeycloakAdapterConfigService ckService = KeycloakAdapterConfigService.find(context);
+        ckService.addSecureDeployment(operation, model);
     }
 }

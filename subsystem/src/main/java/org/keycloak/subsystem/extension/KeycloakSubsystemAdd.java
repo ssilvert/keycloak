@@ -27,6 +27,7 @@ import org.jboss.as.server.DeploymentProcessorTarget;
 import org.jboss.as.server.deployment.Phase;
 import org.jboss.dmr.ModelNode;
 import org.jboss.msc.service.ServiceController;
+import org.jboss.msc.service.ServiceName;
 
 /**
  * The Keycloak subsystem add update handler.
@@ -55,17 +56,28 @@ class KeycloakSubsystemAdd extends AbstractBoottimeAddStepHandler {
         context.addStep(new AbstractDeploymentChainStep() {
             protected void execute(DeploymentProcessorTarget processorTarget) {
                 processorTarget.addDeploymentProcessor(KeycloakExtension.SUBSYSTEM_NAME, Phase.DEPENDENCIES, 0, new KeycloakDependencyProcessor());
+                processorTarget.addDeploymentProcessor(KeycloakExtension.SUBSYSTEM_NAME,
+                                                       AuthDataDeploymentProcessor.PHASE,
+                                                       AuthDataDeploymentProcessor.PRIORITY,
+                                                       new AuthDataDeploymentProcessor());
             }
         }, OperationContext.Stage.RUNTIME);
     }
 
     @Override
     protected void performRuntime(OperationContext context, ModelNode operation, ModelNode model, ServiceVerificationHandler verificationHandler, List<ServiceController<?>> newControllers) throws OperationFailedException {
-        super.performRuntime(context, operation, model, verificationHandler, newControllers); //To change body of generated methods, choose Tools | Templates.
+        super.performRuntime(context, operation, model, verificationHandler, newControllers);
         System.out.println("*********** KeycloakSubsystemAdd.performRuntime ***********");
         System.out.println("operation=" + operation.toString());
         System.out.println("model = " + model.toString());
         System.out.println("***************************************");
+
+        ServiceController<KeycloakAdapterConfigService> controller = context.getServiceTarget()
+                .addService(KeycloakAdapterConfigService.SERVICE_NAME, KeycloakAdapterConfigService.INSTANCE)
+                .addListener(verificationHandler)
+                .setInitialMode(ServiceController.Mode.ACTIVE)
+                .install();
+        newControllers.add(controller);
     }
 
     @Override

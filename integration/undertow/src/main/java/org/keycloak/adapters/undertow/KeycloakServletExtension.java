@@ -11,6 +11,7 @@ import io.undertow.servlet.api.AuthMethodConfig;
 import io.undertow.servlet.api.DeploymentInfo;
 import io.undertow.servlet.api.LoginConfig;
 import io.undertow.servlet.api.ServletSessionConfig;
+import java.io.ByteArrayInputStream;
 import org.jboss.logging.Logger;
 import org.keycloak.adapters.config.RealmConfiguration;
 import org.keycloak.representations.adapters.config.AdapterConfig;
@@ -25,6 +26,8 @@ import java.util.Map;
  * @version $Revision: 1 $
  */
 public class KeycloakServletExtension implements ServletExtension {
+    public static String AUTH_DATA_PARAM_NAME = "org.keycloak.json.authData";
+
     protected Logger log = Logger.getLogger(KeycloakServletExtension.class);
 
     // todo when this DeploymentInfo method of the same name is fixed.
@@ -40,6 +43,11 @@ public class KeycloakServletExtension implements ServletExtension {
         return false;
     }
 
+    private InputStream getJSONFromServletContext(ServletContext servletContext) {
+        String json = servletContext.getInitParameter(AUTH_DATA_PARAM_NAME);
+        if (json == null) return null;
+        return new ByteArrayInputStream(json.getBytes());
+    }
 
     @Override
     public void handleDeployment(DeploymentInfo deploymentInfo, ServletContext servletContext) {
@@ -49,7 +57,11 @@ public class KeycloakServletExtension implements ServletExtension {
         }
         log.info("KeycloakServletException initialization");
         InputStream is = servletContext.getResourceAsStream("/WEB-INF/keycloak.json");
-        if (is == null) throw new RuntimeException("Unable to find /WEB-INF/keycloak.json configuration file");
+        if (is == null) {
+            is = getJSONFromServletContext(servletContext);
+            System.out.println(">>>> Got json from servlet Context");
+        }
+        if (is == null) throw new RuntimeException("Unable to find realm config in /WEB-INF/keycloak.json or in keycloak subsystem.");
         RealmConfigurationLoader loader = new RealmConfigurationLoader(is);
         loader.init(true);
         AdapterConfig keycloakConfig = loader.getAdapterConfig();

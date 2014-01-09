@@ -12,7 +12,7 @@
     <packaging>pom</packaging>
 
     <properties>
-        <keycloak.apache.httpcomponents.version>4.1.2</keycloak.apache.httpcomponents.version>
+        <apache.httpcomponents.version>4.1.2</apache.httpcomponents.version>
         <resteasy.version>3.0.5.Final</resteasy.version>
         <undertow.version>1.0.0.Beta28</undertow.version>
         <picketlink.version>2.5.0.Beta6</picketlink.version>
@@ -87,6 +87,8 @@
         <module>examples</module>
         <module>testsuite</module>
         <module>server</module>
+        <module>dist</module>
+        <module>dist-as7</module>
     </modules>
 
     <dependencyManagement>
@@ -246,7 +248,7 @@
                 <artifactId>freemarker</artifactId>
                 <version>2.3.19</version>
             </dependency>
-            
+
             <!-- Google+ -->
             <dependency>
                 <groupId>com.google.http-client</groupId>
@@ -258,44 +260,44 @@
                 <artifactId>google-api-services-oauth2</artifactId>
                 <version>v2-rev35-1.14.1-beta</version>
             </dependency>
-            
+
             <!-- Twitter -->
             <dependency>
                 <groupId>org.twitter4j</groupId>
                 <artifactId>twitter4j-core</artifactId>
                 <version>3.0.3</version>
             </dependency>
-			
-			<!-- QR Code Generator -->
-            <dependency>
-      			<groupId>com.google.zxing</groupId>
-      			<artifactId>core</artifactId>
-      			<version>2.2</version>
-			</dependency>
-            <dependency>
-      			<groupId>com.google.zxing</groupId>
-      			<artifactId>javase</artifactId>
-      			<version>2.2</version>
-			</dependency>
-						
-			<!-- Email Test Servers -->
-			<dependency>
-    			<groupId>com.icegreen</groupId>
-    			<artifactId>greenmail</artifactId>
-	    		<version>1.3.1b</version>
-			</dependency>
 
-			<!-- Selenium -->
-			<dependency>
-				<groupId>org.seleniumhq.selenium</groupId>
-				<artifactId>selenium-java</artifactId>
-				<version>2.35.0</version>
-  			</dependency>
-			<dependency>
-				<groupId>org.seleniumhq.selenium</groupId>
-				<artifactId>selenium-chrome-driver</artifactId>
-				<version>2.35.0</version>
-			</dependency>
+            <!-- QR Code Generator -->
+            <dependency>
+                <groupId>com.google.zxing</groupId>
+                <artifactId>core</artifactId>
+                <version>2.2</version>
+            </dependency>
+            <dependency>
+                <groupId>com.google.zxing</groupId>
+                <artifactId>javase</artifactId>
+                <version>2.2</version>
+            </dependency>
+
+            <!-- Email Test Servers -->
+            <dependency>
+                <groupId>com.icegreen</groupId>
+                <artifactId>greenmail</artifactId>
+                <version>1.3.1b</version>
+            </dependency>
+
+            <!-- Selenium -->
+            <dependency>
+                <groupId>org.seleniumhq.selenium</groupId>
+                <artifactId>selenium-java</artifactId>
+                <version>2.35.0</version>
+            </dependency>
+            <dependency>
+                <groupId>org.seleniumhq.selenium</groupId>
+                <artifactId>selenium-chrome-driver</artifactId>
+                <version>2.35.0</version>
+            </dependency>
             <dependency>
                 <groupId>org.mongodb</groupId>
                 <artifactId>mongo-java-driver</artifactId>
@@ -327,13 +329,13 @@
                 <artifactId>mysql-connector-java</artifactId>
                 <version>${mysql.version}</version>
             </dependency>
-            <!-- the dependency seems to override Resteasy 3.0.5's depending on 4.2.1
-            <dependency>
-                <groupId>org.apache.httpcomponents</groupId>
-                <artifactId>httpclient</artifactId>
-                <version>${keycloak.apache.httpcomponents.version}</version>
-            </dependency>
-             -->
+            <!-- the dependency seems to override Resteasy 3.0.5's dependeing on 4.2.1
+           <dependency>
+               <groupId>org.apache.httpcomponents</groupId>
+               <artifactId>httpclient</artifactId>
+               <version>${apache.httpcomponents.version}</version>
+           </dependency>
+            -->
             <dependency>
                 <groupId>org.wildfly</groupId>
                 <artifactId>wildfly-controller</artifactId>
@@ -355,6 +357,11 @@
                 <version>${wildfly.version}</version>
                 <type>pom</type>
                 <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.wildfly</groupId>
+                <artifactId>wildfly-undertow</artifactId>
+                <version>${wildfly.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.jboss.logging</groupId>
@@ -434,14 +441,14 @@
                     <artifactId>maven-deploy-plugin</artifactId>
                     <version>2.5</version>
                 </plugin>
-				<plugin>
-					<groupId>org.apache.maven.plugins</groupId>
-					<artifactId>maven-war-plugin</artifactId>
-					<version>2.3</version>
-					<configuration>
-						<failOnMissingWebXml>false</failOnMissingWebXml>
-					</configuration>
-				</plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-war-plugin</artifactId>
+                    <version>2.3</version>
+                    <configuration>
+                        <failOnMissingWebXml>false</failOnMissingWebXml>
+                    </configuration>
+                </plugin>
                 <plugin>
                     <groupId>com.lazerycode.jmeter</groupId>
                     <artifactId>jmeter-maven-plugin</artifactId>

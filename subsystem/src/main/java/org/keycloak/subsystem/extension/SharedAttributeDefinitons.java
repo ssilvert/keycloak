@@ -60,7 +60,6 @@ public class SharedAttributeDefinitons {
             new SimpleAttributeDefinitionBuilder("cors-max-age", ModelType.INT, true)
             .setXmlName("cors-max-age")
             .setAllowExpression(true)
-            .setDefaultValue(new ModelNode(-1))
             .setValidator(new IntRangeValidator(-1))
             .build();
     protected static final SimpleAttributeDefinition CORS_ALLOWED_HEADERS =

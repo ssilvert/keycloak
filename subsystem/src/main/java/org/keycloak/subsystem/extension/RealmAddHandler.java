@@ -27,6 +27,7 @@ import org.jboss.as.controller.SimpleAttributeDefinition;
 import org.jboss.dmr.ModelNode;
 
 import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.ADD;
+import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.ADDRESS;
 import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.OP;
 import org.jboss.msc.service.ServiceController;
 import org.jboss.msc.service.ServiceController.Mode;
@@ -36,11 +37,11 @@ import org.jboss.msc.service.ServiceName;
  *
  * @author Stan Silvert ssilvert@redhat.com (C) 2013 Red Hat Inc.
  */
-public class AddRealmHandler extends AbstractAddStepHandler {
+public class RealmAddHandler extends AbstractAddStepHandler {
 
-    public static AddRealmHandler INSTANCE = new AddRealmHandler();
+    public static RealmAddHandler INSTANCE = new RealmAddHandler();
 
-    private AddRealmHandler() {}
+    private RealmAddHandler() {}
 
     @Override
     protected void populateModel(ModelNode operation, ModelNode model) throws OperationFailedException {
@@ -71,5 +72,7 @@ public class AddRealmHandler extends AbstractAddStepHandler {
         System.out.println("model = " + model.toString());
         System.out.println("***************************************");
 
+        KeycloakAdapterConfigService ckService = KeycloakAdapterConfigService.find(context);
+        ckService.addRealm(operation, model);
     }
 }

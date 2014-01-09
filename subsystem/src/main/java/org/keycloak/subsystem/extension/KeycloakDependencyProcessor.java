@@ -36,45 +36,35 @@ import org.jboss.msc.service.ServiceRegistry;
  */
 public class KeycloakDependencyProcessor implements DeploymentUnitProcessor {
 
-    private static final ModuleIdentifier BOUNCY_CASTLE = ModuleIdentifier.create("org.bouncycastle");
+    private static final ModuleIdentifier KEYCLOAK_ADAPTER = ModuleIdentifier.create("org.keycloak.adapter");
+/*    private static final ModuleIdentifier BOUNCY_CASTLE = ModuleIdentifier.create("org.bouncycastle");
     private static final ModuleIdentifier JAX_RS = ModuleIdentifier.create("org.jboss.resteasy.resteasy-jaxrs");
     private static final ModuleIdentifier JACKSON_PROVIDER = ModuleIdentifier.create("org.jboss.resteasy.resteasy-jackson-provider");
-    private static final ModuleIdentifier JOSE_JWT = ModuleIdentifier.create("org.jboss.resteasy.jose-jwt");
+    private static final ModuleIdentifier JOSE_JWT = ModuleIdentifier.create("org.jboss.resteasy.jose-jwt"); */
 
     @Override
     public void deploy(DeploymentPhaseContext phaseContext) throws DeploymentUnitProcessingException {
         final DeploymentUnit deploymentUnit = phaseContext.getDeploymentUnit();
         String deploymentName = deploymentUnit.getName();
 
-        // Use second "if" when we write this for WildFly
-        if (!deploymentName.toLowerCase().endsWith("war")) return;
-  /*      if (!DeploymentTypeMarker.isType(DeploymentType.WAR, deploymentUnit)) {
-            return;
-        } */
-
-        SecureDeploymentService service = getSecureDeploymentService(phaseContext.getServiceRegistry(), deploymentName);
+     /*   KeycloakAdapterConfigService service = KeycloakAdapterConfigService.find(phaseContext.getServiceRegistry(), deploymentName);
         if (service != null) {
             addModules(deploymentUnit);
-        }
+        } */
     }
 
     private void addModules(DeploymentUnit deploymentUnit) {
+    /*    System.out.println("********************");
+        System.out.println("Adding keycloak modules");
+        System.out.println("*********************"); */
         final ModuleSpecification moduleSpecification = deploymentUnit.getAttachment(Attachments.MODULE_SPECIFICATION);
         final ModuleLoader moduleLoader = Module.getBootModuleLoader();
 
-        moduleSpecification.addSystemDependency(new ModuleDependency(moduleLoader, BOUNCY_CASTLE, false, false, false, false));
-        moduleSpecification.addSystemDependency(new ModuleDependency(moduleLoader, JAX_RS, false, false, true, false));
-        moduleSpecification.addSystemDependency(new ModuleDependency(moduleLoader, JACKSON_PROVIDER, false, false, true, false));
-        moduleSpecification.addSystemDependency(new ModuleDependency(moduleLoader, JOSE_JWT, false, false, false, false));
-    }
-
-    private SecureDeploymentService getSecureDeploymentService(ServiceRegistry registry, String deploymentName) {
-        ServiceController<?> container = registry.getService(SecureDeploymentService.createServiceName(deploymentName));
-        if (container != null) {
-            SecureDeploymentService service = (SecureDeploymentService)container.getValue();
-            return service;
-        }
-        return null;
+        moduleSpecification.addSystemDependency(new ModuleDependency(moduleLoader, KEYCLOAK_ADAPTER, false, false, true, false));
+  //      moduleSpecification.addSystemDependency(new ModuleDependency(moduleLoader, BOUNCY_CASTLE, false, false, false, false));
+   //     moduleSpecification.addSystemDependency(new ModuleDependency(moduleLoader, JAX_RS, false, false, true, false));
+   //     moduleSpecification.addSystemDependency(new ModuleDependency(moduleLoader, JACKSON_PROVIDER, false, false, true, false));
+   //     moduleSpecification.addSystemDependency(new ModuleDependency(moduleLoader, JOSE_JWT, false, false, false, false));
     }
 
     @Override

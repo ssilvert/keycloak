@@ -12,6 +12,7 @@ import javax.xml.stream.XMLStreamException;
 import org.jboss.as.controller.AttributeDefinition;
 import org.jboss.as.controller.PathAddress;
 import org.jboss.as.controller.PathElement;
+import org.jboss.as.controller.SimpleAttributeDefinition;
 import org.jboss.as.controller.descriptions.ModelDescriptionConstants;
 import org.jboss.as.controller.operations.common.Util;
 import org.jboss.as.controller.parsing.ParseUtils;
@@ -75,7 +76,10 @@ class KeycloakSubsystemParser implements XMLStreamConstants, XMLElementReader<Li
                 readDeployment(reader, addr, resourcesToAdd);
                 continue;
             }
-            addRealm.get(tagName).set(reader.getElementText());
+
+            SimpleAttributeDefinition def = RealmDefinition.lookup(tagName);
+            if (def == null) throw new XMLStreamException("Unknown realm tag " + tagName);
+            def.parseAndSetParameter(reader.getElementText(), addRealm, reader);
         }
 
         if (!RealmDefinition.validateTruststoreSetIfRequired(addRealm)) {
@@ -90,9 +94,9 @@ class KeycloakSubsystemParser implements XMLStreamConstants, XMLElementReader<Li
         }
         composite.get(ModelDescriptionConstants.STEPS).set(steps);
 
-        System.out.println("**** Read realm:");
+     /*   System.out.println("**** Read realm:");
         System.out.println(composite.toString());
-        System.out.println("***************");
+        System.out.println("***************"); */
         list.add(composite);
     }
 
@@ -109,7 +113,10 @@ class KeycloakSubsystemParser implements XMLStreamConstants, XMLElementReader<Li
                 readCredential(reader, addr, credentialsToAdd);
                 continue;
             }
-            addSecureDeployment.get(tagName).set(reader.getElementText());
+
+            SimpleAttributeDefinition def = SecureDeploymentDefinition.lookup(tagName);
+            if (def == null) throw new XMLStreamException("Unknown secure-deployment tag " + tagName);
+            def.parseAndSetParameter(reader.getElementText(), addSecureDeployment, reader);
         }
         // Must add credentials after the deployment is added.
         resourcesToAdd.add(addSecureDeployment);
@@ -154,9 +161,9 @@ class KeycloakSubsystemParser implements XMLStreamConstants, XMLElementReader<Li
     }
 
     private void writeRealms(XMLExtendedStreamWriter writer, SubsystemMarshallingContext context) throws XMLStreamException {
-        System.out.println("***** model to write=");
+       /* System.out.println("***** model to write=");
         System.out.println(context.getModelNode().toString());
-        System.out.println("**********************");
+        System.out.println("**********************"); */
         if (!context.getModelNode().get(RealmDefinition.TAG_NAME).isDefined()) {
             return;
         }
@@ -167,11 +174,12 @@ class KeycloakSubsystemParser implements XMLStreamConstants, XMLElementReader<Li
             for (AttributeDefinition element : RealmDefinition.ALL_ATTRIBUTES) {
                 element.marshallAsElement(realmElements, writer);
             }
+
             ModelNode deployments = realmElements.get(SecureDeploymentDefinition.TAG_NAME);
-            if (!deployments.isDefined()) {
-                continue;
+            if (deployments.isDefined()) {
+                writeSecureDeployments(writer, deployments);
             }
-            writeSecureDeployments(writer, deployments);
+
             writer.writeEndElement();
         }
     }
@@ -184,10 +192,12 @@ class KeycloakSubsystemParser implements XMLStreamConstants, XMLElementReader<Li
             for (AttributeDefinition element : SecureDeploymentDefinition.ALL_ATTRIBUTES) {
                 element.marshallAsElement(deploymentElements, writer);
             }
+
             ModelNode credentials = deploymentElements.get(CredentialDefinition.TAG_NAME);
             if (credentials.isDefined()) {
                 writeCredentials(writer, credentials);
             }
+
             writer.writeEndElement();
         }
     }
