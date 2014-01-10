@@ -33,9 +33,11 @@ import org.jboss.metadata.web.jboss.JBossWebMetaData;
  *
  * @author Stan Silvert ssilvert@redhat.com (C) 2014 Red Hat Inc.
  */
-public class AuthDataDeploymentProcessor implements DeploymentUnitProcessor {
-
-    public static final String AUTH_DATA_PARAM_NAME = "org.keycloak.json.authData";
+public class KeycloakAdapterConfigDeploymentProcessor implements DeploymentUnitProcessor {
+    // This param name is defined again in Keycloak Undertow Integration class
+    // org.keycloak.adapters.undertow.KeycloakServletExtension.  We have this value in
+    // two places to avoid dependency between Keycloak Subsystem and Keyclaok Undertow Integration.
+    public static final String AUTH_DATA_PARAM_NAME = "org.keycloak.json.adapterConfig";
 
     public static final Phase PHASE = Phase.INSTALL;
     // Seems wise to have this run after INSTALL_WAR_DEPLOYMENT
@@ -67,6 +69,7 @@ public class AuthDataDeploymentProcessor implements DeploymentUnitProcessor {
         addJSONData(service.getJSON(deploymentName, resourceName), warMetaData);
     }
 
+    // TODO: remove this.
     private String getJSON() {
         return "{\n" +
 "  \"realm\" : \"demo\",\n" +
@@ -101,16 +104,6 @@ public class AuthDataDeploymentProcessor implements DeploymentUnitProcessor {
 
         webMetaData.setContextParams(contextParams);
     }
-
-    /*private DeploymentInfo getDeploymentInfo(DeploymentPhaseContext phaseContext) {
-        DeploymentUnit deploymentUnit = phaseContext.getDeploymentUnit();
-        ServiceName utDeploymentServiceName = (ServiceName)deploymentUnit.getAttachment(Attachments.DEPLOYMENT_COMPLETE_SERVICES).get(0);
-        ServiceController<?> container = phaseContext.getServiceRegistry().getService(utDeploymentServiceName);
-        System.out.println("utDeploymentServiceName=" + utDeploymentServiceName);
-        System.out.println("container=" + container);
-        UndertowDeploymentService utDeploymentService = (UndertowDeploymentService)container.getValue();
-        return utDeploymentService.getDeploymentInfoInjectedValue().getValue();
-    }*/
 
     @Override
     public void undeploy(DeploymentUnit du) {

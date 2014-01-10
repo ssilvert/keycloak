@@ -25,8 +25,6 @@ import org.jboss.as.controller.operations.common.GenericSubsystemDescribeHandler
 import org.jboss.as.controller.operations.validation.StringLengthValidator;
 import org.jboss.as.controller.registry.ManagementResourceRegistration;
 import org.jboss.dmr.ModelType;
-import org.keycloak.subsystem.wildfly.ModelOnlyAddStepHandler;
-import org.keycloak.subsystem.wildfly.ModelOnlyRemoveStepHandler;
 
 /**
  * Defines attributes and operations for a credential.
@@ -60,6 +58,6 @@ public class CredentialDefinition extends SimpleResourceDefinition {
     @Override
     public void registerAttributes(ManagementResourceRegistration resourceRegistration) {
         super.registerAttributes(resourceRegistration);
-        resourceRegistration.registerReadWriteAttribute(VALUE, null, new ModelOnlyWriteAttributeHandler());
+        resourceRegistration.registerReadWriteAttribute(VALUE, null, new CredentialReadWriteAttributeHandler());
     }
 }

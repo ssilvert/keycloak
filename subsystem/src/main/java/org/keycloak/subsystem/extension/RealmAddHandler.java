@@ -23,17 +23,14 @@ import org.jboss.as.controller.AttributeDefinition;
 import org.jboss.as.controller.OperationContext;
 import org.jboss.as.controller.OperationFailedException;
 import org.jboss.as.controller.ServiceVerificationHandler;
-import org.jboss.as.controller.SimpleAttributeDefinition;
 import org.jboss.dmr.ModelNode;
 
 import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.ADD;
-import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.ADDRESS;
 import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.OP;
 import org.jboss.msc.service.ServiceController;
-import org.jboss.msc.service.ServiceController.Mode;
-import org.jboss.msc.service.ServiceName;
 
 /**
+ * Add a new realm.
  *
  * @author Stan Silvert ssilvert@redhat.com (C) 2013 Red Hat Inc.
  */

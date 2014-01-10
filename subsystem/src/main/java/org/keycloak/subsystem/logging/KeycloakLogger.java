@@ -29,6 +29,7 @@ import static org.jboss.logging.Logger.Level.INFO;
 import static org.jboss.logging.Logger.Level.WARN;
 
 /**
+ * This interface to be fleshed out later when error messages are fully externalized.
  *
  * @author Stan Silvert ssilvert@redhat.com (C) 2013 Red Hat Inc.
  */

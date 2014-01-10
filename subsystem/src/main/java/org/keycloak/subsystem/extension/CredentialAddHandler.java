@@ -22,15 +22,12 @@ import org.jboss.as.controller.AbstractAddStepHandler;
 import org.jboss.as.controller.AttributeDefinition;
 import org.jboss.as.controller.OperationContext;
 import org.jboss.as.controller.OperationFailedException;
-import org.jboss.as.controller.PathAddress;
-import org.jboss.as.controller.PathElement;
 import org.jboss.as.controller.ServiceVerificationHandler;
-import org.jboss.as.controller.descriptions.ModelDescriptionConstants;
-import org.jboss.as.controller.registry.Resource;
 import org.jboss.dmr.ModelNode;
 import org.jboss.msc.service.ServiceController;
 
 /**
+ * Add a credential to a deployment.
  *
  * @author Stan Silvert ssilvert@redhat.com (C) 2014 Red Hat Inc.
  */

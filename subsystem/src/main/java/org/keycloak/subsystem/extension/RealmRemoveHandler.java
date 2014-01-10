@@ -23,6 +23,7 @@ import org.jboss.as.controller.OperationFailedException;
 import org.jboss.dmr.ModelNode;
 
 /**
+ * Remove a realm.
  *
  * @author Stan Silvert ssilvert@redhat.com (C) 2013 Red Hat Inc.
  */

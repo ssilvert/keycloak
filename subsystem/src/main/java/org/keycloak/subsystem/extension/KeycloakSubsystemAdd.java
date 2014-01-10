@@ -27,7 +27,6 @@ import org.jboss.as.server.DeploymentProcessorTarget;
 import org.jboss.as.server.deployment.Phase;
 import org.jboss.dmr.ModelNode;
 import org.jboss.msc.service.ServiceController;
-import org.jboss.msc.service.ServiceName;
 
 /**
  * The Keycloak subsystem add update handler.
@@ -57,9 +56,9 @@ class KeycloakSubsystemAdd extends AbstractBoottimeAddStepHandler {
             protected void execute(DeploymentProcessorTarget processorTarget) {
                 processorTarget.addDeploymentProcessor(KeycloakExtension.SUBSYSTEM_NAME, Phase.DEPENDENCIES, 0, new KeycloakDependencyProcessor());
                 processorTarget.addDeploymentProcessor(KeycloakExtension.SUBSYSTEM_NAME,
-                                                       AuthDataDeploymentProcessor.PHASE,
-                                                       AuthDataDeploymentProcessor.PRIORITY,
-                                                       new AuthDataDeploymentProcessor());
+                                                       KeycloakAdapterConfigDeploymentProcessor.PHASE,
+                                                       KeycloakAdapterConfigDeploymentProcessor.PRIORITY,
+                                                       new KeycloakAdapterConfigDeploymentProcessor());
             }
         }, OperationContext.Stage.RUNTIME);
     }

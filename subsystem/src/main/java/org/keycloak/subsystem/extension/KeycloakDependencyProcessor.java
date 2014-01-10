@@ -27,8 +27,6 @@ import org.jboss.as.server.deployment.module.ModuleSpecification;
 import org.jboss.modules.Module;
 import org.jboss.modules.ModuleIdentifier;
 import org.jboss.modules.ModuleLoader;
-import org.jboss.msc.service.ServiceController;
-import org.jboss.msc.service.ServiceRegistry;
 
 /**
  *
@@ -36,35 +34,30 @@ import org.jboss.msc.service.ServiceRegistry;
  */
 public class KeycloakDependencyProcessor implements DeploymentUnitProcessor {
 
-    private static final ModuleIdentifier KEYCLOAK_ADAPTER = ModuleIdentifier.create("org.keycloak.adapter");
-/*    private static final ModuleIdentifier BOUNCY_CASTLE = ModuleIdentifier.create("org.bouncycastle");
-    private static final ModuleIdentifier JAX_RS = ModuleIdentifier.create("org.jboss.resteasy.resteasy-jaxrs");
-    private static final ModuleIdentifier JACKSON_PROVIDER = ModuleIdentifier.create("org.jboss.resteasy.resteasy-jackson-provider");
-    private static final ModuleIdentifier JOSE_JWT = ModuleIdentifier.create("org.jboss.resteasy.jose-jwt"); */
+    private static final ModuleIdentifier KEYCLOAK_UNDERTOW_ADAPTER = ModuleIdentifier.create("org.keycloak.keycloak-undertow-adapter");
+    private static final ModuleIdentifier KEYCLOAK_CORE_ADAPTER = ModuleIdentifier.create("org.keycloak.keycloak-adapter-core");
+    private static final ModuleIdentifier APACHE_HTTPCOMPONENTS = ModuleIdentifier.create("org.apache.httpcomponents");
 
     @Override
     public void deploy(DeploymentPhaseContext phaseContext) throws DeploymentUnitProcessingException {
         final DeploymentUnit deploymentUnit = phaseContext.getDeploymentUnit();
-        String deploymentName = deploymentUnit.getName();
 
-     /*   KeycloakAdapterConfigService service = KeycloakAdapterConfigService.find(phaseContext.getServiceRegistry(), deploymentName);
-        if (service != null) {
+        KeycloakAdapterConfigService service = KeycloakAdapterConfigService.find(phaseContext.getServiceRegistry());
+        if (service.isKeycloakDeployment(deploymentUnit.getName())) {
             addModules(deploymentUnit);
-        } */
+        }
     }
 
     private void addModules(DeploymentUnit deploymentUnit) {
-    /*    System.out.println("********************");
+        System.out.println("********************");
         System.out.println("Adding keycloak modules");
-        System.out.println("*********************"); */
+        System.out.println("*********************");
         final ModuleSpecification moduleSpecification = deploymentUnit.getAttachment(Attachments.MODULE_SPECIFICATION);
         final ModuleLoader moduleLoader = Module.getBootModuleLoader();
 
-        moduleSpecification.addSystemDependency(new ModuleDependency(moduleLoader, KEYCLOAK_ADAPTER, false, false, true, false));
-  //      moduleSpecification.addSystemDependency(new ModuleDependency(moduleLoader, BOUNCY_CASTLE, false, false, false, false));
-   //     moduleSpecification.addSystemDependency(new ModuleDependency(moduleLoader, JAX_RS, false, false, true, false));
-   //     moduleSpecification.addSystemDependency(new ModuleDependency(moduleLoader, JACKSON_PROVIDER, false, false, true, false));
-   //     moduleSpecification.addSystemDependency(new ModuleDependency(moduleLoader, JOSE_JWT, false, false, false, false));
+        moduleSpecification.addSystemDependency(new ModuleDependency(moduleLoader, KEYCLOAK_UNDERTOW_ADAPTER, false, false, true, false));
+        moduleSpecification.addSystemDependency(new ModuleDependency(moduleLoader, KEYCLOAK_CORE_ADAPTER, false, false, false, false));
+        moduleSpecification.addSystemDependency(new ModuleDependency(moduleLoader, APACHE_HTTPCOMPONENTS, false, false, true, false));
     }
 
     @Override

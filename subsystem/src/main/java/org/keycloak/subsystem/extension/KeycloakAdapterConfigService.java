@@ -20,8 +20,6 @@ package org.keycloak.subsystem.extension;
 import java.util.HashMap;
 import java.util.Map;
 import org.jboss.as.controller.OperationContext;
-import org.jboss.as.controller.descriptions.ModelDescriptionConstants;
-import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.ADDRESS;
 import org.jboss.dmr.ModelNode;
 import org.jboss.dmr.Property;
 import org.jboss.msc.service.Service;
@@ -32,13 +30,20 @@ import org.jboss.msc.service.StartContext;
 import org.jboss.msc.service.StartException;
 import org.jboss.msc.service.StopContext;
 
+import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.ADDRESS;
+
 /**
+ * This service keeps track of the entire Keycloak management model so as to provide
+ * adapter configuration to each deployment at deploy time.
  *
  * @author Stan Silvert ssilvert@redhat.com (C) 2013 Red Hat Inc.
  */
 public class KeycloakAdapterConfigService implements Service<KeycloakAdapterConfigService> {
     private static final String CREDENTIALS_JSON_NAME = "credentials";
 
+    // Right now this is used as a service, but I'm not sure it really needs to be implemented that way.
+    // It's also a singleton serving the entire subsystem, but the INSTANCE variable is currently only
+    // used during initialization of the subsystem.
     public static final ServiceName SERVICE_NAME = ServiceName.JBOSS.append("KeycloakAdapterConfigService");
     public static final KeycloakAdapterConfigService INSTANCE = new KeycloakAdapterConfigService();
 
@@ -92,9 +97,16 @@ public class KeycloakAdapterConfigService implements Service<KeycloakAdapterConf
         System.out.println("================================");
     }
 
+    public void removeSecureDeployment(ModelNode operation) {
+        this.deployments.remove(deploymentNameFromOp(operation));
+        System.out.println("===== Removed Deployment =======");
+        System.out.println("deployment=");
+        System.out.println(this.deployments.get(deploymentNameFromOp(operation)).toString());
+        System.out.println("================================");
+    }
+
     public void addCredential(ModelNode operation, ModelNode model) {
-        ModelNode deployment = this.deployments.get(deploymentNameFromOp(operation));
-        ModelNode credentials = deployment.get(CREDENTIALS_JSON_NAME);
+        ModelNode credentials = credentialsFromOp(operation);
         if (!credentials.isDefined()) {
             credentials = new ModelNode();
         }
@@ -102,6 +114,7 @@ public class KeycloakAdapterConfigService implements Service<KeycloakAdapterConf
         String credentialName = credentialNameFromOp(operation);
         credentials.get(credentialName).set(model.get("value").asString());
 
+        ModelNode deployment = this.deployments.get(deploymentNameFromOp(operation));
         deployment.get(CREDENTIALS_JSON_NAME).set(credentials);
 
         System.out.println("====== added credential ============");
@@ -109,21 +122,55 @@ public class KeycloakAdapterConfigService implements Service<KeycloakAdapterConf
         System.out.println(this.deployments.get(deploymentNameFromOp(operation)));
     }
 
+    public void removeCredential(ModelNode operation) {
+        ModelNode credentials = credentialsFromOp(operation);
+        if (!credentials.isDefined()) {
+            throw new RuntimeException("Can not remove credential.  No credential defined for deployment in op " + operation.toString());
+        }
+
+        String credentialName = credentialNameFromOp(operation);
+        credentials.remove(credentialName);
+
+        System.out.println("====== removed credential ============");
+        System.out.println("deployment =");
+        System.out.println(this.deployments.get(deploymentNameFromOp(operation)));
+    }
+
+    public void updateCredential(ModelNode operation, String attrName, ModelNode resolvedValue) {
+        ModelNode credentials = credentialsFromOp(operation);
+        if (!credentials.isDefined()) {
+            throw new RuntimeException("Can not update credential.  No credential defined for deployment in op " + operation.toString());
+        }
+
+        String credentialName = credentialNameFromOp(operation);
+        credentials.get(credentialName).set(resolvedValue);
+
+        System.out.println("===== Updated Credential =======");
+        System.out.println("deployment=");
+        System.out.println(this.deployments.get(deploymentNameFromOp(operation)).toString());
+        System.out.println("================================");
+    }
+
+    private ModelNode credentialsFromOp(ModelNode operation) {
+        ModelNode deployment = this.deployments.get(deploymentNameFromOp(operation));
+        return deployment.get(CREDENTIALS_JSON_NAME);
+    }
+
     private String realmNameFromOp(ModelNode operation) {
-        return valueFromOp(RealmDefinition.TAG_NAME, operation);
+        return valueFromOpAddress(RealmDefinition.TAG_NAME, operation);
     }
 
     private String deploymentNameFromOp(ModelNode operation) {
-        return valueFromOp(SecureDeploymentDefinition.TAG_NAME, operation);
+        return valueFromOpAddress(SecureDeploymentDefinition.TAG_NAME, operation);
     }
 
     private String credentialNameFromOp(ModelNode operation) {
-        return valueFromOp(CredentialDefinition.TAG_NAME, operation);
+        return valueFromOpAddress(CredentialDefinition.TAG_NAME, operation);
     }
 
-    private String valueFromOp(String tagName, ModelNode operation) {
-        String deploymentName = getValueOfAddrElement(operation.get(ADDRESS), tagName);
-        if (deploymentName == null) throw new RuntimeException("Can't find '" + tagName + "' in address " + operation.toString());
+    private String valueFromOpAddress(String addrElement, ModelNode operation) {
+        String deploymentName = getValueOfAddrElement(operation.get(ADDRESS), addrElement);
+        if (deploymentName == null) throw new RuntimeException("Can't find '" + addrElement + "' in address " + operation.toString());
         return deploymentName;
     }
 

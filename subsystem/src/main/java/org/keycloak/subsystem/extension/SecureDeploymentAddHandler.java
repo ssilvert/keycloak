@@ -28,10 +28,9 @@ import org.jboss.dmr.ModelNode;
 import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.ADD;
 import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.OP;
 import org.jboss.msc.service.ServiceController;
-import org.jboss.msc.service.ServiceController.Mode;
-import org.jboss.msc.service.ServiceName;
 
 /**
+ * Add a deployment to a realm.
  *
  * @author Stan Silvert ssilvert@redhat.com (C) 2013 Red Hat Inc.
  */

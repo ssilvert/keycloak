@@ -1,5 +1,5 @@
 /*
- * Copyright 2013 Red Hat Inc. and/or its affiliates and other contributors
+ * Copyright 2014 Red Hat Inc. and/or its affiliates and other contributors
  * as indicated by the @author tags. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
@@ -17,42 +17,40 @@
 
 package org.keycloak.subsystem.extension;
 
-import java.util.List;
 import org.jboss.as.controller.AbstractWriteAttributeHandler;
-import org.jboss.as.controller.AttributeDefinition;
 import org.jboss.as.controller.OperationContext;
 import org.jboss.as.controller.OperationFailedException;
-import org.jboss.as.controller.SimpleAttributeDefinition;
 import org.jboss.dmr.ModelNode;
 
 /**
- * Update an attribute on a secure-deployment.
+ * Update a credential value.
  *
- * @author Stan Silvert ssilvert@redhat.com (C) 2013 Red Hat Inc.
+ * @author Stan Silvert ssilvert@redhat.com (C) 2014 Red Hat Inc.
  */
-public class SecureDeploymentWriteAttributeHandler extends AbstractWriteAttributeHandler<KeycloakAdapterConfigService> {
-
-    public SecureDeploymentWriteAttributeHandler(List<SimpleAttributeDefinition> definitions) {
-        this(definitions.toArray(new AttributeDefinition[definitions.size()]));
-    }
-
-    public SecureDeploymentWriteAttributeHandler(AttributeDefinition... definitions) {
-        super(definitions);
-    }
+public class CredentialReadWriteAttributeHandler extends AbstractWriteAttributeHandler<KeycloakAdapterConfigService> {
 
     @Override
     protected boolean applyUpdateToRuntime(OperationContext context, ModelNode operation, String attributeName,
-                                           ModelNode resolvedValue, ModelNode currentValue, HandbackHolder<KeycloakAdapterConfigService> hh) throws OperationFailedException {
+                                           ModelNode resolvedValue, ModelNode currentValue, AbstractWriteAttributeHandler.HandbackHolder<KeycloakAdapterConfigService> hh) throws OperationFailedException {
+
+        System.out.println("*****************************");
+        System.out.println("CredentialReadWriteAttributeHandler.applyUpdateToRuntime");
+        System.out.println("attributeName=" + attributeName);
+        System.out.println("resolvedValue=" + resolvedValue.toString());
+        System.out.println("*****************************");
+
         KeycloakAdapterConfigService ckService = KeycloakAdapterConfigService.find(context);
+        ckService.updateCredential(operation, attributeName, resolvedValue);
+
         hh.setHandback(ckService);
-        ckService.updateSecureDeployment(operation, attributeName, resolvedValue);
+
         return false;
     }
 
     @Override
     protected void revertUpdateToRuntime(OperationContext context, ModelNode operation, String attributeName,
                                          ModelNode valueToRestore, ModelNode valueToRevert, KeycloakAdapterConfigService ckService) throws OperationFailedException {
-        ckService.updateSecureDeployment(operation, attributeName, valueToRestore);
+        ckService.updateCredential(operation, attributeName, valueToRestore);
     }
 
 }

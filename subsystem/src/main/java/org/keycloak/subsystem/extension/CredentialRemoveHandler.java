@@ -20,11 +20,10 @@ package org.keycloak.subsystem.extension;
 import org.jboss.as.controller.AbstractRemoveStepHandler;
 import org.jboss.as.controller.OperationContext;
 import org.jboss.as.controller.OperationFailedException;
-import org.jboss.as.controller.PathAddress;
-import org.jboss.as.controller.descriptions.ModelDescriptionConstants;
 import org.jboss.dmr.ModelNode;
 
 /**
+ * Remove a credential from a deployment.
  *
  * @author Stan Silvert ssilvert@redhat.com (C) 2014 Red Hat Inc.
  */
@@ -36,11 +35,18 @@ public class CredentialRemoveHandler extends AbstractRemoveStepHandler {
 
     @Override
     protected void performRuntime(OperationContext context, ModelNode operation, ModelNode model) throws OperationFailedException {
-      /*  KeycloakAdapterConfigService service = KeycloakAdapterConfigService.find(context, operation);
+        System.out.println("*******************************************");
+        System.out.println("* CredentialRemoveHandler.performRuntime  *");
+        System.out.println("*******************************************");
+        System.out.println("* operation =                             *");
+        System.out.println(operation.toString());
+        System.out.println("*******************************************");
+        System.out.println("* model=                                  *");
+        System.out.println(model.toString());
+        System.out.println("*******************************************");
 
-        String credentialName = PathAddress.pathAddress(operation.get(ModelDescriptionConstants.ADDRESS)).getLastElement().getValue();
-
-        service.removeCredential(credentialName); */
+        KeycloakAdapterConfigService ckService = KeycloakAdapterConfigService.find(context);
+        ckService.removeCredential(operation);
     }
 
 }

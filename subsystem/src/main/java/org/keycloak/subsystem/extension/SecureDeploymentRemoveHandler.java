@@ -22,9 +22,8 @@ import org.jboss.as.controller.OperationContext;
 import org.jboss.as.controller.OperationFailedException;
 import org.jboss.dmr.ModelNode;
 
-import org.jboss.msc.service.ServiceName;
-
 /**
+ * Remove a secure-deployment from a realm.
  *
  * @author Stan Silvert ssilvert@redhat.com (C) 2013 Red Hat Inc.
  */
@@ -36,13 +35,7 @@ public class SecureDeploymentRemoveHandler extends AbstractRemoveStepHandler {
 
     @Override
     protected void performRuntime(OperationContext context, ModelNode operation, ModelNode model) throws OperationFailedException {
-      /*  System.out.println("*********** SecureDeploymentRemoveHandler.performRuntime ***********");
-        System.out.println("operation=" + operation.toString());
-        System.out.println("model = " + model.toString());
-        System.out.println("***************************************");  */
-
-     /*   String secureDeploymentName = KeycloakAdapterConfigService.getDeploymentNameFromOperation(operation);
-        ServiceName serviceName = KeycloakAdapterConfigService.createServiceName(secureDeploymentName);
-        context.removeService(serviceName); */
+        KeycloakAdapterConfigService ckService = KeycloakAdapterConfigService.find(context);
+        ckService.removeSecureDeployment(operation);
     }
 }

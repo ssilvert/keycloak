@@ -23,9 +23,9 @@ import org.jboss.as.controller.AttributeDefinition;
 import org.jboss.as.controller.OperationContext;
 import org.jboss.as.controller.OperationFailedException;
 import org.jboss.dmr.ModelNode;
-import org.jboss.msc.service.ServiceName;
 
 /**
+ * Update an attribute on a realm.
  *
  * @author Stan Silvert ssilvert@redhat.com (C) 2013 Red Hat Inc.
  */
@@ -42,8 +42,6 @@ public class RealmWriteAttributeHandler extends AbstractWriteAttributeHandler<Ke
     @Override
     protected boolean applyUpdateToRuntime(OperationContext context, ModelNode operation, String attributeName,
                                            ModelNode resolvedValue, ModelNode currentValue, HandbackHolder<KeycloakAdapterConfigService> hh) throws OperationFailedException {
-
-
         System.out.println("*****************************");
         System.out.println("RealmWriteAttributeHandler.applyUpdateToRuntime");
         System.out.println("attributeName=" + attributeName);

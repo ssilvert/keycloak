@@ -25,9 +25,7 @@ import org.jboss.logging.annotations.MessageBundle;
 import org.jboss.logging.Messages;
 
 /**
- * Date: 05.11.2011
- *
- * 12650 - 12699
+ * This interface to be fleshed out later when error messages are fully externalized.
  *
  * @author Stan Silvert ssilvert@redhat.com (C) 2012 Red Hat Inc.
  */

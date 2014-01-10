@@ -1,5 +1,5 @@
 /*
- * Copyright 2013 Red Hat Inc. and/or its affiliates and other contributors
+ * Copyright 2014 Red Hat Inc. and/or its affiliates and other contributors
  * as indicated by the @author tags. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
@@ -25,6 +25,7 @@ import org.jboss.as.controller.operations.common.GenericSubsystemDescribeHandler
 import org.jboss.as.controller.registry.ManagementResourceRegistration;
 
 /**
+ * Definition of subsystem=keycloak.
  *
  * @author Stan Silvert ssilvert@redhat.com (C) 2013 Red Hat Inc.
  */
@@ -32,7 +33,8 @@ public class KeycloakSubsystemDefinition extends SimpleResourceDefinition {
     protected KeycloakSubsystemDefinition() {
         super(PathElement.pathElement(ModelDescriptionConstants.SUBSYSTEM, KeycloakExtension.SUBSYSTEM_NAME),
                 KeycloakExtension.getResourceDescriptionResolver("subsystem"),
-                KeycloakSubsystemAdd.INSTANCE,ReloadRequiredRemoveStepHandler.INSTANCE
+                KeycloakSubsystemAdd.INSTANCE,
+                ReloadRequiredRemoveStepHandler.INSTANCE
         );
     }
 

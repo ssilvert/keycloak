@@ -26,7 +26,10 @@ import java.util.Map;
  * @version $Revision: 1 $
  */
 public class KeycloakServletExtension implements ServletExtension {
-    public static String AUTH_DATA_PARAM_NAME = "org.keycloak.json.authData";
+    // This param name is defined again in Keycloak Subsystem class
+    // org.keycloak.subsystem.extensionKeycloakAdapterConfigDeploymentProcessor.  We have this value in
+    // two places to avoid dependency between Keycloak Subsystem and Keyclaok Undertow Integration.
+    public static final String AUTH_DATA_PARAM_NAME = "org.keycloak.json.adapterConfig";
 
     protected Logger log = Logger.getLogger(KeycloakServletExtension.class);
 

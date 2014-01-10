@@ -30,10 +30,9 @@ import org.jboss.as.controller.operations.validation.StringLengthValidator;
 import org.jboss.as.controller.registry.ManagementResourceRegistration;
 import org.jboss.dmr.ModelNode;
 import org.jboss.dmr.ModelType;
-import static org.keycloak.subsystem.extension.RealmDefinition.ALL_ATTRIBUTES;
 
 /**
- * Defines attributes and operations for the Keycloak Subsystem
+ * Defines attributes and operations for a secure-deployment.
  *
  * @author Stan Silvert ssilvert@redhat.com (C) 2013 Red Hat Inc.
  */
