@@ -27,6 +27,5 @@
         <module>js</module>
         <module>installed</module>
         <module>admin-client</module>
-        <module>keycloak-feature-pack</module>
     </modules>
 </project>
