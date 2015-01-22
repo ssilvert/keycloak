@@ -493,6 +493,11 @@
                 <version>${wildfly.version}</version>
             </dependency>
             <dependency>
+                <groupId>org.wildfly</groupId>
+                <artifactId>wildfly-web</artifactId>
+                <version>${wildfly.version}</version>
+            </dependency>
+            <dependency>
                 <groupId>org.jboss.logging</groupId>
                 <artifactId>jboss-logging-processor</artifactId>
                 <version>${jboss-logging-tools.version}</version>

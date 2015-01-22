@@ -117,14 +117,19 @@
         </dependency>
         
         <dependency>
-            <groupId>org.jboss.as</groupId>
-            <artifactId>jboss-as-web</artifactId>
-            <version>7.1.1.Final</version>
+            <groupId>org.wildfly</groupId>
+            <artifactId>wildfly-web</artifactId>
         </dependency>
         
         <dependency>
             <groupId>org.keycloak</groupId>
             <artifactId>keycloak-as7-adapter</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        
+        <dependency>
+            <groupId>org.keycloak</groupId>
+            <artifactId>keycloak-admin-client</artifactId>
             <version>${project.version}</version>
         </dependency>
     </dependencies>

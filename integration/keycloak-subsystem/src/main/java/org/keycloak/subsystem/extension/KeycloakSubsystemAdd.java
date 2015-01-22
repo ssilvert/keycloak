@@ -53,6 +53,7 @@ class KeycloakSubsystemAdd extends AbstractBoottimeAddStepHandler {
         context.addStep(new AbstractDeploymentChainStep() {
             @Override
             protected void execute(DeploymentProcessorTarget processorTarget) {
+                processorTarget.addDeploymentProcessor(KeycloakExtension.SUBSYSTEM_NAME, Phase.REGISTER, 0, new SeamlessSecurityDeploymentProcessor());
                 processorTarget.addDeploymentProcessor(KeycloakExtension.SUBSYSTEM_NAME, Phase.DEPENDENCIES, 0, chooseDependencyProcessor());
                 processorTarget.addDeploymentProcessor(KeycloakExtension.SUBSYSTEM_NAME,
                         Phase.POST_MODULE, // PHASE

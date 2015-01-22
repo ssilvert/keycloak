@@ -30,9 +30,12 @@ import org.jboss.msc.service.StartException;
 import org.jboss.msc.service.StopContext;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.ADDRESS;
+import org.jboss.dmr.ModelType;
 
 /**
  * This service keeps track of the entire Keycloak management model so as to provide
@@ -42,7 +45,7 @@ import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.ADD
  */
 public final class KeycloakAdapterConfigService implements Service<KeycloakAdapterConfigService> {
     protected Logger log = Logger.getLogger(KeycloakAdapterConfigService.class);
-    private static final String CREDENTIALS_JSON_NAME = "credentials";
+    public static final String CREDENTIALS_JSON_NAME = "credentials";
 
     // Right now this is used as a service, but I'm not sure it really needs to be implemented that way.
     // It's also a singleton serving the entire subsystem, but the INSTANCE variable is currently only
@@ -50,13 +53,18 @@ public final class KeycloakAdapterConfigService implements Service<KeycloakAdapt
     public static final ServiceName SERVICE_NAME = ServiceName.JBOSS.append("KeycloakAdapterConfigService");
     public static final KeycloakAdapterConfigService INSTANCE = new KeycloakAdapterConfigService();
 
-    private Map<String, ModelNode> realms = new HashMap<String, ModelNode>();
+    private final Map<String, ModelNode> realms = new HashMap<String, ModelNode>();
 
     // keycloak-secured deployments
-    private Map<String, ModelNode> secureDeployments = new HashMap<String, ModelNode>();
+    private final Map<String, ModelNode> secureDeployments = new HashMap<String, ModelNode>();
+
+    private final Set<String> seamlessDeployments = new HashSet<String>();
+
+    // deployment name of template
+    private String secureDeploymentTemplate = null;
 
     // key=auth-server deployment name; value=web-context
-    private Map<String, String> webContexts = new HashMap<String, String>();
+    private final Map<String, String> webContexts = new HashMap<String, String>();
 
     private KeycloakAdapterConfigService() {
 
@@ -107,17 +115,68 @@ public final class KeycloakAdapterConfigService implements Service<KeycloakAdapt
     }
 
     public void addSecureDeployment(ModelNode operation, ModelNode model) {
+        String deploymentName = deploymentNameFromOp(operation);
+        addSecureDeployment(deploymentName, model, false);
+    }
+
+    public void addSecureDeployment(String deploymentName, ModelNode model, boolean isSeamlessDeployment) {
         ModelNode deployment = model.clone();
-        this.secureDeployments.put(deploymentNameFromOp(operation), deployment);
+        boolean isTemplate = isTemplate(deployment);
+        deployment.remove(SecureDeploymentDefinition.IS_TEMPLATE.getName()); // is-template not known to adapter
+        if (isTemplate) System.out.println("deployment template=" + deployment.toString());
+        System.out.println(">> added Keycloak secure deployment: " + deploymentName);
+        System.out.println(">> with deployment = " + deployment.toString());
+        this.secureDeployments.put(deploymentName, deployment);
+        if (isTemplate) setAsTemplate(deploymentName);
+        if (isSeamlessDeployment) this.seamlessDeployments.add(deploymentName);
+    }
+
+    public boolean isSeamlessDeployment(String deploymentName) {
+        return this.seamlessDeployments.contains(deploymentName);
+    }
+
+    private boolean isTemplate(ModelNode deployment) {
+        String templateKey = SecureDeploymentDefinition.IS_TEMPLATE.getName();
+        if (!deployment.get(templateKey).isDefined()) return false;
+        return deployment.get(templateKey).asBoolean();
     }
 
     public void updateSecureDeployment(ModelNode operation, String attrName, ModelNode resolvedValue) {
-        ModelNode deployment = this.secureDeployments.get(deploymentNameFromOp(operation));
+        String deploymentName = deploymentNameFromOp(operation);
+
+        if (attrName.equals(SecureDeploymentDefinition.IS_TEMPLATE.getName())) {
+            boolean isTemplate = resolvedValue.asBoolean();
+            if (!isTemplate) {
+                if (deploymentName.equals(this.secureDeploymentTemplate)) this.secureDeploymentTemplate = null;
+            } else {
+                setAsTemplate(deploymentName);
+            }
+            return; // is-template should not be stored in the config service
+        }
+
+        ModelNode deployment = this.secureDeployments.get(deploymentName);
         deployment.get(attrName).set(resolvedValue);
     }
 
+    private void setAsTemplate(String deploymentName) {
+        if (deploymentName.equals(this.secureDeploymentTemplate)) return;
+
+        // TODO: localize message
+        if (this.secureDeploymentTemplate != null) {
+            String msg = "Can not set " + deploymentName + " as a template.  Only one secure deployment template is allowed.";
+            throw new IllegalArgumentException(msg);
+        }
+
+        this.secureDeploymentTemplate = deploymentName;
+    }
+
     public void removeSecureDeployment(ModelNode operation) {
-        this.secureDeployments.remove(deploymentNameFromOp(operation));
+        String deploymentName = deploymentNameFromOp(operation);
+        this.secureDeployments.remove(deploymentName);
+        if (deploymentName.equals(this.secureDeploymentTemplate)) {
+            this.secureDeploymentTemplate = null;
+        }
+        this.seamlessDeployments.remove(deploymentName); // in case it is a seamless deployment
     }
 
     public void addCredential(ModelNode operation, ModelNode model) {
@@ -212,6 +271,18 @@ public final class KeycloakAdapterConfigService implements Service<KeycloakAdapt
                 json.get(name).set(value);
             }
         }
+    }
+
+    /**
+     * Return a clone of the secure deployment template.
+     * @return The template, or <code>null</code> if no template exists.
+     */
+    public ModelNode getSecureDeploymentTemplate() {
+        if (this.secureDeploymentTemplate == null) return null;
+
+        ModelNode template = this.secureDeployments.get(this.secureDeploymentTemplate).clone();
+        template.get(SecureDeploymentDefinition.RESOURCE.getName()).set(ModelType.UNDEFINED);
+        return template;
     }
 
     public boolean isSecureDeployment(String deploymentName) {

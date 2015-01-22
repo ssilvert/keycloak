@@ -30,6 +30,10 @@ import org.keycloak.subsystem.logging.KeycloakLogger;
 
 import java.util.ArrayList;
 import java.util.List;
+import org.jboss.metadata.web.spec.AuthConstraintMetaData;
+import org.jboss.metadata.web.spec.SecurityConstraintMetaData;
+import org.jboss.metadata.web.spec.WebResourceCollectionMetaData;
+import org.jboss.metadata.web.spec.WebResourceCollectionsMetaData;
 
 /**
  * Pass authentication data (keycloak.json) as a servlet context param so it can be read by the KeycloakServletExtension.
@@ -101,7 +105,59 @@ public class KeycloakAdapterConfigDeploymentProcessor implements DeploymentUnitP
         }
         loginConfig.setAuthMethod("KEYCLOAK");
         loginConfig.setRealmName(service.getRealmName(deploymentName));
+        
+        System.out.println("&1 " + deploymentName);
+        if (needsSecurityConstraints(deploymentName, service, webMetaData)) {
+            System.out.println("&2 " + deploymentName);
+            List<SecurityConstraintMetaData> securityConstraints = new ArrayList<SecurityConstraintMetaData>();
+            securityConstraints.add(makeDefaultSecurityConstraints());
+            webMetaData.setSecurityConstraints(securityConstraints);
+        }
+
         KeycloakLogger.ROOT_LOGGER.deploymentSecured(deploymentName);
+    }
+
+    private boolean needsSecurityConstraints(String deploymentName, KeycloakAdapterConfigService service, JBossWebMetaData webMetaData) {
+        System.out.println("&3 " + deploymentName);
+        if (!service.isSeamlessDeployment(deploymentName)) return false;
+        System.out.println("&4 " + deploymentName);
+        List<SecurityConstraintMetaData> securityConstraints = webMetaData.getSecurityConstraints();
+        if (securityConstraints == null) return true;
+        System.out.println("&5 " + deploymentName);
+        if (securityConstraints.isEmpty()) return true;
+        System.out.println("&6 " + deploymentName);
+        System.out.println(deploymentName + " securityConstraints.get(0)=" + securityConstraints.get(0));
+        return false;
+    }
+
+    /* Create this constraint
+    <security-constraint>
+        <web-resource-collection>
+            <url-pattern>/*</url-pattern>
+        </web-resource-collection>
+        <auth-constraint>
+            <role-name>user</role-name>
+        </auth-constraint>
+    </security-constraint>
+    */
+    private SecurityConstraintMetaData makeDefaultSecurityConstraints() {
+        SecurityConstraintMetaData secConstraint = new SecurityConstraintMetaData();
+
+        List<String> urlPatterns = new ArrayList<String>();
+        urlPatterns.add("/*");
+        WebResourceCollectionMetaData defaultWebRscCollection = new WebResourceCollectionMetaData();
+        defaultWebRscCollection.setUrlPatterns(urlPatterns);
+        WebResourceCollectionsMetaData webRscCollections = new WebResourceCollectionsMetaData();
+        webRscCollections.add(defaultWebRscCollection);
+        secConstraint.setResourceCollections(webRscCollections);
+
+        List<String> roleNames = new ArrayList<String>();
+        roleNames.add("user");
+        AuthConstraintMetaData defaultAuthConstraint = new AuthConstraintMetaData();
+        defaultAuthConstraint.setRoleNames(roleNames);
+        secConstraint.setAuthConstraint(defaultAuthConstraint);
+
+        return secConstraint;
     }
 
     private void addJSONData(String json, WarMetaData warMetaData) {

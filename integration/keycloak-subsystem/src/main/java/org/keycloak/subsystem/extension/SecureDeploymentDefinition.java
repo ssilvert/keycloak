@@ -41,6 +41,12 @@ public class SecureDeploymentDefinition extends SimpleResourceDefinition {
 
     public static final String TAG_NAME = "secure-deployment";
 
+    protected static final SimpleAttributeDefinition IS_TEMPLATE =
+            new SimpleAttributeDefinitionBuilder("is-template", ModelType.BOOLEAN, true)
+                    .setXmlName("is-template")
+                    .setAllowExpression(true)
+                    .setDefaultValue(new ModelNode(false))
+                    .build();
     protected static final SimpleAttributeDefinition REALM =
             new SimpleAttributeDefinitionBuilder("realm", ModelType.STRING, true)
                     .setXmlName("realm")
@@ -55,10 +61,10 @@ public class SecureDeploymentDefinition extends SimpleResourceDefinition {
                     .build();
     protected static final SimpleAttributeDefinition USE_RESOURCE_ROLE_MAPPINGS =
             new SimpleAttributeDefinitionBuilder("use-resource-role-mappings", ModelType.BOOLEAN, true)
-            .setXmlName("use-resource-role-mappings")
-            .setAllowExpression(true)
-            .setDefaultValue(new ModelNode(false))
-            .build();
+                    .setXmlName("use-resource-role-mappings")
+                    .setAllowExpression(true)
+                    .setDefaultValue(new ModelNode(false))
+                    .build();
     protected static final SimpleAttributeDefinition BEARER_ONLY =
             new SimpleAttributeDefinitionBuilder("bearer-only", ModelType.BOOLEAN, true)
                     .setXmlName("bearer-only")
@@ -80,6 +86,7 @@ public class SecureDeploymentDefinition extends SimpleResourceDefinition {
 
     protected static final List<SimpleAttributeDefinition> DEPLOYMENT_ONLY_ATTRIBUTES = new ArrayList<SimpleAttributeDefinition>();
     static {
+        DEPLOYMENT_ONLY_ATTRIBUTES.add(IS_TEMPLATE);
         DEPLOYMENT_ONLY_ATTRIBUTES.add(REALM);
         DEPLOYMENT_ONLY_ATTRIBUTES.add(RESOURCE);
         DEPLOYMENT_ONLY_ATTRIBUTES.add(USE_RESOURCE_ROLE_MAPPINGS);

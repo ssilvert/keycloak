@@ -4,7 +4,10 @@
       xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-app_3_0.xsd"
       version="3.0">
 
-	<module-name>auth</module-name>
+    <!-- Display name used by the Keycloak subsystem to identify it at deploy time -->
+    <display-name>Keycloak Server</display-name>
+    
+    <module-name>auth</module-name>
 
     <servlet>
         <servlet-name>Keycloak REST Interface</servlet-name>
