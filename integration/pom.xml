@@ -26,6 +26,7 @@
         <module>wildfly-extensions</module>
         <module>keycloak-server-subsystem</module>
         <module>keycloak-adapter-subsystem</module>
+        <module>elytron</module>
         <module>keycloak-as7-subsystem</module>
         <module>js</module>
         <module>installed</module>
