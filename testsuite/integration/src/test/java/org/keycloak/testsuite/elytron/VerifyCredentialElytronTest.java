@@ -16,36 +16,16 @@
  */
 package org.keycloak.testsuite.elytron;
 
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.nio.charset.Charset;
-import java.security.InvalidKeyException;
-import java.security.NoSuchAlgorithmException;
-import java.security.Provider;
-import java.security.Security;
-import java.security.spec.InvalidKeySpecException;
-import org.junit.AfterClass;
 import org.junit.Assert;
 import static org.junit.Assert.assertEquals;
-import org.junit.BeforeClass;
+import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Test;
-import org.keycloak.elytron.KeycloakSecurityRealm;
-import org.keycloak.elytron.KeycloakSecurityRealmBuilder;
-import org.keycloak.models.OAuthClientModel;
-import org.keycloak.models.RealmModel;
-import org.keycloak.services.managers.RealmManager;
 import org.keycloak.testsuite.rule.KeycloakRule;
 import org.wildfly.security.auth.provider.CredentialSupport;
 import org.wildfly.security.auth.provider.RealmIdentity;
 import org.wildfly.security.auth.provider.RealmUnavailableException;
-import org.wildfly.security.password.Password;
-import org.wildfly.security.password.PasswordFactory;
-import org.wildfly.security.password.impl.WildFlyElytronPasswordProvider;
 import org.wildfly.security.password.interfaces.ClearPassword;
-import static org.wildfly.security.password.interfaces.ClearPassword.ALGORITHM_CLEAR;
-import org.wildfly.security.password.spec.ClearPasswordSpec;
-import org.wildfly.security.password.spec.PasswordSpec;
 
 /**
  *
@@ -53,46 +33,44 @@ import org.wildfly.security.password.spec.PasswordSpec;
  */
 public class VerifyCredentialElytronTest extends AbstractElytronTest {
 
+    private static final Class CREDENTIAL_TYPE = ClearPassword.class;
+
     @ClassRule
-    public static KeycloakRule kc = new KeycloakRule(new KeycloakRule.KeycloakSetup() {
-        @Override                                                                         // "test"
-        public void config(RealmManager manager, RealmModel adminstrationRealm, RealmModel testRealm) {
-            OAuthClientModel oauthClient = testRealm.addOAuthClient("elytron-client");
-            oauthClient.setEnabled(true);
-            oauthClient.setPublicClient(false);
-            oauthClient.setSecret("elytron");
-            oauthClient.setDirectGrantsOnly(true);
-        }
-    });
+    public static KeycloakRule kc = new SetupElytronClientRule();
 
-    static final Charset UTF_8 = Charset.forName("UTF-8");
+    private RealmIdentity realmIdentity;
+
+    @Before
+    public void createRealmIdentity() throws RealmUnavailableException {
+        realmIdentity = keycloakRealm.createRealmIdentity("test-user@localhost");
+    }
 
     @Test
-    public void testVerifyCredential() throws Exception {
-        RealmIdentity realmIdentity = keycloakRealm.createRealmIdentity("test-user@localhost");
-
-        Class credentialType = ClearPassword.class;
-        CredentialSupport support = keycloakRealm.getCredentialSupport(credentialType);
+    public void testRealmLevelSupport() throws RealmUnavailableException {
+        CredentialSupport support = keycloakRealm.getCredentialSupport(CREDENTIAL_TYPE);
         assertEquals("Realm level support", CredentialSupport.VERIFIABLE_ONLY, support);
-
-        verifyPasswordSupport(realmIdentity, credentialType);
-        verifyPassword(realmIdentity, credentialType, "password");
     }
 
     @Test
-    public void testVerifyInvalidCredential() throws Exception {
-        //TODO
-    }
-
-    private void verifyPasswordSupport(RealmIdentity identity, Class<?> credentialType) throws RealmUnavailableException {
-        CredentialSupport credentialSupport = identity.getCredentialSupport(credentialType);
+    public void testIdentityLevelSupport() throws RealmUnavailableException {
+        CredentialSupport credentialSupport = realmIdentity.getCredentialSupport(CREDENTIAL_TYPE);
         assertEquals("Identity level support", CredentialSupport.VERIFIABLE_ONLY, credentialSupport);
     }
 
-    private void verifyPassword(RealmIdentity identity, Class<?> credentialType, String password)throws RealmUnavailableException {
+    @Test
+    public void testGetCredential() throws RealmUnavailableException {
         // Always null for now.  Might change for local keycloak.
-        Assert.assertNull(identity.getCredential(credentialType));
-        Assert.assertTrue(identity.verifyCredential(generatePassword(password)));
+        Assert.assertNull(realmIdentity.getCredential(CREDENTIAL_TYPE));
+    }
+
+    @Test
+    public void testValidCredential() throws RealmUnavailableException {
+        Assert.assertTrue(realmIdentity.verifyCredential(generatePassword("password")));
+    }
+
+    @Test
+    public void testInvalidCredential() throws Exception {
+        Assert.assertFalse(realmIdentity.verifyCredential(generatePassword("passwordd")));
     }
 
 }

@@ -19,7 +19,7 @@ package org.keycloak.testsuite.elytron;
 
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.security.NoSuchAlgorithmException;
+import java.nio.charset.Charset;
 import java.security.Provider;
 import java.security.Security;
 import org.junit.AfterClass;
@@ -27,7 +27,6 @@ import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.keycloak.elytron.KeycloakSecurityRealm;
 import org.keycloak.elytron.KeycloakSecurityRealmBuilder;
-import static org.keycloak.testsuite.elytron.VerifyCredentialElytronTest.UTF_8;
 import org.wildfly.security.auth.provider.CredentialSupport;
 import org.wildfly.security.password.Password;
 import org.wildfly.security.password.PasswordFactory;
@@ -44,6 +43,7 @@ import org.wildfly.security.password.spec.PasswordSpec;
 public abstract class AbstractElytronTest {
 
     protected static KeycloakSecurityRealm keycloakRealm;
+    private static final Charset UTF_8 = Charset.forName("UTF-8");
     private static final Provider provider = new WildFlyElytronPasswordProvider();
 
     @BeforeClass

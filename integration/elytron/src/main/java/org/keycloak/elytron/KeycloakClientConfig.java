@@ -34,7 +34,7 @@ public class KeycloakClientConfig {
         return realmName;
     }
 
-    public void setRealmName(String realmName) {
+    void setRealmName(String realmName) {
         this.realmName = realmName;
     }
 
@@ -42,7 +42,7 @@ public class KeycloakClientConfig {
         return authServerUri;
     }
 
-    public void setAuthServerUri(URI authServerUri) {
+    void setAuthServerUri(URI authServerUri) {
         this.authServerUri = authServerUri;
     }
 
@@ -50,7 +50,7 @@ public class KeycloakClientConfig {
         return clientName;
     }
 
-    public void setClientName(String clientName) {
+    void setClientName(String clientName) {
         this.clientName = clientName;
     }
 
@@ -58,7 +58,7 @@ public class KeycloakClientConfig {
         return clientSecret;
     }
 
-    public void setClientSecret(String clientSecret) {
+    void setClientSecret(String clientSecret) {
         this.clientSecret = clientSecret;
     }
 

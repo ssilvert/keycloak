@@ -23,7 +23,6 @@ import org.wildfly.security.auth.provider.CredentialSupport;
 import org.wildfly.security.auth.provider.RealmIdentity;
 import org.wildfly.security.auth.provider.RealmUnavailableException;
 import org.wildfly.security.auth.provider.SecurityRealm;
-import org.wildfly.security.password.Password;
 
 /**
  *
@@ -37,6 +36,10 @@ public class KeycloakSecurityRealm implements SecurityRealm {
     KeycloakSecurityRealm(KeycloakClientConfig config, Map<Class<?>, CredentialSupport> credentialSupportMap) {
         this.config = config;
         this.credentialSupportMap = credentialSupportMap;
+    }
+
+    public KeycloakClientConfig getConfig() {
+        return this.config;
     }
 
     @Override

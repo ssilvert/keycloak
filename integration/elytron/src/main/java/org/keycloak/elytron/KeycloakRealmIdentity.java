@@ -17,14 +17,12 @@
 package org.keycloak.elytron;
 
 import java.security.Principal;
-import java.util.HashMap;
 import java.util.Map;
 import org.keycloak.representations.AccessTokenResponse;
 import org.wildfly.security.auth.provider.AuthenticatedRealmIdentity;
 import org.wildfly.security.auth.provider.CredentialSupport;
 import org.wildfly.security.auth.provider.RealmIdentity;
 import org.wildfly.security.auth.provider.RealmUnavailableException;
-import org.wildfly.security.password.Password;
 import org.wildfly.security.password.interfaces.ClearPassword;
 
 /**
@@ -71,7 +69,9 @@ public class KeycloakRealmIdentity implements RealmIdentity {
         AccessTokenResponse response = DirectGrantLogin.login(this.config,
                 principal.getName(),
                 password.getPassword());
-        
+
+        if (response == null) return false;
+
         return true;
     }
 

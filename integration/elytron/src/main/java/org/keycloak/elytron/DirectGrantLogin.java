@@ -28,8 +28,7 @@ import org.keycloak.util.BasicAuthHelper;
 import org.wildfly.security.auth.provider.RealmUnavailableException;
 
 /**
- * @author <a href="mailto:bill@burkecentral.com">Bill Burke</a>
- * @version $Revision: 1 $
+ * @author Stan Silvert ssilvert@redhat.com (C) 2015 Red Hat Inc.
  */
 public class DirectGrantLogin {
 
@@ -37,7 +36,7 @@ public class DirectGrantLogin {
     }
 
     public static class Failure extends Exception {
-        private int status;
+        private final int status;
 
         public Failure(int status) {
             this.status = status;
@@ -48,7 +47,7 @@ public class DirectGrantLogin {
         }
     }
 
-    public static String getContent(HttpEntity entity) throws IOException {
+    private static String getContent(HttpEntity entity) throws IOException {
         if (entity == null) return null;
         InputStream is = entity.getContent();
         try {
@@ -70,11 +69,19 @@ public class DirectGrantLogin {
 
     }
 
+    /**
+     * Login to Keycloak using direct access grant.
+     *
+     * @param config Configuration to use for the REST client.
+     * @param username Username
+     * @param password Password
+     * @return An access token if login is successful.  <code>null</code> If login is not successful.
+     * @throws RealmUnavailableException If any error occurs.
+     */
     public static AccessTokenResponse login(KeycloakClientConfig config, String username, char[] password) throws RealmUnavailableException {
 
         HttpClient client = new HttpClientBuilder()
                 .disableTrustManager().build();
-
 
         try {
             HttpPost post = new HttpPost(KeycloakUriBuilder.fromUri(config.getAuthServerUri())
@@ -92,12 +99,17 @@ public class DirectGrantLogin {
             HttpResponse response = client.execute(post);
             int status = response.getStatusLine().getStatusCode();
             HttpEntity entity = response.getEntity();
+
+            if (status == 401) {
+                return null;  // unauthorized
+            }
+
             if (status != 200) {
                 String json = getContent(entity);
-                throw new IOException("Bad status: " + status + " response: " + json);
+                throw new RealmUnavailableException("Bad status: " + status + " response: " + json);
             }
             if (entity == null) {
-                throw new IOException("No Entity");
+                throw new RealmUnavailableException("No Entity in login response");
             }
             String json = getContent(entity);
             return JsonSerialization.readValue(json, AccessTokenResponse.class);
@@ -108,22 +120,24 @@ public class DirectGrantLogin {
         }
     }
 
-   /* not implemented yet
-    public static void logout(String baseUrl, AccessTokenResponse res) throws IOException {
-
+    public static void logout(KeycloakClientConfig config, AccessTokenResponse res) throws RealmUnavailableException {
         HttpClient client = new HttpClientBuilder()
                 .disableTrustManager().build();
-
-
         try {
-            HttpPost post = new HttpPost(KeycloakUriBuilder.fromUri(baseUrl + "/auth")
+            URI logoutUri = KeycloakUriBuilder.fromUri(config.getAuthServerUri())
                     .path(ServiceUrlConstants.TOKEN_SERVICE_LOGOUT_PATH)
-                    .build("demo"));
+                    .build(config.getRealmName());
+            HttpPost post = new HttpPost(logoutUri);
+
+            String authorization = BasicAuthHelper.createHeader(config.getClientName(), config.getClientSecret());
+            post.setHeader("Authorization", authorization);
+
             List<NameValuePair> formparams = new ArrayList<NameValuePair>();
             formparams.add(new BasicNameValuePair(OAuth2Constants.REFRESH_TOKEN, res.getRefreshToken()));
-            formparams.add(new BasicNameValuePair(OAuth2Constants.CLIENT_ID, "admin-client"));
+
             UrlEncodedFormEntity form = new UrlEncodedFormEntity(formparams, "UTF-8");
             post.setEntity(form);
+
             HttpResponse response = client.execute(post);
             boolean status = response.getStatusLine().getStatusCode() != 204;
             HttpEntity entity = response.getEntity();
@@ -131,13 +145,20 @@ public class DirectGrantLogin {
                 return;
             }
             InputStream is = entity.getContent();
-            if (is != null) is.close();
-            if (status) {
-                throw new RuntimeException("failed to logout");
+            String content = getContent(entity);
+            if (is != null) {
+                is.close();
             }
+            if (status) {
+                int statusCode = response.getStatusLine().getStatusCode();
+                String reason = response.getStatusLine().getReasonPhrase();
+                throw new RealmUnavailableException("Logout failed: " + statusCode + ": " + reason + " " + content);
+            }
+        } catch (IOException e) {
+            throw new RealmUnavailableException(e);
         } finally {
             client.getConnectionManager().shutdown();
         }
-    } */
+    }
 
 }
