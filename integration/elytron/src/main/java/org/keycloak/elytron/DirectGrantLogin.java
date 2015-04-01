@@ -5,7 +5,6 @@ import org.apache.http.HttpResponse;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
-import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.message.BasicNameValuePair;
 import org.keycloak.OAuth2Constants;
@@ -13,10 +12,8 @@ import org.keycloak.constants.ServiceUrlConstants;
 import org.keycloak.adapters.HttpClientBuilder;
 import org.keycloak.representations.AccessTokenResponse;
 import org.keycloak.representations.idm.RoleRepresentation;
-import org.keycloak.util.HostUtils;
 import org.keycloak.util.JsonSerialization;
 import org.keycloak.util.KeycloakUriBuilder;
-import org.keycloak.util.UriUtils;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -89,7 +86,6 @@ public class DirectGrantLogin {
             List <NameValuePair> formparams = new ArrayList <NameValuePair>();
             formparams.add(new BasicNameValuePair("username", username));
             formparams.add(new BasicNameValuePair("password", new String(password)));
-            //formparams.add(new BasicNameValuePair(OAuth2Constants.CLIENT_ID, "elytron-client"));
             String authorization = BasicAuthHelper.createHeader(config.getClientName(), config.getClientSecret());
             post.setHeader("Authorization", authorization);
             formparams.add(new BasicNameValuePair(OAuth2Constants.GRANT_TYPE, "password"));

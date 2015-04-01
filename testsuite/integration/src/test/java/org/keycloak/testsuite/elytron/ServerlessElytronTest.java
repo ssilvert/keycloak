@@ -17,18 +17,13 @@
 
 package org.keycloak.testsuite.elytron;
 
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.security.Principal;
 import javax.security.auth.x500.X500Principal;
 import org.junit.Assert;
-import org.junit.Before;
 import org.junit.Test;
-import org.keycloak.elytron.KeycloakSecurityRealmBuilder;
 import org.wildfly.security.auth.provider.CredentialSupport;
 import org.wildfly.security.auth.provider.RealmIdentity;
 import org.wildfly.security.auth.provider.RealmUnavailableException;
-import org.wildfly.security.auth.provider.SecurityRealm;
 import org.wildfly.security.password.Password;
 
 /**
@@ -36,19 +31,6 @@ import org.wildfly.security.password.Password;
  * @author Stan Silvert ssilvert@redhat.com (C) 2015 Red Hat Inc.
  */
 public class ServerlessElytronTest extends AbstractElytronTest {
-    //private SecurityRealm realm;
-
-   /* @Before
-    public void setupSecurityRealm()  throws URISyntaxException {
-        this.realm = KeycloakSecurityRealmBuilder.builder()
-                .setRealmName("test-realm")
-                .setAuthServerUri(new URI("foo"))
-                //.setElytronClientName("elytron-client") <-- this is the default value
-                .setElytronClientSecret("elytron")
-                .addCredentialSupport(Password.class, CredentialSupport.FULLY_SUPPORTED)
-                .build();
-    }*/
-
 
     @Test
     public void testCreateRealmIdentity() throws RealmUnavailableException {

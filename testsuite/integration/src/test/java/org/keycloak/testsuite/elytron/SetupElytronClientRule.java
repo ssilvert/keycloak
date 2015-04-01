@@ -29,14 +29,14 @@ import org.keycloak.testsuite.rule.KeycloakRule;
 public class SetupElytronClientRule extends KeycloakRule {
     public SetupElytronClientRule() {
         super(new KeycloakRule.KeycloakSetup() {
-        @Override                                                                         // "test"
-        public void config(RealmManager manager, RealmModel adminstrationRealm, RealmModel testRealm) {
-            OAuthClientModel oauthClient = testRealm.addOAuthClient("elytron-client");
-            oauthClient.setEnabled(true);
-            oauthClient.setPublicClient(false);
-            oauthClient.setSecret("elytron");
-            oauthClient.setDirectGrantsOnly(true);
-        }
-    });
+            @Override                                                                         // "test"
+            public void config(RealmManager manager, RealmModel adminstrationRealm, RealmModel testRealm) {
+                OAuthClientModel oauthClient = testRealm.addOAuthClient("elytron-client");
+                oauthClient.setEnabled(true);
+                oauthClient.setPublicClient(false);
+                oauthClient.setSecret("elytron");
+                oauthClient.setDirectGrantsOnly(true);
+            }
+        });
     }
 }

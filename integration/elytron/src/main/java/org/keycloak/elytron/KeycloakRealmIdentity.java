@@ -82,7 +82,19 @@ public class KeycloakRealmIdentity implements RealmIdentity {
 
     @Override
     public AuthenticatedRealmIdentity getAuthenticatedRealmIdentity() throws RealmUnavailableException {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        return new AuthenticatedRealmIdentity() {
+
+            @Override
+            public Principal getPrincipal() {
+                return principal;
+            }
+
+            @Override
+            public void dispose() {
+
+            }
+
+        };
     }
 
 }

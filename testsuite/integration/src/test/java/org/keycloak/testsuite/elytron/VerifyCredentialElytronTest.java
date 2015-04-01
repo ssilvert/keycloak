@@ -16,12 +16,14 @@
  */
 package org.keycloak.testsuite.elytron;
 
+import java.security.Principal;
 import org.junit.Assert;
 import static org.junit.Assert.assertEquals;
 import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Test;
 import org.keycloak.testsuite.rule.KeycloakRule;
+import org.wildfly.security.auth.provider.AuthenticatedRealmIdentity;
 import org.wildfly.security.auth.provider.CredentialSupport;
 import org.wildfly.security.auth.provider.RealmIdentity;
 import org.wildfly.security.auth.provider.RealmUnavailableException;
@@ -73,4 +75,12 @@ public class VerifyCredentialElytronTest extends AbstractElytronTest {
         Assert.assertFalse(realmIdentity.verifyCredential(generatePassword("passwordd")));
     }
 
+    @Test
+    public void testAuthenticatedRealmIdentity() throws RealmUnavailableException {
+        Principal principal = realmIdentity.getPrincipal();
+        AuthenticatedRealmIdentity authedId = realmIdentity.getAuthenticatedRealmIdentity();
+        Assert.assertNotNull(authedId);
+        Assert.assertNotNull(authedId.getPrincipal());
+        Assert.assertEquals(principal, authedId.getPrincipal());
+    }
 }
