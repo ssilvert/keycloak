@@ -17,7 +17,7 @@
 
 package org.keycloak.testsuite.elytron;
 
-import org.keycloak.models.OAuthClientModel;
+import org.keycloak.models.ClientModel;
 import org.keycloak.models.RealmModel;
 import org.keycloak.services.managers.RealmManager;
 import org.keycloak.testsuite.rule.KeycloakRule;
@@ -31,7 +31,7 @@ public class SetupElytronClientRule extends KeycloakRule {
         super(new KeycloakRule.KeycloakSetup() {
             @Override                                                                         // "test"
             public void config(RealmManager manager, RealmModel adminstrationRealm, RealmModel testRealm) {
-                OAuthClientModel oauthClient = testRealm.addOAuthClient("elytron-client");
+                ClientModel oauthClient = testRealm.addClient("elytron-client");
                 oauthClient.setEnabled(true);
                 oauthClient.setPublicClient(false);
                 oauthClient.setSecret("elytron");

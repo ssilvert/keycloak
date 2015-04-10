@@ -27,10 +27,10 @@ import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.keycloak.elytron.KeycloakSecurityRealm;
 import org.keycloak.elytron.KeycloakSecurityRealmBuilder;
+import org.wildfly.security.WildFlyElytronProvider;
 import org.wildfly.security.auth.provider.CredentialSupport;
 import org.wildfly.security.password.Password;
 import org.wildfly.security.password.PasswordFactory;
-import org.wildfly.security.password.impl.WildFlyElytronPasswordProvider;
 import org.wildfly.security.password.interfaces.ClearPassword;
 import static org.wildfly.security.password.interfaces.ClearPassword.ALGORITHM_CLEAR;
 import org.wildfly.security.password.spec.ClearPasswordSpec;
@@ -44,7 +44,7 @@ public abstract class AbstractElytronTest {
 
     protected static KeycloakSecurityRealm keycloakRealm;
     private static final Charset UTF_8 = Charset.forName("UTF-8");
-    private static final Provider provider = new WildFlyElytronPasswordProvider();
+    private static final Provider provider = new WildFlyElytronProvider();
 
     @BeforeClass
     public static void createRealm() throws URISyntaxException {
