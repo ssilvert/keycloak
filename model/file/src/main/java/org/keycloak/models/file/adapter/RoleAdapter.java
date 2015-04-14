@@ -26,6 +26,8 @@ import org.keycloak.models.utils.KeycloakModelUtils;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import org.keycloak.connections.file.InMemoryModel;
+import org.keycloak.models.KeycloakSession;
 import org.keycloak.models.ModelDuplicateException;
 import org.keycloak.models.entities.RoleEntity;
 
@@ -39,17 +41,15 @@ public class RoleAdapter implements RoleModel {
     private final RoleEntity role;
     private RoleContainerModel roleContainer;
     private final RealmModel realm;
+    private final InMemoryModel inMemoryModel;
 
     private final Set<RoleModel> compositeRoles = new HashSet<RoleModel>();
 
-    public RoleAdapter(RealmModel realm, RoleEntity roleEntity) {
-        this(realm, roleEntity, null);
-    }
-
-    public RoleAdapter(RealmModel realm, RoleEntity roleEntity, RoleContainerModel roleContainer) {
+    public RoleAdapter(RealmModel realm, RoleEntity roleEntity, RoleContainerModel roleContainer, InMemoryModel inMemoryModel) {
         this.role = roleEntity;
         this.roleContainer = roleContainer;
         this.realm = realm;
+        this.inMemoryModel = inMemoryModel;
     }
 
     public RoleEntity getRoleEntity() {
@@ -72,7 +72,7 @@ public class RoleAdapter implements RoleModel {
 
     @Override
     public void setName(String name) {
-        RealmAdapter realmAdapter = (RealmAdapter)realm;
+        RealmAdapter realmAdapter = (RealmAdapter)inMemoryModel.getRealm(realm.getId());
         if (role.getName().equals(name)) return;
         if (realmAdapter.hasRoleWithName(name)) throw new ModelDuplicateException("Role name " + name + " already exists.");
         role.setName(name);

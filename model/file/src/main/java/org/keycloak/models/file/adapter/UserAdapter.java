@@ -34,6 +34,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import org.keycloak.connections.file.InMemoryModel;
+import org.keycloak.models.KeycloakSession;
 import org.keycloak.models.ModelDuplicateException;
 import org.keycloak.models.entities.FederatedIdentityEntity;
 import org.keycloak.models.entities.RoleEntity;
@@ -46,18 +47,20 @@ import org.keycloak.models.entities.UserEntity;
  */
 public class UserAdapter implements UserModel, Comparable {
 
+    private final KeycloakSession session;
     private final InMemoryModel inMemoryModel;
     private final UserEntity user;
     private final RealmModel realm;
 
     private final Set<RoleModel> allRoles = new HashSet<RoleModel>();
 
-    public UserAdapter(RealmModel realm, UserEntity userEntity, InMemoryModel inMemoryModel) {
+    public UserAdapter(RealmModel realm, UserEntity userEntity, KeycloakSession session, InMemoryModel inMemoryModel) {
         this.user = userEntity;
         this.realm = realm;
         if (userEntity.getFederatedIdentities() == null) {
             userEntity.setFederatedIdentities(new ArrayList<FederatedIdentityEntity>());
         }
+        this.session = session;
         this.inMemoryModel = inMemoryModel;
     }
 
@@ -79,6 +82,7 @@ public class UserAdapter implements UserModel, Comparable {
     public void setUsername(String username) {
         if (getUsername() == null) {
             user.setUsername(username);
+            inMemoryModel.requestWrite(session);
             return;
         }
 
@@ -87,6 +91,7 @@ public class UserAdapter implements UserModel, Comparable {
         if (inMemoryModel.hasUserWithUsername(realm.getId(), username))
             throw new ModelDuplicateException("User with username " + username + " already exists in realm.");
         user.setUsername(username);
+        inMemoryModel.requestWrite(session);
     }
 
     @Override
@@ -97,6 +102,7 @@ public class UserAdapter implements UserModel, Comparable {
     @Override
     public void setEnabled(boolean enabled) {
         user.setEnabled(enabled);
+        inMemoryModel.requestWrite(session);
     }
 
     @Override
@@ -107,6 +113,7 @@ public class UserAdapter implements UserModel, Comparable {
     @Override
     public void setFirstName(String firstName) {
         user.setFirstName(firstName);
+        inMemoryModel.requestWrite(session);
     }
 
     @Override
@@ -117,6 +124,7 @@ public class UserAdapter implements UserModel, Comparable {
     @Override
     public void setLastName(String lastName) {
         user.setLastName(lastName);
+        inMemoryModel.requestWrite(session);
     }
 
     @Override
@@ -128,14 +136,16 @@ public class UserAdapter implements UserModel, Comparable {
     public void setEmail(String email) {
         if (email == null) {
             user.setEmail(email);
+            inMemoryModel.requestWrite(session);
             return;
         }
 
         if (email.equals(getEmail())) return;
 
-        RealmAdapter realmAdapter = (RealmAdapter)realm;
+        RealmAdapter realmAdapter = (RealmAdapter)inMemoryModel.getRealm(realm.getId());
         if (realmAdapter.hasUserWithEmail(email)) throw new ModelDuplicateException("User with email address " + email + " already exists.");
         user.setEmail(email);
+        inMemoryModel.requestWrite(session);
     }
 
     @Override
@@ -146,6 +156,7 @@ public class UserAdapter implements UserModel, Comparable {
     @Override
     public void setEmailVerified(boolean verified) {
         user.setEmailVerified(verified);
+        inMemoryModel.requestWrite(session);
     }
 
     @Override
@@ -155,6 +166,7 @@ public class UserAdapter implements UserModel, Comparable {
         }
 
         user.getAttributes().put(name, value);
+        inMemoryModel.requestWrite(session);
     }
 
     @Override
@@ -162,6 +174,7 @@ public class UserAdapter implements UserModel, Comparable {
         if (user.getAttributes() == null) return;
 
         user.getAttributes().remove(name);
+        inMemoryModel.requestWrite(session);
     }
 
     @Override
@@ -187,6 +200,7 @@ public class UserAdapter implements UserModel, Comparable {
         if (requiredActions == null) requiredActions = new ArrayList<RequiredAction>();
         if (!requiredActions.contains(action)) requiredActions.add(action);
         user.setRequiredActions(requiredActions);
+        inMemoryModel.requestWrite(session);
     }
 
     @Override
@@ -205,6 +219,7 @@ public class UserAdapter implements UserModel, Comparable {
     @Override
     public void setTotp(boolean totp) {
         user.setTotp(totp);
+        inMemoryModel.requestWrite(session);
     }
 
     @Override
@@ -232,6 +247,7 @@ public class UserAdapter implements UserModel, Comparable {
             credentialEntity.setValue(cred.getValue());
         }
         credentialEntity.setDevice(cred.getDevice());
+        inMemoryModel.requestWrite(session);
     }
 
     private CredentialEntity getCredentialEntity(UserEntity userEntity, String credType) {
@@ -279,6 +295,7 @@ public class UserAdapter implements UserModel, Comparable {
         credentialEntity.setSalt(credModel.getSalt());
         credentialEntity.setDevice(credModel.getDevice());
         credentialEntity.setHashIterations(credModel.getHashIterations());
+        inMemoryModel.requestWrite(session);
     }
 
     @Override
@@ -295,6 +312,7 @@ public class UserAdapter implements UserModel, Comparable {
     @Override
     public void grantRole(RoleModel role) {
         allRoles.add(role);
+        inMemoryModel.requestWrite(session);
     }
 
     @Override
@@ -322,6 +340,7 @@ public class UserAdapter implements UserModel, Comparable {
     public void deleteRoleMapping(RoleModel role) {
         if (user == null || role == null) return;
         allRoles.remove(role);
+        inMemoryModel.requestWrite(session);
     }
 
     @Override
@@ -331,7 +350,7 @@ public class UserAdapter implements UserModel, Comparable {
         for (RoleModel role : allRoles) {
             RoleEntity roleEntity = ((RoleAdapter)role).getRoleEntity();
             if (app.getId().equals(roleEntity.getClientId())) {
-                result.add(new RoleAdapter(realm, roleEntity, app));
+                result.add(new RoleAdapter(realm, roleEntity, app, inMemoryModel));
             }
         }
         return result;
@@ -345,6 +364,7 @@ public class UserAdapter implements UserModel, Comparable {
     @Override
     public void setFederationLink(String link) {
         user.setFederationLink(link);
+        inMemoryModel.requestWrite(session);
     }
 
     @Override

@@ -24,6 +24,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 import org.jboss.logging.Logger;
 import org.keycloak.Config;
 import org.keycloak.exportimport.Strategy;
@@ -47,6 +49,9 @@ public class DefaultFileConnectionProviderFactory implements FileConnectionProvi
     protected static final Logger logger = Logger.getLogger(DefaultFileConnectionProviderFactory.class);
 
     private File kcdata;
+    private InMemoryModel model = new InMemoryModel();
+    private boolean modelEmpty = true;
+    private ReadWriteLock lock = new ReentrantReadWriteLock();
     private final Map<KeycloakSession, FileConnectionProvider> allProviders = new HashMap<KeycloakSession, FileConnectionProvider>();
 
     @Override
@@ -137,12 +142,15 @@ public class DefaultFileConnectionProviderFactory implements FileConnectionProvi
         synchronized (allProviders) {
             FileConnectionProvider fcProvider = allProviders.get(session);
             if (fcProvider == null) {
-                InMemoryModel model = new InMemoryModel();
                 fcProvider = new DefaultFileConnectionProvider(this, session, model);
                 allProviders.put(session, fcProvider);
                 session.getTransaction().enlist(fcProvider);
-                readModelFile(session);
+                if (modelEmpty) readModelFile(session);
+                modelEmpty = false;
                 //logger.info("Added session " + session.hashCode() + " total sessions=" + allModels.size());
+                if (!modelEmpty) System.out.println(">>>> Getting read lock");
+                if (!modelEmpty) lock.readLock().lock();
+                if (!modelEmpty) System.out.println(">>>> Got read lock " + Thread.currentThread().hashCode());
             }
 
             return fcProvider;
@@ -154,25 +162,36 @@ public class DefaultFileConnectionProviderFactory implements FileConnectionProvi
     //private static int commitCount = 0;
     void commit(KeycloakSession session) {
         //commitCount++;
-        synchronized (allProviders) {
-            // in case commit was somehow called twice on the same session
-            if (!allProviders.containsKey(session)) return;
+        // in case commit was somehow called twice on the same session
+        if (!allProviders.containsKey(session)) return;
 
-            try {
+        try {
+            if (!modelEmpty) lock.readLock().unlock();
+            System.out.println(">>>> Unlocked read lock");
+            if (model.isWritePending(session)) {
+                System.out.println(">>>> Getting write lock");
+                lock.writeLock().lock();
+                System.out.println(">>>> Got write lock");
                 writeModelFile(session);
-            } finally {
-                allProviders.remove(session);
-                //logger.info("Removed session " + session.hashCode());
-                //logger.info("*** commitCount=" + commitCount);
-                //logger.info("commit(): Session count=" + allModels.size());
             }
+        } finally {
+            if (model.isWritePending(session)) {
+                lock.writeLock().unlock();
+                System.out.println(">>>> Unlocked write lock");
+                model.writeCompleted(session);
+            }
+            allProviders.remove(session);
+            //logger.info("Removed session " + session.hashCode());
+            //logger.info("*** commitCount=" + commitCount);
+            //logger.info("commit(): Session count=" + allModels.size());
+        }
 
     //     if (commitCount == 16) {Thread.dumpStack();System.exit(0);}
-        }
     }
 
     void rollback(KeycloakSession session) {
         synchronized (allProviders) {
+            lock.readLock().unlock();
             allProviders.remove(session);
             //logger.info("rollback(): Session count=" + allModels.size());
         }
@@ -186,7 +205,8 @@ public class DefaultFileConnectionProviderFactory implements FileConnectionProvi
 
     @Override
     public void close() {
-
+        System.out.println("&&&&& Factory closed");
+        System.out.println("allProviders.size=" + allProviders.size());
     }
 
     @Override

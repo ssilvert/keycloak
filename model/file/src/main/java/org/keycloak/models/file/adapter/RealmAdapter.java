@@ -82,10 +82,6 @@ public class RealmAdapter implements RealmModel {
         this.inMemoryModel = inMemoryModel;
     }
 
-    public RealmEntity getRealmEnity() {
-        return realm;
-    }
-
     @Override
     public String getId() {
         return realm.getId();
@@ -100,6 +96,7 @@ public class RealmAdapter implements RealmModel {
     public void setName(String name) {
         if (getName() == null) {
             realm.setName(name);
+            inMemoryModel.requestWrite(session);
             return;
         }
 
@@ -107,6 +104,7 @@ public class RealmAdapter implements RealmModel {
 
         if (inMemoryModel.getRealmByName(name) != null) throw new ModelDuplicateException("Realm " + name + " already exists.");
         realm.setName(name);
+        inMemoryModel.requestWrite(session);
     }
 
     @Override
@@ -117,6 +115,7 @@ public class RealmAdapter implements RealmModel {
     @Override
     public void setEnabled(boolean enabled) {
         realm.setEnabled(enabled);
+        inMemoryModel.requestWrite(session);
     }
 
     @Override
@@ -127,6 +126,7 @@ public class RealmAdapter implements RealmModel {
     @Override
     public void setSslRequired(SslRequired sslRequired) {
         realm.setSslRequired(sslRequired.name());
+        inMemoryModel.requestWrite(session);
     }
 
     @Override
@@ -137,6 +137,7 @@ public class RealmAdapter implements RealmModel {
     @Override
     public void setPasswordCredentialGrantAllowed(boolean passwordCredentialGrantAllowed) {
         realm.setPasswordCredentialGrantAllowed(passwordCredentialGrantAllowed);
+        inMemoryModel.requestWrite(session);
     }
 
     @Override
@@ -147,6 +148,7 @@ public class RealmAdapter implements RealmModel {
     @Override
     public void setRegistrationAllowed(boolean registrationAllowed) {
         realm.setRegistrationAllowed(registrationAllowed);
+        inMemoryModel.requestWrite(session);
     }
 
     @Override
@@ -157,6 +159,7 @@ public class RealmAdapter implements RealmModel {
     @Override
     public void setRegistrationEmailAsUsername(boolean registrationEmailAsUsername) {
         realm.setRegistrationEmailAsUsername(registrationEmailAsUsername);
+        inMemoryModel.requestWrite(session);
     }
 
     @Override
@@ -167,6 +170,7 @@ public class RealmAdapter implements RealmModel {
     @Override
     public void setRememberMe(boolean rememberMe) {
         realm.setRememberMe(rememberMe);
+        inMemoryModel.requestWrite(session);
     }
 
     @Override
@@ -177,6 +181,7 @@ public class RealmAdapter implements RealmModel {
     @Override
     public void setBruteForceProtected(boolean value) {
         realm.setBruteForceProtected(value);
+        inMemoryModel.requestWrite(session);
     }
 
     @Override
@@ -187,6 +192,7 @@ public class RealmAdapter implements RealmModel {
     @Override
     public void setMaxFailureWaitSeconds(int val) {
         realm.setMaxFailureWaitSeconds(val);
+        inMemoryModel.requestWrite(session);
     }
 
     @Override
@@ -197,6 +203,7 @@ public class RealmAdapter implements RealmModel {
     @Override
     public void setWaitIncrementSeconds(int val) {
         realm.setWaitIncrementSeconds(val);
+        inMemoryModel.requestWrite(session);
     }
 
     @Override
@@ -207,6 +214,7 @@ public class RealmAdapter implements RealmModel {
     @Override
     public void setQuickLoginCheckMilliSeconds(long val) {
         realm.setQuickLoginCheckMilliSeconds(val);
+        inMemoryModel.requestWrite(session);
     }
 
     @Override
@@ -217,6 +225,7 @@ public class RealmAdapter implements RealmModel {
     @Override
     public void setMinimumQuickLoginWaitSeconds(int val) {
         realm.setMinimumQuickLoginWaitSeconds(val);
+        inMemoryModel.requestWrite(session);
     }
 
 
@@ -228,6 +237,7 @@ public class RealmAdapter implements RealmModel {
     @Override
     public void setMaxDeltaTimeSeconds(int val) {
         realm.setMaxDeltaTimeSeconds(val);
+        inMemoryModel.requestWrite(session);
     }
 
     @Override
@@ -238,6 +248,7 @@ public class RealmAdapter implements RealmModel {
     @Override
     public void setFailureFactor(int failureFactor) {
         realm.setFailureFactor(failureFactor);
+        inMemoryModel.requestWrite(session);
     }
 
 
@@ -249,6 +260,7 @@ public class RealmAdapter implements RealmModel {
     @Override
     public void setVerifyEmail(boolean verifyEmail) {
         realm.setVerifyEmail(verifyEmail);
+        inMemoryModel.requestWrite(session);
     }
 
     @Override
@@ -259,6 +271,7 @@ public class RealmAdapter implements RealmModel {
     @Override
     public void setResetPasswordAllowed(boolean resetPassword) {
         realm.setResetPasswordAllowed(resetPassword);
+        inMemoryModel.requestWrite(session);
     }
 
     @Override
@@ -273,6 +286,7 @@ public class RealmAdapter implements RealmModel {
     public void setPasswordPolicy(PasswordPolicy policy) {
         this.passwordPolicy = policy;
         realm.setPasswordPolicy(policy.toString());
+        inMemoryModel.requestWrite(session);
     }
 
     @Override
@@ -283,6 +297,7 @@ public class RealmAdapter implements RealmModel {
     @Override
     public void setNotBefore(int notBefore) {
         realm.setNotBefore(notBefore);
+        inMemoryModel.requestWrite(session);
     }
 
 
@@ -294,6 +309,7 @@ public class RealmAdapter implements RealmModel {
     @Override
     public void setSsoSessionIdleTimeout(int seconds) {
         realm.setSsoSessionIdleTimeout(seconds);
+        inMemoryModel.requestWrite(session);
     }
 
     @Override
@@ -304,6 +320,7 @@ public class RealmAdapter implements RealmModel {
     @Override
     public void setSsoSessionMaxLifespan(int seconds) {
         realm.setSsoSessionMaxLifespan(seconds);
+        inMemoryModel.requestWrite(session);
     }
 
     @Override
@@ -314,6 +331,7 @@ public class RealmAdapter implements RealmModel {
     @Override
     public void setAccessTokenLifespan(int tokenLifespan) {
         realm.setAccessTokenLifespan(tokenLifespan);
+        inMemoryModel.requestWrite(session);
     }
 
     @Override
@@ -324,6 +342,7 @@ public class RealmAdapter implements RealmModel {
     @Override
     public void setAccessCodeLifespan(int accessCodeLifespan) {
         realm.setAccessCodeLifespan(accessCodeLifespan);
+        inMemoryModel.requestWrite(session);
     }
 
     @Override
@@ -334,6 +353,7 @@ public class RealmAdapter implements RealmModel {
     @Override
     public void setAccessCodeLifespanUserAction(int accessCodeLifespanUserAction) {
         realm.setAccessCodeLifespanUserAction(accessCodeLifespanUserAction);
+        inMemoryModel.requestWrite(session);
     }
 
     @Override
@@ -345,6 +365,7 @@ public class RealmAdapter implements RealmModel {
     public void setPublicKeyPem(String publicKeyPem) {
         realm.setPublicKeyPem(publicKeyPem);
         this.publicKey = null;
+        inMemoryModel.requestWrite(session);
     }
 
     @Override
@@ -359,6 +380,7 @@ public class RealmAdapter implements RealmModel {
         this.certificate = certificate;
         String certificatePem = KeycloakModelUtils.getPemFromCertificate(certificate);
         setCertificatePem(certificatePem);
+        inMemoryModel.requestWrite(session);
     }
 
     @Override
@@ -369,7 +391,7 @@ public class RealmAdapter implements RealmModel {
     @Override
     public void setCertificatePem(String certificate) {
         realm.setCertificatePem(certificate);
-
+        inMemoryModel.requestWrite(session);
     }
 
 
@@ -382,6 +404,7 @@ public class RealmAdapter implements RealmModel {
     public void setPrivateKeyPem(String privateKeyPem) {
         realm.setPrivateKeyPem(privateKeyPem);
         this.privateKey = null;
+        inMemoryModel.requestWrite(session);
     }
 
     @Override
@@ -396,6 +419,7 @@ public class RealmAdapter implements RealmModel {
         this.publicKey = publicKey;
         String publicKeyPem = KeycloakModelUtils.getPemFromKey(publicKey);
         setPublicKeyPem(publicKeyPem);
+        inMemoryModel.requestWrite(session);
     }
 
     @Override
@@ -410,6 +434,7 @@ public class RealmAdapter implements RealmModel {
         this.privateKey = privateKey;
         String privateKeyPem = KeycloakModelUtils.getPemFromKey(privateKey);
         setPrivateKeyPem(privateKeyPem);
+        inMemoryModel.requestWrite(session);
     }
 
     @Override
@@ -428,6 +453,7 @@ public class RealmAdapter implements RealmModel {
     @Override
     public void setCodeSecret(String codeSecret) {
         realm.setCodeSecret(codeSecret);
+        inMemoryModel.requestWrite(session);
     }
 
     @Override
@@ -438,6 +464,7 @@ public class RealmAdapter implements RealmModel {
     @Override
     public void setLoginTheme(String name) {
         realm.setLoginTheme(name);
+        inMemoryModel.requestWrite(session);
     }
 
     @Override
@@ -448,6 +475,7 @@ public class RealmAdapter implements RealmModel {
     @Override
     public void setAccountTheme(String name) {
         realm.setAccountTheme(name);
+        inMemoryModel.requestWrite(session);
     }
 
     @Override
@@ -458,6 +486,7 @@ public class RealmAdapter implements RealmModel {
     @Override
     public void setAdminTheme(String name) {
         realm.setAdminTheme(name);
+        inMemoryModel.requestWrite(session);
     }
 
     @Override
@@ -468,6 +497,7 @@ public class RealmAdapter implements RealmModel {
     @Override
     public void setEmailTheme(String name) {
         realm.setEmailTheme(name);
+        inMemoryModel.requestWrite(session);
     }
 
     @Override
@@ -494,8 +524,9 @@ public class RealmAdapter implements RealmModel {
         roleEntity.setName(name);
         roleEntity.setRealmId(getId());
 
-        RoleAdapter roleModel = new RoleAdapter(this, roleEntity, this);
+        RoleAdapter roleModel = new RoleAdapter(this, roleEntity, this, inMemoryModel);
         allRoles.put(id, roleModel);
+        inMemoryModel.requestWrite(session);
         return roleModel;
     }
 
@@ -509,12 +540,16 @@ public class RealmAdapter implements RealmModel {
         if (id == null) throw new NullPointerException("id == null");
 
         // try realm roles first
-        if (allRoles.remove(id) != null) return true;
+        if (allRoles.remove(id) != null) {
+            inMemoryModel.requestWrite(session);
+            return true;
+        }
 
         for (ClientModel app : getClients()) {
             for (RoleModel appRole : app.getRoles()) {
                 if (id.equals(appRole.getId())) {
                     app.removeRole(appRole);
+                    inMemoryModel.requestWrite(session);
                     return true;
                 }
             }
@@ -559,6 +594,7 @@ public class RealmAdapter implements RealmModel {
 
         roleNames.add(name);
         realm.setDefaultRoles(roleNames);
+        inMemoryModel.requestWrite(session);
     }
 
     boolean hasRoleWithName(String name) {
@@ -582,6 +618,7 @@ public class RealmAdapter implements RealmModel {
         }
 
         realm.setDefaultRoles(roleNames);
+        inMemoryModel.requestWrite(session);
     }
 
     @Override
@@ -641,7 +678,7 @@ public class RealmAdapter implements RealmModel {
         });
 
         allApps.put(id, app);
-
+        inMemoryModel.requestWrite(session);
         return app;
     }
 
@@ -660,6 +697,7 @@ public class RealmAdapter implements RealmModel {
             appToBeRemoved.removeRole(role);
         }
 
+        inMemoryModel.requestWrite(session);
         return (allApps.remove(id) != null);
     }
 
@@ -684,6 +722,7 @@ public class RealmAdapter implements RealmModel {
         }
 
         addRequiredCredential(credentialModel, requiredCredList);
+        inMemoryModel.requestWrite(session);
     }
 
     protected void addRequiredCredential(RequiredCredentialModel credentialModel, List<RequiredCredentialEntity> persistentCollection) {
@@ -694,6 +733,7 @@ public class RealmAdapter implements RealmModel {
         credEntity.setSecret(credentialModel.isSecret());
 
         persistentCollection.add(credEntity);
+        inMemoryModel.requestWrite(session);
     }
 
     @Override
@@ -720,6 +760,7 @@ public class RealmAdapter implements RealmModel {
                 addRequiredCredential(credentialModel, credsEntities);
             }
         }
+        inMemoryModel.requestWrite(session);
     }
 
     @Override
@@ -758,6 +799,7 @@ public class RealmAdapter implements RealmModel {
     @Override
     public void setBrowserSecurityHeaders(Map<String, String> headers) {
         realm.setBrowserSecurityHeaders(headers);
+        inMemoryModel.requestWrite(session);
     }
 
     @Override
@@ -768,6 +810,7 @@ public class RealmAdapter implements RealmModel {
     @Override
     public void setSmtpConfig(Map<String, String> smtpConfig) {
         realm.setSmtpConfig(smtpConfig);
+        inMemoryModel.requestWrite(session);
     }
 
     @Override
@@ -791,6 +834,7 @@ public class RealmAdapter implements RealmModel {
         if (identityProvider.getAlias() == null) throw new NullPointerException("identityProvider.getAlias() == null");
         if (identityProvider.getInternalId() == null) identityProvider.setInternalId(KeycloakModelUtils.generateId());
         allIdProviders.put(identityProvider.getInternalId(), identityProvider);
+        inMemoryModel.requestWrite(session);
     }
 
     @Override
@@ -801,12 +845,14 @@ public class RealmAdapter implements RealmModel {
                 break;
             }
         }
+        inMemoryModel.requestWrite(session);
     }
 
     @Override
     public void updateIdentityProvider(IdentityProviderModel identityProvider) {
         removeIdentityProviderByAlias(identityProvider.getAlias());
         addIdentityProvider(identityProvider);
+        inMemoryModel.requestWrite(session);
     }
 
     @Override
@@ -825,6 +871,7 @@ public class RealmAdapter implements RealmModel {
         entity.setLastSync(lastSync);
         realm.getUserFederationProviders().add(entity);
 
+        inMemoryModel.requestWrite(session);
         return new UserFederationProviderModel(entity.getId(), providerName, config, priority, displayName, fullSyncPeriod, changedSyncPeriod, lastSync);
     }
 
@@ -839,6 +886,7 @@ public class RealmAdapter implements RealmModel {
                 it.remove();
             }
         }
+        inMemoryModel.requestWrite(session);
     }
 
     @Override
@@ -859,6 +907,7 @@ public class RealmAdapter implements RealmModel {
                 entity.setLastSync(model.getLastSync());
             }
         }
+        inMemoryModel.requestWrite(session);
     }
 
     @Override
@@ -908,6 +957,7 @@ public class RealmAdapter implements RealmModel {
         }
 
         realm.setUserFederationProviders(entities);
+        inMemoryModel.requestWrite(session);
     }
 
     @Override
@@ -918,6 +968,7 @@ public class RealmAdapter implements RealmModel {
     @Override
     public void setEventsEnabled(boolean enabled) {
         realm.setEventsEnabled(enabled);
+        inMemoryModel.requestWrite(session);
     }
 
     @Override
@@ -928,6 +979,7 @@ public class RealmAdapter implements RealmModel {
     @Override
     public void setEventsExpiration(long expiration) {
         realm.setEventsExpiration(expiration);
+        inMemoryModel.requestWrite(session);
     }
 
     @Override
@@ -942,8 +994,9 @@ public class RealmAdapter implements RealmModel {
         } else {
             realm.setEventsListeners(Collections.EMPTY_LIST);
         }
+        inMemoryModel.requestWrite(session);
     }
-    
+
     @Override
     public Set<String> getEnabledEventTypes() {
         return new HashSet<String>(realm.getEnabledEventTypes());
@@ -955,7 +1008,8 @@ public class RealmAdapter implements RealmModel {
             realm.setEnabledEventTypes(new ArrayList<String>(enabledEventTypes));
         } else {
             realm.setEnabledEventTypes(Collections.EMPTY_LIST);
-        }        
+        }
+        inMemoryModel.requestWrite(session);
     }
 
     @Override
@@ -976,6 +1030,7 @@ public class RealmAdapter implements RealmModel {
             realm.setMasterAdminClient(appId);
             this.masterAdminApp = client;
         }
+        inMemoryModel.requestWrite(session);
     }
 
     @Override
@@ -992,6 +1047,7 @@ public class RealmAdapter implements RealmModel {
     @Override
     public void setAccessCodeLifespanLogin(int accessCodeLifespanLogin) {
         realm.setAccessCodeLifespanLogin(accessCodeLifespanLogin);
+        inMemoryModel.requestWrite(session);
     }
 
     @Override
@@ -1002,6 +1058,7 @@ public class RealmAdapter implements RealmModel {
     @Override
     public void setInternationalizationEnabled(boolean enabled) {
         realm.setInternationalizationEnabled(enabled);
+        inMemoryModel.requestWrite(session);
     }
 
     @Override
@@ -1012,6 +1069,7 @@ public class RealmAdapter implements RealmModel {
     @Override
     public void setSupportedLocales(Set<String> locales) {
         realm.setSupportedLocales(new ArrayList<>(locales));
+        inMemoryModel.requestWrite(session);
     }
 
     @Override
@@ -1022,6 +1080,7 @@ public class RealmAdapter implements RealmModel {
     @Override
     public void setDefaultLocale(String locale) {
         realm.setDefaultLocale(locale);
+        inMemoryModel.requestWrite(session);
     }
 
     @Override

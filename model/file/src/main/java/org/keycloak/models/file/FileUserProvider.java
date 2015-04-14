@@ -283,6 +283,7 @@ public class FileUserProvider implements UserProvider {
             }
         }
 
+        inMemoryModel.requestWrite(session);
         return userModel;
     }
 
@@ -299,14 +300,16 @@ public class FileUserProvider implements UserProvider {
         // userEntity.setEnabled(true);
         userEntity.setRealmId(realm.getId());
 
-        UserAdapter user = new UserAdapter(realm, userEntity, inMemoryModel);
+        UserAdapter user = new UserAdapter(realm, userEntity, session, inMemoryModel);
         inMemoryModel.putUser(realm.getId(), userId, user);
 
+        inMemoryModel.requestWrite(session);
         return user;
     }
 
     @Override
     public boolean removeUser(RealmModel realm, UserModel user) {
+        inMemoryModel.requestWrite(session);
         return inMemoryModel.removeUser(realm.getId(), user.getId());
     }
 
@@ -326,6 +329,7 @@ public class FileUserProvider implements UserProvider {
         }
 
         userEntity.getFederatedIdentities().add(federatedIdentityEntity);
+        inMemoryModel.requestWrite(session);
     }
 
     @Override
@@ -338,6 +342,7 @@ public class FileUserProvider implements UserProvider {
         }
 
         userEntity.getFederatedIdentities().remove(federatedIdentityEntity);
+        inMemoryModel.requestWrite(session);
         return true;
     }
 
@@ -357,6 +362,7 @@ public class FileUserProvider implements UserProvider {
 
     @Override
     public UserModel addUser(RealmModel realm, String username) {
+        inMemoryModel.requestWrite(session);
         return this.addUser(realm, KeycloakModelUtils.generateId(), username.toLowerCase(), true);
     }
 
@@ -377,6 +383,7 @@ public class FileUserProvider implements UserProvider {
         for (UserModel user : toBeRemoved) {
             inMemoryModel.removeUser(realm.getId(), user.getId());
         }
+        inMemoryModel.requestWrite(session);
     }
 
     @Override
@@ -401,6 +408,7 @@ public class FileUserProvider implements UserProvider {
         FederatedIdentityEntity federatedIdentityEntity = findFederatedIdentityLink(userEntity, federatedIdentityModel.getIdentityProvider());
 
         federatedIdentityEntity.setToken(federatedIdentityModel.getToken());
+        inMemoryModel.requestWrite(session);
     }
 
     private FederatedIdentityEntity findFederatedIdentityLink(UserEntity userEntity, String identityProvider) {

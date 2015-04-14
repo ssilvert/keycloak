@@ -67,7 +67,7 @@ public class FileRealmProvider implements RealmProvider {
         realmEntity.setId(id);
         RealmAdapter realm = new RealmAdapter(session, realmEntity, inMemoryModel);
         inMemoryModel.putRealm(id, realm);
-
+        inMemoryModel.requestWrite(session);
         return realm;
     }
 
@@ -90,17 +90,18 @@ public class FileRealmProvider implements RealmProvider {
 
     @Override
     public boolean removeRealm(String id) {
+        inMemoryModel.requestWrite(session);
         return inMemoryModel.removeRealm(id);
     }
 
     @Override
     public RoleModel getRoleById(String id, RealmModel realm) {
-        return realm.getRoleById(id);
+        return getRealm(realm.getId()).getRoleById(id);
     }
 
     @Override
     public ClientModel getClientById(String id, RealmModel realm) {
-        return realm.getClientById(id);
+        return getRealm(realm.getId()).getClientById(id);
     }
 
 }

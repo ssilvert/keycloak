@@ -63,6 +63,7 @@ public class ClientAdapter implements ClientModel {
 
     @Override
     public void updateClient() {
+        inMemoryModel.requestWrite(session);
     }
 
     @Override
@@ -84,6 +85,7 @@ public class ClientAdapter implements ClientModel {
         List<String> result = new ArrayList<String>();
         result.addAll(webOrigins);
         entity.setWebOrigins(result);
+        inMemoryModel.requestWrite(session);
     }
 
     @Override
@@ -91,6 +93,7 @@ public class ClientAdapter implements ClientModel {
         Set<String> webOrigins = getWebOrigins();
         webOrigins.add(webOrigin);
         setWebOrigins(webOrigins);
+        inMemoryModel.requestWrite(session);
     }
 
     @Override
@@ -98,6 +101,7 @@ public class ClientAdapter implements ClientModel {
         Set<String> webOrigins = getWebOrigins();
         webOrigins.remove(webOrigin);
         setWebOrigins(webOrigins);
+        inMemoryModel.requestWrite(session);
     }
 
     @Override
@@ -114,17 +118,20 @@ public class ClientAdapter implements ClientModel {
         List<String> result = new ArrayList<String>();
         result.addAll(redirectUris);
         entity.setRedirectUris(result);
+        inMemoryModel.requestWrite(session);
     }
 
     @Override
     public void addRedirectUri(String redirectUri) {
         if (entity.getRedirectUris().contains(redirectUri)) return;
         entity.getRedirectUris().add(redirectUri);
+        inMemoryModel.requestWrite(session);
     }
 
     @Override
     public void removeRedirectUri(String redirectUri) {
         entity.getRedirectUris().remove(redirectUri);
+        inMemoryModel.requestWrite(session);
     }
 
     @Override
@@ -135,6 +142,7 @@ public class ClientAdapter implements ClientModel {
     @Override
     public void setEnabled(boolean enabled) {
         entity.setEnabled(enabled);
+        inMemoryModel.requestWrite(session);
     }
 
     @Override
@@ -150,6 +158,7 @@ public class ClientAdapter implements ClientModel {
     @Override
     public void setSecret(String secret) {
         entity.setSecret(secret);
+        inMemoryModel.requestWrite(session);
     }
 
     @Override
@@ -160,6 +169,7 @@ public class ClientAdapter implements ClientModel {
     @Override
     public void setPublicClient(boolean flag) {
         entity.setPublicClient(flag);
+        inMemoryModel.requestWrite(session);
     }
 
 
@@ -171,6 +181,7 @@ public class ClientAdapter implements ClientModel {
     @Override
     public void setFrontchannelLogout(boolean flag) {
         entity.setFrontchannelLogout(flag);
+        inMemoryModel.requestWrite(session);
     }
 
     @Override
@@ -181,6 +192,7 @@ public class ClientAdapter implements ClientModel {
     @Override
     public void setFullScopeAllowed(boolean value) {
         entity.setFullScopeAllowed(value);
+        inMemoryModel.requestWrite(session);
     }
 
     @Override
@@ -196,6 +208,7 @@ public class ClientAdapter implements ClientModel {
     @Override
     public void setNotBefore(int notBefore) {
         entity.setNotBefore(notBefore);
+        inMemoryModel.requestWrite(session);
     }
 
     @Override
@@ -220,11 +233,13 @@ public class ClientAdapter implements ClientModel {
     @Override
     public void addScopeMapping(RoleModel role) {
         allScopeMappings.put(role.getId(), role);
+        inMemoryModel.requestWrite(session);
     }
 
     @Override
     public void deleteScopeMapping(RoleModel role) {
         allScopeMappings.remove(role.getId());
+        inMemoryModel.requestWrite(session);
     }
 
     @Override
@@ -235,18 +250,20 @@ public class ClientAdapter implements ClientModel {
     @Override
     public void setProtocol(String protocol) {
         entity.setProtocol(protocol);
+        inMemoryModel.requestWrite(session);
 
     }
 
     @Override
     public void setAttribute(String name, String value) {
         entity.getAttributes().put(name, value);
-
+        inMemoryModel.requestWrite(session);
     }
 
     @Override
     public void removeAttribute(String name) {
         entity.getAttributes().remove(name);
+        inMemoryModel.requestWrite(session);
     }
 
     @Override
@@ -285,6 +302,7 @@ public class ClientAdapter implements ClientModel {
         entity.setConsentRequired(model.isConsentRequired());
         entity.setConsentText(model.getConsentText());
         this.entity.getProtocolMappers().add(entity);
+        inMemoryModel.requestWrite(session);
         return entityToModel(entity);
     }
 
@@ -299,6 +317,7 @@ public class ClientAdapter implements ClientModel {
         }
 
         entity.getProtocolMappers().remove(toBeRemoved);
+        inMemoryModel.requestWrite(session);
     }
 
     @Override
@@ -313,6 +332,7 @@ public class ClientAdapter implements ClientModel {
         } else {
             entity.setConfig(mapping.getConfig());
         }
+        inMemoryModel.requestWrite(session);
     }
 
     protected ProtocolMapperEntity getProtocolMapperEntityById(String id) {
@@ -375,6 +395,7 @@ public class ClientAdapter implements ClientModel {
         }
 
         entity.setIdentityProviders(stored);
+        inMemoryModel.requestWrite(session);
     }
 
     @Override
@@ -413,6 +434,7 @@ public class ClientAdapter implements ClientModel {
     public void setClientId(String clientId) {
         if (appNameExists(clientId)) throw new ModelDuplicateException("Application named " + clientId + " already exists.");
         entity.setClientId(clientId);
+        inMemoryModel.requestWrite(session);
     }
 
     private boolean appNameExists(String name) {
@@ -432,6 +454,7 @@ public class ClientAdapter implements ClientModel {
     @Override
     public void setSurrogateAuthRequired(boolean surrogateAuthRequired) {
         entity.setSurrogateAuthRequired(surrogateAuthRequired);
+        inMemoryModel.requestWrite(session);
     }
 
     @Override
@@ -442,11 +465,13 @@ public class ClientAdapter implements ClientModel {
     @Override
     public void setManagementUrl(String url) {
         entity.setManagementUrl(url);
+        inMemoryModel.requestWrite(session);
     }
 
     @Override
     public void setBaseUrl(String url) {
         entity.setBaseUrl(url);
+        inMemoryModel.requestWrite(session);
     }
 
     @Override
@@ -462,6 +487,7 @@ public class ClientAdapter implements ClientModel {
     @Override
     public void setBearerOnly(boolean only) {
         entity.setBearerOnly(only);
+        inMemoryModel.requestWrite(session);
     }
 
     @Override
@@ -472,6 +498,7 @@ public class ClientAdapter implements ClientModel {
     @Override
     public void setConsentRequired(boolean consentRequired) {
         entity.setConsentRequired(consentRequired);
+        inMemoryModel.requestWrite(session);
     }
 
     @Override
@@ -482,6 +509,7 @@ public class ClientAdapter implements ClientModel {
     @Override
     public void setDirectGrantsOnly(boolean flag) {
         entity.setDirectGrantsOnly(flag);
+        inMemoryModel.requestWrite(session);
     }
 
     @Override
@@ -505,9 +533,10 @@ public class ClientAdapter implements ClientModel {
         roleEntity.setName(name);
         roleEntity.setClientId(getId());
 
-        RoleAdapter role = new RoleAdapter(getRealm(), roleEntity, this);
+        RoleAdapter role = new RoleAdapter(getRealm(), roleEntity, this, inMemoryModel);
         allRoles.put(id, role);
 
+        inMemoryModel.requestWrite(session);
         return role;
     }
 
@@ -538,6 +567,7 @@ public class ClientAdapter implements ClientModel {
 
         this.deleteScopeMapping(role);
 
+        inMemoryModel.requestWrite(session);
         return removed;
     }
 
@@ -611,6 +641,7 @@ public class ClientAdapter implements ClientModel {
         }
 
         entity.setDefaultRoles(roleNames);
+        inMemoryModel.requestWrite(session);
     }
 
     @Override
@@ -621,6 +652,7 @@ public class ClientAdapter implements ClientModel {
     @Override
     public void setNodeReRegistrationTimeout(int timeout) {
         entity.setNodeReRegistrationTimeout(timeout);
+        inMemoryModel.requestWrite(session);
     }
 
     @Override
@@ -635,6 +667,7 @@ public class ClientAdapter implements ClientModel {
         }
 
         entity.getRegisteredNodes().put(nodeHost, registrationTime);
+        inMemoryModel.requestWrite(session);
     }
 
     @Override
@@ -642,6 +675,7 @@ public class ClientAdapter implements ClientModel {
         if (entity.getRegisteredNodes() == null) return;
 
         entity.getRegisteredNodes().remove(nodeHost);
+        inMemoryModel.requestWrite(session);
     }
 
     @Override

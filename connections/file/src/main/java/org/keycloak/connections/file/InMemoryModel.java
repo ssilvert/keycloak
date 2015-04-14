@@ -19,7 +19,10 @@ package org.keycloak.connections.file;
 
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
+import org.keycloak.models.KeycloakSession;
 import org.keycloak.models.RealmModel;
 import org.keycloak.models.UserModel;
 
@@ -32,12 +35,26 @@ import org.keycloak.models.UserModel;
  * @author Stan Silvert ssilvert@redhat.com (C) 2015 Red Hat Inc.
  */
 public class InMemoryModel {
+    private final Set<KeycloakSession> writePending = new HashSet<KeycloakSession>();
+
     private final Map<String, RealmModel> allRealms = new HashMap<String, RealmModel>();
 
     //                realmId,    userId, userModel
     private final Map<String, Map<String,UserModel>> allUsers = new HashMap<String, Map<String,UserModel>>();
 
     public InMemoryModel() {
+    }
+
+    public boolean isWritePending(KeycloakSession session) {
+        return writePending.contains(session);
+    }
+
+    public void requestWrite(KeycloakSession session) {
+        writePending.add(session);
+    }
+
+    void writeCompleted(KeycloakSession session) {
+        writePending.remove(session);
     }
 
     public void putRealm(String id, RealmModel realm) {
