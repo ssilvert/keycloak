@@ -34,7 +34,6 @@ import org.jboss.staxmapper.XMLExtendedStreamWriter;
 
 import javax.xml.stream.XMLStreamConstants;
 import javax.xml.stream.XMLStreamException;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
@@ -54,12 +53,7 @@ class KeycloakSubsystemParser implements XMLStreamConstants, XMLElementReader<Li
         list.add(addKeycloakSub);
 
         while (reader.hasNext() && nextTag(reader) != END_ELEMENT) {
-            if (reader.getLocalName().equals(RealmDefinition.TAG_NAME)) {
-                readRealm(reader, list);
-            }
-            else if (reader.getLocalName().equals(SecureDeploymentDefinition.TAG_NAME)) {
-                readDeployment(reader, list);
-            } else if (reader.getLocalName().equals(AuthServerDefinition.TAG_NAME)) {
+            if (reader.getLocalName().equals(AuthServerDefinition.TAG_NAME)) {
                 readAuthServer(reader, list);
             }
         }
@@ -88,72 +82,6 @@ class KeycloakSubsystemParser implements XMLStreamConstants, XMLElementReader<Li
         list.add(addAuthServer);
     }
 
-    private void readRealm(XMLExtendedStreamReader reader, List<ModelNode> list) throws XMLStreamException {
-        String realmName = readNameAttribute(reader);
-        ModelNode addRealm = new ModelNode();
-        addRealm.get(ModelDescriptionConstants.OP).set(ModelDescriptionConstants.ADD);
-        PathAddress addr = PathAddress.pathAddress(PathElement.pathElement(ModelDescriptionConstants.SUBSYSTEM, KeycloakExtension.SUBSYSTEM_NAME),
-                                                   PathElement.pathElement(RealmDefinition.TAG_NAME, realmName));
-        addRealm.get(ModelDescriptionConstants.OP_ADDR).set(addr.toModelNode());
-
-        while (reader.hasNext() && nextTag(reader) != END_ELEMENT) {
-            String tagName = reader.getLocalName();
-            SimpleAttributeDefinition def = RealmDefinition.lookup(tagName);
-            if (def == null) throw new XMLStreamException("Unknown realm tag " + tagName);
-            def.parseAndSetParameter(reader.getElementText(), addRealm, reader);
-        }
-
-        if (!SharedAttributeDefinitons.validateTruststoreSetIfRequired(addRealm)) {
-            //TODO: externalize the message
-            throw new XMLStreamException("truststore and truststore-password must be set if ssl-required is not none and disable-trust-maanger is false.");
-        }
-
-        list.add(addRealm);
-    }
-
-    private void readDeployment(XMLExtendedStreamReader reader, List<ModelNode> resourcesToAdd) throws XMLStreamException {
-        String name = readNameAttribute(reader);
-        ModelNode addSecureDeployment = new ModelNode();
-        addSecureDeployment.get(ModelDescriptionConstants.OP).set(ModelDescriptionConstants.ADD);
-        PathAddress addr = PathAddress.pathAddress(PathElement.pathElement(ModelDescriptionConstants.SUBSYSTEM, KeycloakExtension.SUBSYSTEM_NAME),
-                PathElement.pathElement(SecureDeploymentDefinition.TAG_NAME, name));
-        addSecureDeployment.get(ModelDescriptionConstants.OP_ADDR).set(addr.toModelNode());
-        List<ModelNode> credentialsToAdd = new ArrayList<ModelNode>();
-        while (reader.hasNext() && nextTag(reader) != END_ELEMENT) {
-            String tagName = reader.getLocalName();
-            if (tagName.equals(CredentialDefinition.TAG_NAME)) {
-                readCredential(reader, addr, credentialsToAdd);
-                continue;
-            }
-
-            SimpleAttributeDefinition def = SecureDeploymentDefinition.lookup(tagName);
-            if (def == null) throw new XMLStreamException("Unknown secure-deployment tag " + tagName);
-            def.parseAndSetParameter(reader.getElementText(), addSecureDeployment, reader);
-        }
-
-
-        /**
-         * TODO need to check realm-ref first.
-        if (!SharedAttributeDefinitons.validateTruststoreSetIfRequired(addSecureDeployment)) {
-            //TODO: externalize the message
-            throw new XMLStreamException("truststore and truststore-password must be set if ssl-required is not none  and disable-trust-maanger is false.");
-        }
-         */
-
-        // Must add credentials after the deployment is added.
-        resourcesToAdd.add(addSecureDeployment);
-        resourcesToAdd.addAll(credentialsToAdd);
-    }
-
-    public void readCredential(XMLExtendedStreamReader reader, PathAddress parent, List<ModelNode> credentialsToAdd) throws XMLStreamException {
-        String name = readNameAttribute(reader);
-        ModelNode addCredential = new ModelNode();
-        addCredential.get(ModelDescriptionConstants.OP).set(ModelDescriptionConstants.ADD);
-        PathAddress addr = PathAddress.pathAddress(parent, PathElement.pathElement(CredentialDefinition.TAG_NAME, name));
-        addCredential.get(ModelDescriptionConstants.OP_ADDR).set(addr.toModelNode());
-        addCredential.get(CredentialDefinition.VALUE.getName()).set(reader.getElementText());
-        credentialsToAdd.add(addCredential);
-    }
 
     // expects that the current tag will have one single attribute called "name"
     private String readNameAttribute(XMLExtendedStreamReader reader) throws XMLStreamException {
@@ -179,8 +107,6 @@ class KeycloakSubsystemParser implements XMLStreamConstants, XMLElementReader<Li
     public void writeContent(final XMLExtendedStreamWriter writer, final SubsystemMarshallingContext context) throws XMLStreamException {
         context.startSubsystemElement(KeycloakExtension.NAMESPACE, false);
         writeAuthServers(writer, context);
-        writeRealms(writer, context);
-        writeSecureDeployments(writer, context);
         writer.writeEndElement();
     }
 
@@ -199,64 +125,4 @@ class KeycloakSubsystemParser implements XMLStreamConstants, XMLElementReader<Li
             writer.writeEndElement();
         }
     }
-
-    private void writeRealms(XMLExtendedStreamWriter writer, SubsystemMarshallingContext context) throws XMLStreamException {
-        if (!context.getModelNode().get(RealmDefinition.TAG_NAME).isDefined()) {
-            return;
-        }
-        for (Property realm : context.getModelNode().get(RealmDefinition.TAG_NAME).asPropertyList()) {
-            writer.writeStartElement(RealmDefinition.TAG_NAME);
-            writer.writeAttribute("name", realm.getName());
-            ModelNode realmElements = realm.getValue();
-            for (AttributeDefinition element : RealmDefinition.ALL_ATTRIBUTES) {
-                element.marshallAsElement(realmElements, writer);
-            }
-
-            writer.writeEndElement();
-        }
-    }
-
-    private void writeSecureDeployments(XMLExtendedStreamWriter writer, SubsystemMarshallingContext context) throws XMLStreamException {
-        if (!context.getModelNode().get(SecureDeploymentDefinition.TAG_NAME).isDefined()) {
-            return;
-        }
-        for (Property deployment : context.getModelNode().get(SecureDeploymentDefinition.TAG_NAME).asPropertyList()) {
-            writer.writeStartElement(SecureDeploymentDefinition.TAG_NAME);
-            writer.writeAttribute("name", deployment.getName());
-            ModelNode deploymentElements = deployment.getValue();
-            for (AttributeDefinition element : SecureDeploymentDefinition.ALL_ATTRIBUTES) {
-                element.marshallAsElement(deploymentElements, writer);
-            }
-
-            ModelNode credentials = deploymentElements.get(CredentialDefinition.TAG_NAME);
-            if (credentials.isDefined()) {
-                writeCredentials(writer, credentials);
-            }
-
-            writer.writeEndElement();
-        }
-    }
-
-    private void writeCredentials(XMLExtendedStreamWriter writer, ModelNode credentials) throws XMLStreamException {
-        for (Property credential : credentials.asPropertyList()) {
-            writer.writeStartElement(CredentialDefinition.TAG_NAME);
-            writer.writeAttribute("name", credential.getName());
-            String credentialValue = credential.getValue().get(CredentialDefinition.VALUE.getName()).asString();
-            writeCharacters(writer, credentialValue);
-            writer.writeEndElement();
-        }
-    }
-
-    // code taken from org.jboss.as.controller.AttributeMarshaller
-    private void writeCharacters(XMLExtendedStreamWriter writer, String content) throws XMLStreamException {
-        if (content.indexOf('\n') > -1) {
-            // Multiline content. Use the overloaded variant that staxmapper will format
-            writer.writeCharacters(content);
-        } else {
-            // Staxmapper will just output the chars without adding newlines if this is used
-            char[] chars = content.toCharArray();
-            writer.writeCharacters(chars, 0, chars.length);
-        }
-    }
-
 }

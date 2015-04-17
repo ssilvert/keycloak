@@ -48,9 +48,6 @@ public class KeycloakExtension implements Extension {
     protected static final PathElement SUBSYSTEM_PATH = PathElement.pathElement(SUBSYSTEM, SUBSYSTEM_NAME);
     private static final ResourceDefinition KEYCLOAK_SUBSYSTEM_RESOURCE = new KeycloakSubsystemDefinition();
     static final AuthServerDefinition AUTH_SERVER_DEFINITION = new AuthServerDefinition();
-    static final RealmDefinition REALM_DEFINITION = new RealmDefinition();
-    static final SecureDeploymentDefinition SECURE_DEPLOYMENT_DEFINITION = new SecureDeploymentDefinition();
-    static final CredentialDefinition CREDENTIAL_DEFINITION = new CredentialDefinition();
 
     public static StandardResourceDescriptionResolver getResourceDescriptionResolver(final String... keyPrefix) {
         StringBuilder prefix = new StringBuilder(SUBSYSTEM_NAME);
@@ -79,9 +76,6 @@ public class KeycloakExtension implements Extension {
 
         ManagementResourceRegistration registration = subsystem.registerSubsystemModel(KEYCLOAK_SUBSYSTEM_RESOURCE);
         registration.registerSubModel(AUTH_SERVER_DEFINITION);
-        registration.registerSubModel(REALM_DEFINITION);
-        ManagementResourceRegistration secureDeploymentRegistration = registration.registerSubModel(SECURE_DEPLOYMENT_DEFINITION);
-        secureDeploymentRegistration.registerSubModel(CREDENTIAL_DEFINITION);
 
         subsystem.registerXMLElementWriter(PARSER);
     }
