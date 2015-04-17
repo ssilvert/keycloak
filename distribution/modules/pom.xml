@@ -65,7 +65,12 @@
         </dependency>
         <dependency>
             <groupId>org.keycloak</groupId>
-            <artifactId>keycloak-subsystem</artifactId>
+            <artifactId>keycloak-server-subsystem</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.keycloak</groupId>
+            <artifactId>keycloak-adapter-subsystem</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
@@ -254,7 +259,7 @@
                                     <version>${project.version}</version>
                                     <type>war</type>
                                     <overWrite>true</overWrite>
-                                    <outputDirectory>${project.build.directory}/modules/org/keycloak/keycloak-subsystem/main/auth-server</outputDirectory>
+                                    <outputDirectory>${project.build.directory}/modules/org/keycloak/keycloak-server-subsystem/main/auth-server</outputDirectory>
                                 </artifactItem>
                             </artifactItems>
                         </configuration>

@@ -15,7 +15,8 @@
                 <exclude>org/keycloak/keycloak-undertow-adapter/**</exclude>
                 <exclude>org/keycloak/keycloak-wildfly-adapter/**</exclude>
                 <exclude>org/jboss/**</exclude>
-                <exclude>org/keycloak/keycloak-subsystem/**</exclude>
+                <exclude>org/keycloak/keycloak-server-subsystem/**</exclude>
+                <exclude>org/keycloak/keycloak-adapter-subsystem/**</exclude>
             </excludes>
             <outputDirectory>modules</outputDirectory>
         </fileSet>
