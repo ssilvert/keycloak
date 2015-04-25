@@ -45,5 +45,6 @@
         <module>proxy</module>
         <module>appliance-dist</module>
         <module>src-dist</module>
+        <module>feature-pack-builds</module>
     </modules>
 </project>
