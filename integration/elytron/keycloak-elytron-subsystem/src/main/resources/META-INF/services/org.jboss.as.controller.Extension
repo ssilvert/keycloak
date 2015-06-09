@@ -1,1 +1,1 @@
-org.keycloak.subsystem.elytron.extension.KeycloakElytronExtension
+org.keycloak.elytron.subsystem.extension.KeycloakElytronExtension
