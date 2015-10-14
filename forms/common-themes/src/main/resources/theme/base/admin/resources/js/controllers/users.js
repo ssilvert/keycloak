@@ -1090,3 +1090,56 @@ module.controller('UserFederationMapperCreateCtrl', function($scope, realm, prov
 
 });
 
+module.controller('UserImportCtrl', function($scope, UserImport, realm, $location, $route, Notifications, $modal) {
+    console.log('UserImportCtrl');
+
+    $scope.users = {
+        enabled: true
+    };
+    
+    $scope.realm = realm;
+    $scope.changed = false;
+    $scope.files = [];
+    
+    var oldCopy = angular.copy($scope.users);
+
+    $scope.importFile = function($fileContent){
+        $scope.users = angular.copy(JSON.parse($fileContent));
+        $scope.users.realm = realm.realm;
+        $scope.importing = true;
+    };
+
+    $scope.viewImportDetails = function() {
+        $modal.open({
+            templateUrl: resourceUrl + '/partials/modal/view-object.html',
+            controller: 'ObjectModalCtrl',
+            resolve: {
+                object: function () {
+                    return $scope.users;
+                }
+            }
+        })
+    };
+    
+    $scope.$watch('users', function() {
+        if (!angular.equals($scope.users, oldCopy)) {
+            $scope.changed = true;
+        }
+    }, true);
+    
+    $scope.save = function() {
+        var userCopy = angular.copy($scope.users);
+        UserImport.save(userCopy, function() {
+            Notifications.success("The users have been imported.");
+        });
+    };
+    
+    $scope.cancel = function() {
+        $location.url("/realms/" + realm.realm + "/users");
+    };
+    
+    $scope.reset = function() {
+        $route.reload();
+    }
+
+});
