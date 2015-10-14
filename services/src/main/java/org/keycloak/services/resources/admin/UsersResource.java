@@ -208,6 +208,86 @@ public class UsersResource {
         }
     }
 
+    protected Response newUser(final UriInfo uriInfo, final UserRepresentation rep) {
+        try {
+            Map<String, ClientModel> apps = realm.getClientNameMap();
+            UserModel user = RepresentationToModel.createUser(session, realm, rep, apps);
+
+            adminEvent.operation(OperationType.CREATE).resourcePath(uriInfo, user.getId()).representation(rep).success();
+
+            return Response.created(uriInfo.getAbsolutePathBuilder().path(user.getId()).build()).build();
+        } catch (ModelDuplicateException e) {
+            if (session.getTransaction().isActive()) {
+                session.getTransaction().setRollbackOnly();
+            }
+            return ErrorResponse.exists("User exists with same username or email");
+        }
+    }
+
+    /**
+     * Import Users from a JSON file.
+     *
+     * @param uriInfo
+     * @param userRep
+     * @return
+     */
+    @Path("import")
+    @POST
+    @Consumes(MediaType.APPLICATION_JSON)
+    public Response importUsers(final @Context UriInfo uriInfo, UserImportRepresentation userRep) {
+        auth.requireManage();
+        
+        // check all constraints before mass import
+        for (UserRepresentation rep : userRep.getUsers()) {
+            if (session.users().getUserByUsername(rep.getUsername(), realm) != null) {
+                return ErrorResponse.exists("User '" + rep.getUsername() + "' already exists");
+            }
+            if (rep.getEmail() != null && session.users().getUserByEmail(rep.getEmail(), realm) != null) {
+                return ErrorResponse.exists("User email '" + rep.getEmail() + "' already exists");
+            }
+        }
+
+        Response response = null;
+        for (UserRepresentation rep : userRep.getUsers()) {
+            response = newUser(uriInfo, rep);
+            Response.Status status = Response.Status.fromStatusCode(response.getStatus());
+            if (status != Response.Status.CREATED) {
+                if (session.getTransaction().isActive()) {
+                    session.getTransaction().rollback();
+                }
+                return response;
+            }
+        }
+
+        if (session.getTransaction().isActive()) {
+            session.getTransaction().commit();
+        }
+
+        return response;
+    }
+
+    public static class UserImportRepresentation {
+        protected String realm;
+        protected List<UserRepresentation> users;
+
+        public String getRealm() {
+            return realm;
+        }
+
+        public void setRealm(String realm) {
+            this.realm = realm;
+        }
+
+        public List<UserRepresentation> getUsers() {
+            return users;
+        }
+
+        public void setUsers(List<UserRepresentation> users) {
+            this.users = users;
+        }
+
+    }
+
     private void updateUserFromRep(UserModel user, UserRepresentation rep, Set<String> attrsToRemove) {
         if (realm.isEditUsernameAllowed()) {
             user.setUsername(rep.getUsername());

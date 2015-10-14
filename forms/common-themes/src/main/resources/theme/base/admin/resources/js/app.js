@@ -384,6 +384,18 @@ module.config([ '$routeProvider', function($routeProvider) {
             },
             controller : 'UserDetailCtrl'
         })
+        .when('/import/user/:realm', {
+            templateUrl : resourceUrl + '/partials/user-import.html',
+            resolve : {
+                realm : function(RealmLoader) {
+                    return RealmLoader();
+                },
+                user : function() {
+                    return {};
+                }
+            },
+            controller : 'UserImportCtrl'
+        })
         .when('/realms/:realm/users/:user', {
             templateUrl : resourceUrl + '/partials/user-detail.html',
             resolve : {
