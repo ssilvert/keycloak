@@ -308,6 +308,12 @@ module.factory('User', function($resource) {
     });
 });
 
+module.factory('UserImport', function($resource) {
+    return $resource(authUrl + '/admin/realms/:realm/users/import', {
+        realm : '@realm'
+    });
+});
+
 module.factory('UserFederationInstances', function($resource) {
     return $resource(authUrl + '/admin/realms/:realm/user-federation/instances/:instance', {
         realm : '@realm',
