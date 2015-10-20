@@ -20,7 +20,7 @@
                     <div class="pull-right" data-ng-show="access.manageUsers">
                         <button data-ng-click="unlockUsers()" class="btn btn-default">Unlock Users</button>
                         <a id="createUser" class="btn btn-default" href="#/create/user/{{realm.realm}}">Add User</a>
-                        <a id="createUser" class="btn btn-default" href="#/import/user/{{realm.realm}}">Import Users</a>
+                        <a id="importUsers" class="btn btn-default" href="#/import/users/{{realm.realm}}">{{:: 'import' | translate}}</a>
                     </div>
                 </div>
             </th>

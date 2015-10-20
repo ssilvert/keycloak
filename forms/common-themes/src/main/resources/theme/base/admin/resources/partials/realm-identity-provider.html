@@ -8,7 +8,7 @@
                     <caption class="hidden">{{:: 'table-of-identity-providers' | translate}}</caption>
                     <thead>
                     <tr>
-                        <th colspan="6" class="kc-table-actions">
+                        <th colspan="5" class="kc-table-actions">
                             <div class="dropdown pull-right">
                                 <select class="form-control" ng-model="provider"
                                         ng-options="p.name group by p.groupName for p in allProviders track by p.id"
@@ -16,6 +16,9 @@
                                     <option value="" disabled selected>{{:: 'add-provider.placeholder' | translate}}</option>
                                 </select>
                             </div>
+                        </th>
+                        <th colspan="1" class="kc-table-actions">
+                            <a id="importIdentityProviders" class="btn btn-default" href="#/import/identity-provider-settings/{{realm.realm}}">{{:: 'import' | translate}}</a>
                         </th>
                     </tr>
                     <tr ng-show="configuredProviders.length > 0">

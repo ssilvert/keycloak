@@ -38,6 +38,7 @@ import java.util.List;
 import java.util.Map;
 
 import static javax.ws.rs.core.Response.Status.BAD_REQUEST;
+import org.keycloak.representations.idm.PartialImport;
 
 /**
  * @author Pedro Igor
@@ -131,6 +132,47 @@ public class IdentityProvidersResource {
     }
 
     /**
+     * Import Clients from a JSON file.
+     *
+     * @param uriInfo
+     * @param idpImports
+     * @return
+     */
+    @Path("import")
+    @POST
+    @Consumes(MediaType.APPLICATION_JSON)
+    public Response importClients(final @Context UriInfo uriInfo, PartialImport idpImports) {
+        auth.requireManage();
+
+        // check all constraints before mass import
+        List<IdentityProviderRepresentation> idps = idpImports.getIdentityProviders();
+        if (idps == null || idps.isEmpty()) {
+            return ErrorResponse.error("No providers to import.", Response.Status.INTERNAL_SERVER_ERROR);
+        }
+
+        for (IdentityProviderRepresentation rep : idps) {
+            if (realm.getClientByClientId(rep.getAlias()) != null) {
+                return ErrorResponse.exists("Identity Provider alias '" + rep.getAlias() + "' already exists");
+            }
+        }
+
+        for (IdentityProviderRepresentation rep : idps) {
+            try {
+                create(uriInfo, rep);
+            } catch (Exception e) {
+                if (session.getTransaction().isActive()) session.getTransaction().setRollbackOnly();
+                return ErrorResponse.error(e.getMessage(), Response.Status.INTERNAL_SERVER_ERROR);
+            }
+        }
+
+        if (session.getTransaction().isActive()) {
+            session.getTransaction().commit();
+        }
+
+        return Response.ok().build();
+    }
+
+    /**
      * Get identity providers
      *
      * @return
@@ -169,7 +211,7 @@ public class IdentityProvidersResource {
 
             adminEvent.operation(OperationType.CREATE).resourcePath(uriInfo, identityProvider.getInternalId())
                     .representation(representation).success();
-            
+
             return Response.created(uriInfo.getAbsolutePathBuilder().path(representation.getProviderId()).build()).build();
         } catch (ModelDuplicateException e) {
             return ErrorResponse.exists("Identity Provider " + representation.getAlias() + " already exists");
@@ -194,7 +236,7 @@ public class IdentityProvidersResource {
 
         IdentityProviderResource identityProviderResource = new IdentityProviderResource(this.auth, realm, session, identityProviderModel, adminEvent);
         ResteasyProviderFactory.getInstance().injectProperties(identityProviderResource);
-        
+
         return identityProviderResource;
     }
 
