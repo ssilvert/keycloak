@@ -75,6 +75,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import org.keycloak.models.UsernameLoginFailureModel;
+import org.keycloak.representations.idm.PartialImport;
 import org.keycloak.services.managers.BruteForceProtector;
 import org.keycloak.services.managers.UserSessionManager;
 import org.keycloak.services.resources.AccountService;
@@ -208,37 +209,26 @@ public class UsersResource {
         }
     }
 
-    protected Response newUser(final UriInfo uriInfo, final UserRepresentation rep) {
-        try {
-            Map<String, ClientModel> apps = realm.getClientNameMap();
-            UserModel user = RepresentationToModel.createUser(session, realm, rep, apps);
-
-            adminEvent.operation(OperationType.CREATE).resourcePath(uriInfo, user.getId()).representation(rep).success();
-
-            return Response.created(uriInfo.getAbsolutePathBuilder().path(user.getId()).build()).build();
-        } catch (ModelDuplicateException e) {
-            if (session.getTransaction().isActive()) {
-                session.getTransaction().setRollbackOnly();
-            }
-            return ErrorResponse.exists("User exists with same username or email");
-        }
-    }
-
     /**
      * Import Users from a JSON file.
      *
      * @param uriInfo
-     * @param userRep
+     * @param userImports
      * @return
      */
     @Path("import")
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
-    public Response importUsers(final @Context UriInfo uriInfo, UserImportRepresentation userRep) {
+    public Response importUsers(final @Context UriInfo uriInfo, PartialImport userImports) {
         auth.requireManage();
-        
+
         // check all constraints before mass import
-        for (UserRepresentation rep : userRep.getUsers()) {
+        List<UserRepresentation> users = userImports.getUsers();
+        if (users == null || users.isEmpty()) {
+            return ErrorResponse.error("No users to import.", Response.Status.INTERNAL_SERVER_ERROR);
+        }
+
+        for (UserRepresentation rep : users) {
             if (session.users().getUserByUsername(rep.getUsername(), realm) != null) {
                 return ErrorResponse.exists("User '" + rep.getUsername() + "' already exists");
             }
@@ -247,15 +237,14 @@ public class UsersResource {
             }
         }
 
-        Response response = null;
-        for (UserRepresentation rep : userRep.getUsers()) {
-            response = newUser(uriInfo, rep);
-            Response.Status status = Response.Status.fromStatusCode(response.getStatus());
-            if (status != Response.Status.CREATED) {
-                if (session.getTransaction().isActive()) {
-                    session.getTransaction().rollback();
-                }
-                return response;
+        for (UserRepresentation rep : users) {
+            try {
+                Map<String, ClientModel> apps = realm.getClientNameMap();
+                UserModel user = RepresentationToModel.createUser(session, realm, rep, apps);
+                adminEvent.operation(OperationType.CREATE).resourcePath(uriInfo, user.getId()).representation(rep).success();
+            } catch (Exception e) {
+                if (session.getTransaction().isActive()) session.getTransaction().setRollbackOnly();
+                return ErrorResponse.error(e.getMessage(), Response.Status.INTERNAL_SERVER_ERROR);
             }
         }
 
@@ -263,29 +252,7 @@ public class UsersResource {
             session.getTransaction().commit();
         }
 
-        return response;
-    }
-
-    public static class UserImportRepresentation {
-        protected String realm;
-        protected List<UserRepresentation> users;
-
-        public String getRealm() {
-            return realm;
-        }
-
-        public void setRealm(String realm) {
-            this.realm = realm;
-        }
-
-        public List<UserRepresentation> getUsers() {
-            return users;
-        }
-
-        public void setUsers(List<UserRepresentation> users) {
-            this.users = users;
-        }
-
+        return Response.ok().build();
     }
 
     private void updateUserFromRep(UserModel user, UserRepresentation rep, Set<String> attrsToRemove) {

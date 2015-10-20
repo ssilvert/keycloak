@@ -203,6 +203,18 @@ module.config([ '$routeProvider', function($routeProvider) {
             },
             controller : 'RealmIdentityProviderCtrl'
         })
+        .when('/import/identity-provider-settings/:realm', {
+            templateUrl : resourceUrl + '/templates/kc-partial-import.html',
+            resolve : {
+                section : function() { return 'identity-provider-settings' },
+                sectionName : function() { return 'Identity Providers' },
+                resourceName : function() { return 'identity-provider'},
+                realm : function(RealmLoader) {
+                    return RealmLoader();
+                }
+            },
+            controller : 'PartialImportCtrl'
+        })
         .when('/create/identity-provider/:realm/:provider_id', {
             templateUrl : function(params){ return resourceUrl + '/partials/realm-identity-provider-' + params.provider_id + '.html'; },
             resolve : {
@@ -384,17 +396,17 @@ module.config([ '$routeProvider', function($routeProvider) {
             },
             controller : 'UserDetailCtrl'
         })
-        .when('/import/user/:realm', {
-            templateUrl : resourceUrl + '/partials/user-import.html',
+        .when('/import/users/:realm', {
+            templateUrl : resourceUrl + '/templates/kc-partial-import.html',
             resolve : {
+                section : function() { return 'users' },
+                sectionName : function() { return 'Users' },
+                resourceName : function() { return 'users'},
                 realm : function(RealmLoader) {
                     return RealmLoader();
-                },
-                user : function() {
-                    return {};
                 }
             },
-            controller : 'UserImportCtrl'
+            controller : 'PartialImportCtrl'
         })
         .when('/realms/:realm/users/:user', {
             templateUrl : resourceUrl + '/partials/user-detail.html',
@@ -607,6 +619,18 @@ module.config([ '$routeProvider', function($routeProvider) {
                 }
             },
             controller : 'ClientRoleDetailCtrl'
+        })
+        .when('/import/clients/:realm', {
+            templateUrl : resourceUrl + '/templates/kc-partial-import.html',
+            resolve : {
+                section : function() { return 'clients' },
+                sectionName : function() { return 'Clients' },
+                resourceName : function() { return 'clients'},
+                realm : function(RealmLoader) {
+                    return RealmLoader();
+                }
+            },
+            controller : 'PartialImportCtrl'
         })
         .when('/realms/:realm/clients/:client/roles/:role', {
             templateUrl : resourceUrl + '/partials/client-role-detail.html',
@@ -1901,74 +1925,6 @@ module.directive('kcTabsUserFederation', function () {
         restrict: 'E',
         replace: true,
         templateUrl: resourceUrl + '/templates/kc-tabs-user-federation.html'
-    }
-});
-
-module.controller('RoleSelectorModalCtrl', function($scope, realm, config, configName, RealmRoles, Client, ClientRole, $modalInstance) {
-    $scope.selectedRealmRole = {
-        role: undefined
-    };
-    $scope.selectedClientRole = {
-        role: undefined
-    };
-    $scope.client = {
-        selected: undefined
-    };
-
-    $scope.selectRealmRole = function() {
-        config[configName] = $scope.selectedRealmRole.role.name;
-        $modalInstance.close();
-    }
-
-    $scope.selectClientRole = function() {
-        config[configName] = $scope.client.selected.clientId + "." + $scope.selectedClientRole.role.name;
-        $modalInstance.close();
-    }
-
-    $scope.cancel = function() {
-        $modalInstance.dismiss();
-    }
-
-    $scope.changeClient = function() {
-        if ($scope.client.selected) {
-            ClientRole.query({realm: realm.realm, client: $scope.client.selected.id}, function (data) {
-                $scope.clientRoles = data;
-             });
-        } else {
-            console.log('selected client was null');
-            $scope.clientRoles = null;
-        }
-
-    }
-    RealmRoles.query({realm: realm.realm}, function(data) {
-        $scope.realmRoles = data;
-    })
-    Client.query({realm: realm.realm}, function(data) {
-        $scope.clients = data;
-        if (data.length > 0) {
-            $scope.client.selected = data[0];
-            $scope.changeClient();
-        }
-    })
-});
-
-module.controller('ProviderConfigCtrl', function ($modal, $scope) {
-    $scope.openRoleSelector = function (configName, config) {
-        $modal.open({
-            templateUrl: resourceUrl + '/partials/modal/role-selector.html',
-            controller: 'RoleSelectorModalCtrl',
-            resolve: {
-                realm: function () {
-                    return $scope.realm;
-                },
-                config: function () {
-                    return config;
-                },
-                configName: function () {
-                    return configName;
-                }
-            }
-        })
     }
 });
 
