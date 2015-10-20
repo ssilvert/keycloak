@@ -27,6 +27,7 @@ import javax.ws.rs.core.UriInfo;
 
 import java.util.ArrayList;
 import java.util.List;
+import org.keycloak.representations.idm.PartialImport;
 
 /**
  * Base resource class for managing a realm's clients.
@@ -39,7 +40,7 @@ public class ClientsResource {
     protected RealmModel realm;
     private RealmAuth auth;
     private AdminEventBuilder adminEvent;
-    
+
     @Context
     protected KeycloakSession session;
 
@@ -47,7 +48,7 @@ public class ClientsResource {
         this.realm = realm;
         this.auth = auth;
         this.adminEvent = adminEvent;
-        
+
         auth.init(RealmAuth.Resource.CLIENT);
     }
 
@@ -96,9 +97,9 @@ public class ClientsResource {
 
         try {
             ClientModel clientModel = RepresentationToModel.createClient(session, realm, rep, true);
-            
+
             adminEvent.operation(OperationType.CREATE).resourcePath(uriInfo, clientModel.getId()).representation(rep).success();
-            
+
             return Response.created(uriInfo.getAbsolutePathBuilder().path(clientModel.getId()).build()).build();
         } catch (ModelDuplicateException e) {
             return ErrorResponse.exists("Client " + rep.getClientId() + " already exists");
@@ -123,6 +124,48 @@ public class ClientsResource {
         ClientResource clientResource = new ClientResource(realm, auth, clientModel, session, adminEvent);
         ResteasyProviderFactory.getInstance().injectProperties(clientResource);
         return clientResource;
+    }
+
+    /**
+     * Import Clients from a JSON file.
+     *
+     * @param uriInfo
+     * @param clientImports
+     * @return
+     */
+    @Path("import")
+    @POST
+    @Consumes(MediaType.APPLICATION_JSON)
+    public Response importClients(final @Context UriInfo uriInfo, PartialImport clientImports) {
+        auth.requireManage();
+
+        // check all constraints before mass import
+        List<ClientRepresentation> clients = clientImports.getClients();
+        if (clients == null || clients.isEmpty()) {
+            return ErrorResponse.error("No clients to import.", Response.Status.INTERNAL_SERVER_ERROR);
+        }
+
+        for (ClientRepresentation rep : clients) {
+            if (realm.getClientByClientId(rep.getClientId()) != null) {
+                return ErrorResponse.exists("Client id '" + rep.getClientId() + "' already exists");
+            }
+        }
+
+        for (ClientRepresentation rep : clients) {
+            try {
+                ClientModel client = RepresentationToModel.createClient(session, realm, rep, true);
+                adminEvent.operation(OperationType.CREATE).resourcePath(uriInfo, client.getId()).representation(rep).success();
+            } catch (Exception e) {
+                if (session.getTransaction().isActive()) session.getTransaction().setRollbackOnly();
+                return ErrorResponse.error(e.getMessage(), Response.Status.INTERNAL_SERVER_ERROR);
+            }
+        }
+
+        if (session.getTransaction().isActive()) {
+            session.getTransaction().commit();
+        }
+
+        return Response.ok().build();
     }
 
 }

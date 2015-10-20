@@ -34,6 +34,7 @@
     <script src="${authUrl}/js/${resourceVersion}/keycloak.js" type="text/javascript"></script>
 
     <script src="${resourceUrl}/js/app.js" type="text/javascript"></script>
+    <script src="${resourceUrl}/js/controllers/common.js" type="text/javascript"></script>
     <script src="${resourceUrl}/js/controllers/realm.js" type="text/javascript"></script>
     <script src="${resourceUrl}/js/controllers/clients.js" type="text/javascript"></script>
     <script src="${resourceUrl}/js/controllers/users.js" type="text/javascript"></script>
