@@ -75,6 +75,7 @@ module.controller('PartialImportCtrl', function($scope, realm, section, sectionN
     $scope.changed = false;
     $scope.files = [];
     $scope.realm = realm;
+    $scope.overwrite = false;
     
     var oldCopy = angular.copy($scope.fileContent);
 
@@ -103,6 +104,7 @@ module.controller('PartialImportCtrl', function($scope, realm, section, sectionN
     
     $scope.save = function() {
         var json = angular.copy($scope.fileContent);
+        json.overwrite = $scope.overwrite;
         var importFile = $resource(authUrl + '/admin/realms/' + realm.realm + '/' + resourceName + '/import');
         importFile.save(json, function() {
             Notifications.success('The ' + sectionName + ' have been imported.');

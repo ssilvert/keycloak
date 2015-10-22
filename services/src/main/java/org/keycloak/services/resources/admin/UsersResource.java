@@ -222,6 +222,8 @@ public class UsersResource {
     public Response importUsers(final @Context UriInfo uriInfo, PartialImport userImports) {
         auth.requireManage();
 
+        boolean overwrite = userImports.isOverwrite();
+
         // check all constraints before mass import
         List<UserRepresentation> users = userImports.getUsers();
         if (users == null || users.isEmpty()) {
@@ -229,16 +231,24 @@ public class UsersResource {
         }
 
         for (UserRepresentation rep : users) {
-            if (session.users().getUserByUsername(rep.getUsername(), realm) != null) {
+            if (!overwrite && userNameExists(rep)) {
                 return ErrorResponse.exists("User '" + rep.getUsername() + "' already exists");
             }
-            if (rep.getEmail() != null && session.users().getUserByEmail(rep.getEmail(), realm) != null) {
+            if (!overwrite && userEmailExists(rep)) {
                 return ErrorResponse.exists("User email '" + rep.getEmail() + "' already exists");
             }
         }
 
         for (UserRepresentation rep : users) {
             try {
+                if (overwrite && userNameExists(rep)) {
+                    session.userStorage().removeUser(realm, getByName(rep));
+                }
+
+                if (overwrite && userEmailExists(rep)) {
+                    session.userStorage().removeUser(realm, getByEmail(rep));
+                }
+
                 Map<String, ClientModel> apps = realm.getClientNameMap();
                 UserModel user = RepresentationToModel.createUser(session, realm, rep, apps);
                 adminEvent.operation(OperationType.CREATE).resourcePath(uriInfo, user.getId()).representation(rep).success();
@@ -253,6 +263,22 @@ public class UsersResource {
         }
 
         return Response.ok().build();
+    }
+
+    private UserModel getByName(UserRepresentation rep) {
+        return session.users().getUserByUsername(rep.getUsername(), realm);
+    }
+
+    private boolean userNameExists(UserRepresentation rep) {
+        return getByName(rep) != null;
+    }
+
+    private UserModel getByEmail(UserRepresentation rep) {
+        return session.users().getUserByEmail(rep.getEmail(), realm);
+    }
+
+    private boolean userEmailExists(UserRepresentation rep) {
+        return (rep.getEmail() != null) &&  (getByEmail(rep) != null);
     }
 
     private void updateUserFromRep(UserModel user, UserRepresentation rep, Set<String> attrsToRemove) {

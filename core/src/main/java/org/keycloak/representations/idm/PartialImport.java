@@ -27,9 +27,18 @@ import org.codehaus.jackson.annotate.JsonIgnoreProperties;
  */
 @JsonIgnoreProperties(ignoreUnknown=true)
 public class PartialImport {
+    protected boolean overwrite;
     protected List<UserRepresentation> users;
     protected List<ClientRepresentation> clients;
     protected List<IdentityProviderRepresentation> identityProviders;
+
+    public boolean isOverwrite() {
+        return overwrite;
+    }
+
+    public void setOverwrite(boolean overwrite) {
+        this.overwrite = overwrite;
+    }
 
     public List<UserRepresentation> getUsers() {
         return users;
@@ -54,5 +63,5 @@ public class PartialImport {
     public void setIdentityProviders(List<IdentityProviderRepresentation> identityProviders) {
         this.identityProviders = identityProviders;
     }
-    
+
 }

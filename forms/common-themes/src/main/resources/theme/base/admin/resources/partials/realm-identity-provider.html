@@ -8,17 +8,17 @@
                     <caption class="hidden">{{:: 'table-of-identity-providers' | translate}}</caption>
                     <thead>
                     <tr>
-                        <th colspan="5" class="kc-table-actions">
-                            <div class="dropdown pull-right">
-                                <select class="form-control" ng-model="provider"
-                                        ng-options="p.name group by p.groupName for p in allProviders track by p.id"
-                                        data-ng-change="addProvider(provider); provider = null">
-                                    <option value="" disabled selected>{{:: 'add-provider.placeholder' | translate}}</option>
-                                </select>
+                        <th colspan="6" class="kc-table-actions">
+                            <div class="form-inline">
+                                <div class="dropdown pull-right">
+                                    <select class="form-control" ng-model="provider"
+                                            ng-options="p.name group by p.groupName for p in allProviders track by p.id"
+                                            data-ng-change="addProvider(provider); provider = null">
+                                        <option value="" disabled selected>{{:: 'add-provider.placeholder' | translate}}</option>
+                                    </select>
+                                    <a id="importIdentityProviders" class="btn btn-default" href="#/import/identity-provider-settings/{{realm.realm}}">{{:: 'import' | translate}}</a>
+                                </div>
                             </div>
-                        </th>
-                        <th colspan="1" class="kc-table-actions">
-                            <a id="importIdentityProviders" class="btn btn-default" href="#/import/identity-provider-settings/{{realm.realm}}">{{:: 'import' | translate}}</a>
                         </th>
                     </tr>
                     <tr ng-show="configuredProviders.length > 0">
