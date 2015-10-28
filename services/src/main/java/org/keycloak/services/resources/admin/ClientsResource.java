@@ -1,5 +1,22 @@
+/*
+ * Copyright 2015 Red Hat Inc. and/or its affiliates and other contributors
+ * as indicated by the @author tags. All rights reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not
+ * use this file except in compliance with the License. You may obtain a copy of
+ * the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations under
+ * the License.
+ */
 package org.keycloak.services.resources.admin;
 
+import java.io.IOException;
 import org.jboss.logging.Logger;
 import org.jboss.resteasy.annotations.cache.NoCache;
 import org.jboss.resteasy.spi.NotFoundException;
@@ -27,6 +44,8 @@ import javax.ws.rs.core.UriInfo;
 
 import java.util.ArrayList;
 import java.util.List;
+import javax.ws.rs.QueryParam;
+import org.keycloak.exportimport.PartialExportUtil;
 import org.keycloak.representations.idm.PartialImport;
 
 /**
@@ -52,25 +71,43 @@ public class ClientsResource {
         auth.init(RealmAuth.Resource.CLIENT);
     }
 
+    @Path("export")
+    @GET
+    @NoCache
+    @Consumes(MediaType.APPLICATION_JSON)
+    public void exportClients(@QueryParam("search") String search,
+                            @QueryParam("fileName") String fileName,
+                            @QueryParam("condensed") boolean condensed) throws IOException {
+        auth.requireView();
+
+        if (search == null) search = "";
+        List clients = getClients(search);
+
+        PartialExportUtil.exportRepresentations("clients", clients, fileName, condensed, session, realm);
+    }
+
     /**
      * Get clients belonging to the realm
      *
-     * Returns a list of clients belonging to the realm
+     * @param search A string that may be a partial match for clientId.
+     *
+     * @return  a list of clients belonging to the realm
      */
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     @NoCache
-    public List<ClientRepresentation> getClients() {
+    public List<ClientRepresentation> getClients(@QueryParam("search") String search) {
         auth.requireAny();
-
         List<ClientRepresentation> rep = new ArrayList<>();
         List<ClientModel> clientModels = realm.getClients();
 
         boolean view = auth.hasView();
         for (ClientModel clientModel : clientModels) {
-            if (view) {
+            if (view && clientMatches(clientModel, search)) {
                 rep.add(ModelToRepresentation.toRepresentation(clientModel));
-            } else {
+            }
+
+            if (!view) {
                 ClientRepresentation client = new ClientRepresentation();
                 client.setId(clientModel.getId());
                 client.setClientId(clientModel.getClientId());
@@ -78,6 +115,12 @@ public class ClientsResource {
             }
         }
         return rep;
+    }
+
+    private boolean clientMatches(ClientModel clientModel, String search) {
+        if (search == null || search.trim().isEmpty()) return true;
+
+        return clientModel.getClientId().contains(search);
     }
 
     /**

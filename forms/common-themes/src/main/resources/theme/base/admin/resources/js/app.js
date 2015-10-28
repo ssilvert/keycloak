@@ -626,6 +626,18 @@ module.config([ '$routeProvider', function($routeProvider) {
             },
             controller : 'PartialImportCtrl'
         })
+        .when('/export/clients/:realm', {
+            templateUrl : resourceUrl + '/templates/kc-partial-export.html',
+            resolve : {
+                section : function() { return 'clients' },
+                sectionName : function() { return 'Clients' },
+                resourceName : function() { return 'clients'},
+                realm : function(RealmLoader) {
+                    return RealmLoader();
+                }
+            },
+            controller : 'PartialExportCtrl'
+        })
         .when('/realms/:realm/clients/:client/roles/:role', {
             templateUrl : resourceUrl + '/partials/client-role-detail.html',
             resolve : {

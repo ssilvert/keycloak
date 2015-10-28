@@ -347,27 +347,38 @@ public class ExportUtils {
     // Streaming API
 
     public static void exportUsersToStream(KeycloakSession session, RealmModel realm, List<UserModel> usersToExport, ObjectMapper mapper, OutputStream os) throws IOException {
+        List users = new ArrayList();
+        for (UserModel user : usersToExport) {
+            users.add(ExportUtils.exportUser(session, realm, user));
+        }
+
+        exportToStream(session, realm, "users", users, mapper, os);
+    }
+
+    public static void exportToStream(KeycloakSession session,
+                                      RealmModel realm,
+                                      String representationName,
+                                      List representationsToExport,
+                                      ObjectMapper mapper,
+                                      OutputStream os) throws IOException {
         JsonFactory factory = mapper.getJsonFactory();
-        JsonGenerator generator = factory.createJsonGenerator(os, JsonEncoding.UTF8);
-        try {
+
+        try (JsonGenerator generator = factory.createJsonGenerator(os, JsonEncoding.UTF8)) {
             if (mapper.isEnabled(SerializationConfig.Feature.INDENT_OUTPUT)) {
                 generator.useDefaultPrettyPrinter();
             }
             generator.writeStartObject();
             generator.writeStringField("realm", realm.getName());
-            // generator.writeStringField("strategy", strategy.toString());
-            generator.writeFieldName("users");
+
+            generator.writeFieldName(representationName);
             generator.writeStartArray();
 
-            for (UserModel user : usersToExport) {
-                UserRepresentation userRep = ExportUtils.exportUser(session, realm, user);
-                generator.writeObject(userRep);
+            for (Object representation : representationsToExport) {
+                generator.writeObject(representation);
             }
 
             generator.writeEndArray();
             generator.writeEndObject();
-        } finally {
-            generator.close();
         }
     }
 }

@@ -657,9 +657,14 @@ module.controller('ClientImportCtrl', function($scope, $location, $upload, realm
 });
 
 
-module.controller('ClientListCtrl', function($scope, realm, clients, Client, serverInfo, $route, Dialog, Notifications) {
+module.controller('ClientListCtrl', function($scope, realm, clients, Client, serverInfo, $route, Dialog, Notifications, LatestQuery) {
     $scope.realm = realm;
     $scope.clients = clients;
+    LatestQuery.clear();
+    
+    $scope.$watch('search.clientId', function(clientId) {
+        LatestQuery.set(clientId);
+    })
 
     $scope.removeClient = function(client) {
         Dialog.confirmDelete(client.clientId, 'client', function() {

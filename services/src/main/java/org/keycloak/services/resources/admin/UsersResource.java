@@ -16,7 +16,6 @@
  */
 package org.keycloak.services.resources.admin;
 
-import java.io.FileOutputStream;
 import java.io.IOException;
 import org.jboss.logging.Logger;
 import org.jboss.resteasy.annotations.cache.NoCache;
@@ -93,15 +92,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
-import org.codehaus.jackson.map.ObjectMapper;
 import org.keycloak.exportimport.PartialExportUtil;
-import org.keycloak.exportimport.util.ExportUtils;
 import org.keycloak.models.UsernameLoginFailureModel;
 import org.keycloak.representations.idm.PartialImport;
 import org.keycloak.services.managers.BruteForceProtector;
 import org.keycloak.services.offline.OfflineTokenUtils;
 import org.keycloak.services.resources.AccountService;
-import org.keycloak.util.JsonSerialization;
 
 /**
  * Base resource for managing users
@@ -664,19 +660,9 @@ public class UsersResource {
         if (search == null) search = "";
         if (fileName == null) throw new IOException("File name can not be null.");
 
-        List<UserModel> users = session.users().searchForUser(search.trim(), realm);
+        List<UserRepresentation> users = getUsers(search, null, null, null, null, null, null);
 
-        try (FileOutputStream out = PartialExportUtil.getExportStream(fileName)) {
-
-            ObjectMapper mapper;
-            if (condensed) {
-                mapper = JsonSerialization.mapper;
-            } else {
-                mapper = JsonSerialization.prettyMapper;
-            }
-
-            ExportUtils.exportUsersToStream(session, realm, users, mapper, out);
-        }
+        PartialExportUtil.exportRepresentations("users", users, fileName, condensed, session, realm);
     }
 
     /**

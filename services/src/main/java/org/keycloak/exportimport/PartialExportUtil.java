@@ -19,6 +19,13 @@ package org.keycloak.exportimport;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.IOException;
+import java.util.List;
+import org.codehaus.jackson.map.ObjectMapper;
+import org.keycloak.exportimport.util.ExportUtils;
+import org.keycloak.models.KeycloakSession;
+import org.keycloak.models.RealmModel;
+import org.keycloak.util.JsonSerialization;
 
 /**
  * Static utility class for exporting to a file.
@@ -27,7 +34,28 @@ import java.io.FileOutputStream;
  */
 public class PartialExportUtil {
 
+    public static void exportRepresentations(String representationName,
+                                             List representations,
+                                             String fileName,
+                                             boolean condensed,
+                                             KeycloakSession session,
+                                             RealmModel realm) throws IOException {
+        try (FileOutputStream out = PartialExportUtil.getExportStream(fileName)) {
+
+            ObjectMapper mapper;
+            if (condensed) {
+                mapper = JsonSerialization.mapper;
+            } else {
+                mapper = JsonSerialization.prettyMapper;
+            }
+
+            ExportUtils.exportToStream(session, realm, representationName, representations, mapper, out);
+        }
+    }
+
     public static FileOutputStream getExportStream(String fileName) throws FileNotFoundException {
+        if (fileName == null) throw new FileNotFoundException("File name can not be null.");
+        
         String baseDir = System.getProperty("jboss.server.base.dir");
         File exportDir = new File(baseDir, "export");
         if (!exportDir.exists()) exportDir.mkdir();
