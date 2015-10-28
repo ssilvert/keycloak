@@ -126,3 +126,47 @@ module.controller('PartialImportCtrl', function($scope, realm, section, sectionN
     }
 
 });
+
+module.controller('PartialExportCtrl', function($scope, realm, section, sectionName, resourceName, $location, Notifications, $resource, LatestQuery) {
+    $scope.section = section;
+    $scope.sectionName = sectionName;
+    $scope.realm = realm;
+    $scope.searchQuery = LatestQuery.get();
+    $scope.fileName = "keycloak-" + section;
+    $scope.condensed = false;
+    $scope.exported = {};
+
+    $scope.cancel = function() {
+        $location.url("/realms/" + realm.realm + "/" + section);
+    };
+    
+    $scope.localExport = function() {
+        var exportResource = $resource(authUrl + '/admin/realms/' + realm.realm + '/' + resourceName, 
+                                       {}, {get: {isArray:true}});
+        var json = exportResource.get({first: 0, search: $scope.searchQuery}, function() {
+            $scope.exported[resourceName] = json;
+            var blob = new Blob([angular.toJson($scope.exported,!$scope.condensed)], { type: 'application/json' });
+            saveAs(blob, $scope.fileName + ".json");
+            Notifications.success('The ' + sectionName + ' have been exported.');
+        }, function(error) {
+            if (error.data.errorMessage) {
+                Notifications.error(error.data.errorMessage);
+            } else {
+                Notifications.error('Unexpected error during export');
+            }
+        });
+    }
+    
+    $scope.serverExport = function() {
+        var exportResource = $resource(authUrl + '/admin/realms/' + realm.realm + '/' + resourceName + '/export');
+        exportResource.get({search: $scope.searchQuery, fileName: $scope.fileName, condensed: $scope.condensed}, function() {
+           Notifications.success($scope.sectionName + ' saved on the server.');
+        }, function(error) {
+            if (error.data.errorMessage) {
+                Notifications.error(error.data.errorMessage);
+            } else {
+                Notifications.error('Unexpected error during export');
+            }
+        });
+    }
+});

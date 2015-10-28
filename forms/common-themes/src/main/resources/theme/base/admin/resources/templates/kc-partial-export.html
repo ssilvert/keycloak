@@ -1,0 +1,58 @@
+<div class="col-sm-9 col-md-10 col-sm-push-3 col-md-push-2">
+    <ol class="breadcrumb">
+        <li><a href="#/realms/{{realm.realm}}/{{section}}">{{sectionName}}</a></li>
+        <li>Export {{sectionName}}</li>
+    </ol>
+
+    <h1>Export {{sectionName}}</h1>
+
+    <form class="form-horizontal" name="exportForm" novalidate>
+
+        <fieldset class="border-top">
+            <div class="form-group">
+                <label for="search-query" class="col-md-2 control-label">Search</label>
+                <div class="col-md-6">
+                    <input class="form-control" id="search-query" type="text" data-ng-model="searchQuery"/>
+                </div>
+                <kc-tooltip>Limit the search using a query.  The query can be tested in the previous list screen.</kc-tooltip>
+            </div>
+            <div class="form-group">
+                <label for="fileName" class="col-md-2 control-label">File Name</label>
+                <div class="col-md-6">
+                    <input class="form-control" id="fileName" type="text" data-ng-model="fileName"/>
+                </div>
+                <kc-tooltip>File name to save under.</kc-tooltip>
+            </div>
+            <div class="form-group">
+                <label for="condensed" class="col-md-2 control-label">Condensed</label>
+                <div class="col-md-6">
+                    <input id="condensed" data-ng-model="condensed" onoffswitch on-text="{{:: 'onText' | translate}}" off-text="{{:: 'offText' | translate}}"/>
+                </div>
+                <kc-tooltip>Control whether the out put is condensed for brevity or formatted for reading.</kc-tooltip>
+            </div>
+            <div class="form-group">
+                <label for="local-export" class="col-md-2 control-label">Local Export</label>
+                <div class="col-md-6">
+                    <a id="local-export" class="btn btn-default" data-ng-click="localExport()" type="submit">{{:: 'export'| translate}}</a>
+                </div>
+                <kc-tooltip>Download to local storage. For added security, credentials will not be stored.</kc-tooltip>
+            </div>
+            <div class="form-group">
+                <label for="server-export" class="col-md-2 control-label">Server Export</label>
+                <div class="col-md-6">
+                    <a id="serer-export" class="btn btn-default" data-ng-click="serverExport()" type="submit">{{:: 'export'| translate}}</a>
+                </div>
+                <kc-tooltip>Download to storage on the server.  Credentials will be stored.</kc-tooltip>
+            </div>
+
+        </fieldset>
+
+        <div class="form-group">
+            <div class="col-md-10 col-md-offset-2">
+                <button kc-cancel data-ng-click="cancel()">{{:: 'cancel'| translate}}</button>
+            </div>
+        </div>
+    </form>
+</div>
+
+<kc-menu></kc-menu>

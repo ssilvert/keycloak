@@ -228,9 +228,10 @@ module.controller('UserOfflineSessionsCtrl', function($scope, $location, realm, 
 });
 
 
-module.controller('UserListCtrl', function($scope, realm, User, UserImpersonation, BruteForce, Notifications, $route, Dialog) {
+module.controller('UserListCtrl', function($scope, realm, User, UserImpersonation, BruteForce, Notifications, $route, Dialog, LatestQuery) {
     $scope.realm = realm;
     $scope.page = 0;
+    LatestQuery.clear();
 
     $scope.query = {
         realm: realm.realm,
@@ -276,6 +277,7 @@ module.controller('UserListCtrl', function($scope, realm, User, UserImpersonatio
     $scope.searchQuery = function() {
         console.log("query.search: " + $scope.query.search);
         $scope.searchLoaded = false;
+        LatestQuery.set($scope.query.search);
 
         $scope.users = User.query($scope.query, function() {
             $scope.searchLoaded = true;
