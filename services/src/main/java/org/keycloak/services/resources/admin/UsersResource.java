@@ -1,5 +1,23 @@
+/*
+ * Copyright 2015 Red Hat Inc. and/or its affiliates and other contributors
+ * as indicated by the @author tags. All rights reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not
+ * use this file except in compliance with the License. You may obtain a copy of
+ * the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations under
+ * the License.
+ */
 package org.keycloak.services.resources.admin;
 
+import java.io.FileOutputStream;
+import java.io.IOException;
 import org.jboss.logging.Logger;
 import org.jboss.resteasy.annotations.cache.NoCache;
 import org.jboss.resteasy.spi.BadRequestException;
@@ -75,11 +93,15 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
+import org.codehaus.jackson.map.ObjectMapper;
+import org.keycloak.exportimport.PartialExportUtil;
+import org.keycloak.exportimport.util.ExportUtils;
 import org.keycloak.models.UsernameLoginFailureModel;
 import org.keycloak.representations.idm.PartialImport;
 import org.keycloak.services.managers.BruteForceProtector;
 import org.keycloak.services.offline.OfflineTokenUtils;
 import org.keycloak.services.resources.AccountService;
+import org.keycloak.util.JsonSerialization;
 
 /**
  * Base resource for managing users
@@ -630,6 +652,33 @@ public class UsersResource {
         }
     }
 
+    @Path("export")
+    @GET
+    @NoCache
+    @Consumes(MediaType.APPLICATION_JSON)
+    public void exportUsers(@QueryParam("search") String search,
+                            @QueryParam("fileName") String fileName,
+                            @QueryParam("condensed") boolean condensed) throws IOException {
+        auth.requireView();
+
+        if (search == null) search = "";
+        if (fileName == null) throw new IOException("File name can not be null.");
+
+        List<UserModel> users = session.users().searchForUser(search.trim(), realm);
+
+        try (FileOutputStream out = PartialExportUtil.getExportStream(fileName)) {
+
+            ObjectMapper mapper;
+            if (condensed) {
+                mapper = JsonSerialization.mapper;
+            } else {
+                mapper = JsonSerialization.prettyMapper;
+            }
+
+            ExportUtils.exportUsersToStream(session, realm, users, mapper, out);
+        }
+    }
+
     /**
      * Get users
      *
@@ -655,7 +704,6 @@ public class UsersResource {
                                              @QueryParam("first") Integer firstResult,
                                              @QueryParam("max") Integer maxResults) {
         auth.requireView();
-
         firstResult = firstResult != null ? firstResult : -1;
         maxResults = maxResults != null ? maxResults : -1;
 

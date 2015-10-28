@@ -133,6 +133,28 @@ module.service('CopyDialog', function($modal) {
     return dialog;
 });
 
+module.service('LatestQuery', function() {
+   var latestQuery = null;
+   
+   var set = function(query) {
+       latestQuery = query;
+   };
+   
+   var get = function() {
+       return latestQuery;
+   }
+   
+   var clear = function() {
+       latestQuery = null;
+   };
+   
+   return {
+       set: set,
+       get: get,
+       clear: clear
+   };
+});
+
 module.factory('Notifications', function($rootScope, $timeout) {
 	// time (in ms) the notifications are shown
 	var delay = 5000;
