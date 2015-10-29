@@ -139,6 +139,8 @@ public class ClientsResource {
     public Response importClients(final @Context UriInfo uriInfo, PartialImport clientImports) {
         auth.requireManage();
 
+        boolean overwrite = clientImports.isOverwrite();
+
         // check all constraints before mass import
         List<ClientRepresentation> clients = clientImports.getClients();
         if (clients == null || clients.isEmpty()) {
@@ -146,13 +148,18 @@ public class ClientsResource {
         }
 
         for (ClientRepresentation rep : clients) {
-            if (realm.getClientByClientId(rep.getClientId()) != null) {
+            if (!overwrite && clientExists(rep)) {
                 return ErrorResponse.exists("Client id '" + rep.getClientId() + "' already exists");
             }
         }
 
         for (ClientRepresentation rep : clients) {
             try {
+                if (overwrite && clientExists(rep)) {
+                    ClientModel toRemove = realm.getClientByClientId(rep.getClientId());
+                    realm.removeClient(toRemove.getId());
+                }
+
                 ClientModel client = RepresentationToModel.createClient(session, realm, rep, true);
                 adminEvent.operation(OperationType.CREATE).resourcePath(uriInfo, client.getId()).representation(rep).success();
             } catch (Exception e) {
@@ -166,6 +173,10 @@ public class ClientsResource {
         }
 
         return Response.ok().build();
+    }
+
+    private boolean clientExists(ClientRepresentation rep) {
+        return realm.getClientByClientId(rep.getClientId()) != null;
     }
 
 }
