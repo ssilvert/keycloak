@@ -132,7 +132,7 @@ public class IdentityProvidersResource {
     }
 
     /**
-     * Import Clients from a JSON file.
+     * Import idp's from a JSON file.
      *
      * @param uriInfo
      * @param idpImports
@@ -144,6 +144,8 @@ public class IdentityProvidersResource {
     public Response importClients(final @Context UriInfo uriInfo, PartialImport idpImports) {
         auth.requireManage();
 
+        boolean overwrite = idpImports.isOverwrite();
+
         // check all constraints before mass import
         List<IdentityProviderRepresentation> idps = idpImports.getIdentityProviders();
         if (idps == null || idps.isEmpty()) {
@@ -151,13 +153,16 @@ public class IdentityProvidersResource {
         }
 
         for (IdentityProviderRepresentation rep : idps) {
-            if (realm.getClientByClientId(rep.getAlias()) != null) {
+            if (!overwrite && idpExists(rep)) {
                 return ErrorResponse.exists("Identity Provider alias '" + rep.getAlias() + "' already exists");
             }
         }
 
         for (IdentityProviderRepresentation rep : idps) {
             try {
+                if (overwrite && idpExists(rep)) {
+                    realm.removeIdentityProviderByAlias(rep.getAlias());
+                }
                 create(uriInfo, rep);
             } catch (Exception e) {
                 if (session.getTransaction().isActive()) session.getTransaction().setRollbackOnly();
@@ -170,6 +175,10 @@ public class IdentityProvidersResource {
         }
 
         return Response.ok().build();
+    }
+
+    private boolean idpExists(IdentityProviderRepresentation rep) {
+        return realm.getIdentityProviderByAlias(rep.getAlias()) != null;
     }
 
     /**
