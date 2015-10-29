@@ -215,6 +215,20 @@ module.config([ '$routeProvider', function($routeProvider) {
             },
             controller : 'PartialImportCtrl'
         })
+        .when('/export/identity-provider-settings/:realm', {
+            templateUrl : resourceUrl + '/templates/kc-partial-export.html',
+            resolve : {
+                section : function() { return 'identity-provider-settings' },
+                sectionName : function() { return 'Identity Providers' },
+                resourceName : function() { return 'identity-provider'},
+                propertyName : function() { return 'identityProviders'},
+                searchEnabled : function() { return false },
+                realm : function(RealmLoader) {
+                    return RealmLoader();
+                }
+            },
+            controller : 'PartialExportCtrl'
+        })
         .when('/create/identity-provider/:realm/:provider_id', {
             templateUrl : function(params){ return resourceUrl + '/partials/realm-identity-provider-' + params.provider_id + '.html'; },
             resolve : {
@@ -414,6 +428,8 @@ module.config([ '$routeProvider', function($routeProvider) {
                 section : function() { return 'users' },
                 sectionName : function() { return 'Users' },
                 resourceName : function() { return 'users'},
+                propertyName : function() { return 'users'},
+                searchEnabled : function() { return true },
                 realm : function(RealmLoader) {
                     return RealmLoader();
                 }
@@ -650,6 +666,8 @@ module.config([ '$routeProvider', function($routeProvider) {
                 section : function() { return 'clients' },
                 sectionName : function() { return 'Clients' },
                 resourceName : function() { return 'clients'},
+                propertyName : function() { return 'clients'},
+                searchEnabled : function() { return true },
                 realm : function(RealmLoader) {
                     return RealmLoader();
                 }
