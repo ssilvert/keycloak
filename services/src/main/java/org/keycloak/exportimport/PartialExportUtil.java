@@ -40,7 +40,7 @@ public class PartialExportUtil {
                                              boolean condensed,
                                              KeycloakSession session,
                                              RealmModel realm) throws IOException {
-        try (FileOutputStream out = PartialExportUtil.getExportStream(fileName)) {
+        try (FileOutputStream out = PartialExportUtil.getExportStream(fileName, realm.getName())) {
 
             ObjectMapper mapper;
             if (condensed) {
@@ -53,11 +53,14 @@ public class PartialExportUtil {
         }
     }
 
-    public static FileOutputStream getExportStream(String fileName) throws FileNotFoundException {
+    public static FileOutputStream getExportStream(String fileName, String realmName) throws FileNotFoundException {
         if (fileName == null) throw new FileNotFoundException("File name can not be null.");
-        
+
         String baseDir = System.getProperty("jboss.server.base.dir");
         File exportDir = new File(baseDir, "export");
+        if (!exportDir.exists()) exportDir.mkdir();
+
+        exportDir = new File(exportDir, realmName);
         if (!exportDir.exists()) exportDir.mkdir();
 
         File exportFile = makeUniqueFileName(exportDir, fileName, 0);

@@ -94,6 +94,7 @@ import java.util.concurrent.TimeUnit;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.keycloak.common.util.Time;
 import org.keycloak.exportimport.PartialExportUtil;
+import org.keycloak.exportimport.util.ExportUtils;
 import org.keycloak.models.UsernameLoginFailureModel;
 import org.keycloak.representations.idm.PartialImport;
 import org.keycloak.services.managers.BruteForceProtector;
@@ -678,9 +679,13 @@ public class UsersResource {
         auth.requireView();
 
         if (search == null) search = "";
-        if (fileName == null) throw new IOException("File name can not be null.");
 
-        List<UserRepresentation> users = getUsers(search, null, null, null, null, null, null);
+        List<UserModel> userModels = session.users().searchForUser(search.trim(), realm, -1, -1);
+        List<UserRepresentation> users = new ArrayList<UserRepresentation>();
+        for (UserModel userModel : userModels) {
+            // exportUser includes credentials; ModelToRepresentation does not
+            users.add(ExportUtils.exportUser(session, realm, userModel));
+        }
 
         PartialExportUtil.exportRepresentations("users", users, fileName, condensed, session, realm);
     }
