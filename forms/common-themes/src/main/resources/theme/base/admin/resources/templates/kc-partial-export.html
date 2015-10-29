@@ -9,7 +9,7 @@
     <form class="form-horizontal" name="exportForm" novalidate>
 
         <fieldset class="border-top">
-            <div class="form-group">
+            <div class="form-group" data-ng-show="searchEnabled">
                 <label for="search-query" class="col-md-2 control-label">Search</label>
                 <div class="col-md-6">
                     <input class="form-control" id="search-query" type="text" data-ng-model="searchQuery"/>
@@ -28,7 +28,7 @@
                 <div class="col-md-6">
                     <input id="condensed" data-ng-model="condensed" onoffswitch on-text="{{:: 'onText' | translate}}" off-text="{{:: 'offText' | translate}}"/>
                 </div>
-                <kc-tooltip>Control whether the out put is condensed for brevity or formatted for reading.</kc-tooltip>
+                <kc-tooltip>Control whether the out put is condensed for brevity or formatted for readability.</kc-tooltip>
             </div>
             <div class="form-group">
                 <label for="local-export" class="col-md-2 control-label">Local Export</label>

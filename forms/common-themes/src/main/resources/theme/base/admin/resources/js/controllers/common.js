@@ -127,12 +127,14 @@ module.controller('PartialImportCtrl', function($scope, realm, section, sectionN
 
 });
 
-module.controller('PartialExportCtrl', function($scope, realm, section, sectionName, resourceName, $location, Notifications, $resource, LatestQuery) {
+module.controller('PartialExportCtrl', function($scope, realm, section, sectionName, resourceName, propertyName, searchEnabled,
+                                                $location, Notifications, $resource, LatestQuery) {
     $scope.section = section;
     $scope.sectionName = sectionName;
+    $scope.searchEnabled = searchEnabled;
     $scope.realm = realm;
     $scope.searchQuery = LatestQuery.get();
-    $scope.fileName = "keycloak-" + section;
+    $scope.fileName = "keycloak-" + propertyName;
     $scope.condensed = false;
     $scope.exported = {};
 
@@ -143,8 +145,8 @@ module.controller('PartialExportCtrl', function($scope, realm, section, sectionN
     $scope.localExport = function() {
         var exportResource = $resource(authUrl + '/admin/realms/' + realm.realm + '/' + resourceName, 
                                        {}, {get: {isArray:true}});
-        var json = exportResource.get({first: 0, search: $scope.searchQuery}, function() {
-            $scope.exported[resourceName] = json;
+        var json = exportResource.get({search: $scope.searchQuery}, function() {
+            $scope.exported[propertyName] = json;
             var blob = new Blob([angular.toJson($scope.exported,!$scope.condensed)], { type: 'application/json' });
             saveAs(blob, $scope.fileName + ".json");
             Notifications.success('The ' + sectionName + ' have been exported.');
