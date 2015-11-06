@@ -55,27 +55,7 @@ public class ExportUtils {
         rep.setClients(clientReps);
 
         // Roles
-        List<RoleRepresentation> realmRoleReps = null;
-        Map<String, List<RoleRepresentation>> clientRolesReps = new HashMap<>();
-
-        Set<RoleModel> realmRoles = realm.getRoles();
-        if (realmRoles != null && realmRoles.size() > 0) {
-            realmRoleReps = exportRoles(realmRoles);
-        }
-        for (ClientModel client : clients) {
-            Set<RoleModel> currentAppRoles = client.getRoles();
-            List<RoleRepresentation> currentAppRoleReps = exportRoles(currentAppRoles);
-            clientRolesReps.put(client.getClientId(), currentAppRoleReps);
-        }
-
-        RolesRepresentation rolesRep = new RolesRepresentation();
-        if (realmRoleReps != null) {
-            rolesRep.setRealm(realmRoleReps);
-        }
-        if (clientRolesReps.size() > 0) {
-            rolesRep.setClient(clientRolesReps);
-        }
-        rep.setRoles(rolesRep);
+        rep.setRoles(getAllRoles(realm, clients));
 
         // Scopes
         List<ClientModel> allClients = new ArrayList<>(clients);
@@ -135,6 +115,42 @@ public class ExportUtils {
         }
 
         return rep;
+    }
+
+    public static RolesRepresentation getAllRoles(RealmModel realm, List<ClientModel> allClients) {
+        List<RoleRepresentation> realmRoleReps = null;
+        Map<String, List<RoleRepresentation>> clientRolesReps = getClientRolesReps(allClients);
+
+        Set<RoleModel> realmRoles = realm.getRoles();
+        if (realmRoles != null && realmRoles.size() > 0) {
+            realmRoleReps = exportRoles(realmRoles);
+        }
+
+        RolesRepresentation rolesRep = new RolesRepresentation();
+        if (realmRoleReps != null) {
+            rolesRep.setRealm(realmRoleReps);
+        }
+        if (clientRolesReps.size() > 0) {
+            rolesRep.setClient(clientRolesReps);
+        }
+
+        return rolesRep;
+    }
+
+    /**
+     *
+     * @param clients All clients of the realm.
+     * @return
+     */
+    public static Map<String, List<RoleRepresentation>> getClientRolesReps(List<ClientModel> clients) {
+        Map<String, List<RoleRepresentation>> clientRolesReps = new HashMap<>();
+        for (ClientModel client : clients) {
+            Set<RoleModel> currentAppRoles = client.getRoles();
+            List<RoleRepresentation> currentAppRoleReps = exportRoles(currentAppRoles);
+            clientRolesReps.put(client.getClientId(), currentAppRoleReps);
+        }
+
+        return clientRolesReps;
     }
 
     /**
@@ -326,15 +342,10 @@ public class ExportUtils {
             users.add(ExportUtils.exportUser(session, realm, user));
         }
 
-        exportToStream(session, realm, "users", users, mapper, os);
+        exportToStream(realm, mapper, os, "users", users);
     }
 
-    public static void exportToStream(KeycloakSession session,
-                                      RealmModel realm,
-                                      String representationName,
-                                      List representationsToExport,
-                                      ObjectMapper mapper,
-                                      OutputStream os) throws IOException {
+    public static void exportToStream(RealmModel realm, ObjectMapper mapper, OutputStream os, String representationName, Object representationsToExport) throws IOException {
         JsonFactory factory = mapper.getJsonFactory();
 
         try (JsonGenerator generator = factory.createJsonGenerator(os, JsonEncoding.UTF8)) {
@@ -345,13 +356,14 @@ public class ExportUtils {
             generator.writeStringField("realm", realm.getName());
 
             generator.writeFieldName(representationName);
-            generator.writeStartArray();
+            generator.writeObject(representationsToExport);
+            /*generator.writeStartArray();
 
             for (Object representation : representationsToExport) {
                 generator.writeObject(representation);
             }
 
-            generator.writeEndArray();
+            generator.writeEndArray();*/
             generator.writeEndObject();
         }
     }

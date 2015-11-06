@@ -66,16 +66,19 @@ module.controller('ProviderConfigCtrl', function ($modal, $scope) {
     }
 });
 
-module.controller('PartialImportCtrl', function($scope, realm, section, sectionName, resourceName, $location, $route, Notifications, $modal, $resource) {
+module.controller('PartialImportCtrl', function($scope, realm, section, sectionName, resourceName, $location, $route, 
+                                                overwriteEnabled, Notifications, $modal, $resource) {
     $scope.fileContent = {
         enabled: true
     };
     $scope.section = section;
     $scope.sectionName = sectionName;
+    $scope.overwriteEnabled = overwriteEnabled;
     $scope.changed = false;
     $scope.files = [];
     $scope.realm = realm;
     $scope.overwrite = false;
+    $scope.skip = false;
     
     var oldCopy = angular.copy($scope.fileContent);
 
@@ -102,9 +105,18 @@ module.controller('PartialImportCtrl', function($scope, realm, section, sectionN
         }
     }, true);
     
+    $scope.$watch('overwrite', function() {
+        if ($scope.overwrite) $scope.skip = false;
+    });
+    
+    $scope.$watch('skip', function() {
+        if ($scope.skip) $scope.overwrite = false;
+    });
+    
     $scope.save = function() {
         var json = angular.copy($scope.fileContent);
         json.overwrite = $scope.overwrite;
+        json.skip = $scope.skip;
         var importFile = $resource(authUrl + '/admin/realms/' + realm.realm + '/' + resourceName + '/import');
         importFile.save(json, function() {
             Notifications.success('The ' + sectionName + ' have been imported.');
@@ -143,8 +155,15 @@ module.controller('PartialExportCtrl', function($scope, realm, section, sectionN
     };
     
     $scope.localExport = function() {
-        var exportResource = $resource(authUrl + '/admin/realms/' + realm.realm + '/' + resourceName, 
-                                       {}, {get: {isArray:true}});
+        var isArray;
+        if ($scope.section !== 'roles') {
+            isArray = {get: {isArray:true}};
+        } else {
+            isArray = {};
+        }
+        
+        var exportResource = $resource(authUrl + '/admin/realms/' + realm.realm + '/' + resourceName + '/localExport', 
+                                       {}, isArray);
         var json = exportResource.get({search: $scope.searchQuery}, function() {
             $scope.exported[propertyName] = json;
             var blob = new Blob([angular.toJson($scope.exported,!$scope.condensed)], { type: 'application/json' });
@@ -160,7 +179,7 @@ module.controller('PartialExportCtrl', function($scope, realm, section, sectionN
     }
     
     $scope.serverExport = function() {
-        var exportResource = $resource(authUrl + '/admin/realms/' + realm.realm + '/' + resourceName + '/export');
+        var exportResource = $resource(authUrl + '/admin/realms/' + realm.realm + '/' + resourceName + '/serverExport');
         exportResource.get({search: $scope.searchQuery, fileName: $scope.fileName, condensed: $scope.condensed}, function() {
            Notifications.success($scope.sectionName + ' saved on the server.');
         }, function(error) {

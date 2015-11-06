@@ -22,6 +22,8 @@
 
                     <div class="pull-right" data-ng-show="access.manageRealm">
                         <a id="createRole" class="btn btn-default" href="#/create/role/{{realm.realm}}">Add Role</a>
+                        <a id="importRoles" class="btn btn-default" href="#/import/roles/{{realm.realm}}">{{:: 'import' | translate}}</a>
+                        <a id="exportRoles" class="btn btn-default" href="#/export/roles/{{realm.realm}}">{{:: 'export' | translate}}</a>
                     </div>
                 </div>
             </th>

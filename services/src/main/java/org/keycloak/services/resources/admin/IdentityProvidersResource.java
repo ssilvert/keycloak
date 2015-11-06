@@ -199,28 +199,28 @@ public class IdentityProvidersResource {
         return realm.getIdentityProviderByAlias(rep.getAlias()) != null;
     }
 
-    @Path("export")
+    @Path("serverExport")
     @GET
     @NoCache
     @Consumes(MediaType.APPLICATION_JSON)
-    public void exportIdentityProviders(@QueryParam("fileName") String fileName,
-                                        @QueryParam("condensed") boolean condensed) throws IOException {
+    public void serverExport(@QueryParam("fileName") String fileName,
+                             @QueryParam("condensed") boolean condensed) throws IOException {
         auth.requireView();
 
         List clients = getIdentityProviders();
-        PartialExportUtil.exportRepresentations("ideintityProviders", clients, fileName, condensed, session, realm);
+        PartialExportUtil.serverExport("identityProviders", clients, fileName, condensed, realm);
     }
 
     /**
-     * Get identity providers.  This method added for consistency with other
-     * resources.  The default path returns all instances.
+     * Get identity providers for export through admin console.
      *
      * @return All identity providers.
      */
     @GET
+    @Path("localExport")
     @NoCache
     @Produces(MediaType.APPLICATION_JSON)
-    public List<IdentityProviderRepresentation> getAllIdentityProviders() {
+    public List<IdentityProviderRepresentation> localExport() {
         return getIdentityProviders();
     }
 
