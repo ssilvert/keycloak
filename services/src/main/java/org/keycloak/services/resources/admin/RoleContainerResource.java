@@ -1,5 +1,6 @@
 package org.keycloak.services.resources.admin;
 
+import java.io.IOException;
 import org.jboss.resteasy.annotations.cache.NoCache;
 import org.jboss.resteasy.spi.NotFoundException;
 import org.keycloak.events.admin.OperationType;
@@ -26,8 +27,16 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import javax.ws.rs.QueryParam;
+import org.keycloak.exportimport.PartialExportUtil;
+import org.keycloak.exportimport.util.ExportUtils;
+import org.keycloak.models.utils.RepresentationToModel;
+import org.keycloak.representations.idm.PartialImport;
+import org.keycloak.representations.idm.RolesRepresentation;
 
 /**
  * @author <a href="mailto:bill@burkecentral.com">Bill Burke</a>
@@ -47,6 +56,155 @@ public class RoleContainerResource extends RoleResource {
         this.auth = auth;
         this.roleContainer = roleContainer;
         this.adminEvent = adminEvent;
+    }
+
+    @Path("serverExport")
+    @GET
+    @NoCache
+    @Consumes(MediaType.APPLICATION_JSON)
+    public void serverExport(@QueryParam("fileName") String fileName,
+                             @QueryParam("condensed") boolean condensed) throws IOException {
+        auth.requireView();
+
+        RolesRepresentation roles = getRolesForExport();
+        PartialExportUtil.serverExport("roles", roles, fileName, condensed, realm);
+    }
+
+    private RolesRepresentation getRolesForExport() {
+        List<ClientModel> allClients = realm.getClients();
+        return ExportUtils.getAllRoles(realm, allClients);
+    }
+
+    @Path("localExport")
+    @GET
+    @NoCache
+    @Consumes(MediaType.APPLICATION_JSON)
+    public RolesRepresentation localExport() throws IOException {
+        auth.requireView();
+
+        return getRolesForExport();
+    }
+
+    /**
+     * Import Roles from a JSON file.
+     *
+     * @param uriInfo
+     * @param roleImports
+     * @return
+     */
+    @Path("import")
+    @POST
+    @Consumes(MediaType.APPLICATION_JSON)
+    public Response importRoles(final @Context UriInfo uriInfo, PartialImport roleImports) {
+        auth.requireManage();
+
+        boolean skip = roleImports.isSkip();
+
+        // check all constraints before mass import
+        RolesRepresentation rolesRep = roleImports.getRoles();
+        if (rolesRep == null) {
+            return ErrorResponse.error("No roles to import.", Response.Status.INTERNAL_SERVER_ERROR);
+        }
+
+        List<RoleRepresentation> realmRoles = rolesRep.getRealm();
+        if (realmRoles == null) {
+            realmRoles = new ArrayList<>();
+            rolesRep.setRealm(realmRoles);
+        }
+        Map<String, List<RoleRepresentation>> clientRoles = rolesRep.getClient();
+        if (clientRoles == null) {
+            clientRoles = new HashMap<>();
+            rolesRep.setClient(clientRoles);
+        }
+
+        if (realmRoles.isEmpty() && clientRoles.isEmpty()) {
+            return ErrorResponse.error("No roles to import.", Response.Status.INTERNAL_SERVER_ERROR);
+        }
+
+        // check realm roles
+        Set<RoleModel> allRoles = roleContainer.getRoles();
+        List<RoleRepresentation> realmRolesToSkip = new ArrayList<>();
+        for (RoleRepresentation rep : realmRoles) {
+            if (!realmRoleExists(rep, allRoles)) continue;
+
+            if (skip) {
+                realmRolesToSkip.add(rep);
+            } else {
+                return ErrorResponse.exists("Realm role name '" + rep.getName() + "' already exists");
+            }
+        }
+
+        // remove skipped realm roles
+        for (RoleRepresentation skipRole : realmRolesToSkip) {
+            System.out.println("Skipping realm role " + skipRole.getName());
+            rolesRep.getRealm().remove(skipRole);
+        }
+
+        // check client roles
+        List<String> clientsToSkip = new ArrayList<>();
+        Map<String, List<RoleRepresentation>> clientRolesToSkip = initClientRolesToSkip(clientRoles.keySet());
+        for (String clientId : clientRoles.keySet()) {
+            if (realm.getClientByClientId(clientId) == null) { // client doesn't exist
+                if (skip) {
+                    clientsToSkip.add(clientId);
+                    continue;
+                } else {
+                    return ErrorResponse.error("Client " + clientId + " not found.", Response.Status.NOT_FOUND);
+                }
+            }
+
+            for (RoleRepresentation roleRep : clientRoles.get(clientId)) {
+                if (!clientRoleExists(clientId, roleRep)) continue;
+
+                if (skip) {
+                    clientRolesToSkip.get(clientId).add(roleRep);
+                } else {
+                    return ErrorResponse.exists("Client role " + roleRep.getName() + " for client " + clientId + " exists.");
+                }
+            }
+        }
+
+        // skip clients
+        for (String clientId : clientsToSkip) {
+            System.out.println("Skipping client " + clientId);
+            rolesRep.getClient().remove(clientId);
+        }
+
+        // skip client roles
+        for (String clientId : clientRolesToSkip.keySet()) {
+            for (RoleRepresentation roleRep : clientRolesToSkip.get(clientId)) {
+                System.out.println("Skipping client role " + roleRep.getName() + " of client " + clientId);
+                rolesRep.getClient().get(clientId).remove(roleRep);
+            }
+        }
+
+        RepresentationToModel.importRoles(rolesRep, realm);
+
+        return Response.ok().build();
+    }
+
+    private boolean realmRoleExists(RoleRepresentation rep, Set<RoleModel> allRoles) {
+        for (RoleModel role : allRoles) {
+            if (rep.getName().equals(role.getName())) return true;
+        }
+
+        return false;
+    }
+
+    private boolean clientRoleExists(String clientId, RoleRepresentation roleRep) {
+        ClientModel client = realm.getClientByClientId(clientId);
+        if (client.getRole(roleRep.getName()) == null) return false;
+
+        return true;
+    }
+
+    private Map<String, List<RoleRepresentation>> initClientRolesToSkip(Set<String> clientIds) {
+        Map<String, List<RoleRepresentation>> rolesToSkip = new HashMap<>();
+        for (String clientId : clientIds) {
+            rolesToSkip.put(clientId, new ArrayList<RoleRepresentation>());
+        }
+
+        return rolesToSkip;
     }
 
     /**

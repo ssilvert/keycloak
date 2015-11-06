@@ -23,7 +23,14 @@
             </div>
             
             <div class="form-group">
-                <label class="col-md-2 control-label" for="overwrite">Overwrite</label>
+                <label class="col-md-2 control-label" for="skip">Skip Existing Records</label>
+                <div class="col-sm-6">
+                    <input ng-model="skip" name="skip" id="skip" onoffswitch on-text="{{:: 'onText' | translate}}" off-text="{{:: 'offText' | translate}}"/>
+                </div>
+            </div>
+            
+            <div class="form-group" data-ng-show="overwriteEnabled">
+                <label class="col-md-2 control-label" for="overwrite">Overwrite Existing Records</label>
                 <div class="col-sm-6">
                     <input ng-model="overwrite" name="overwrite" id="overwrite" onoffswitch on-text="{{:: 'onText' | translate}}" off-text="{{:: 'offText' | translate}}"/>
                 </div>

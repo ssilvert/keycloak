@@ -209,6 +209,7 @@ module.config([ '$routeProvider', function($routeProvider) {
                 section : function() { return 'identity-provider-settings' },
                 sectionName : function() { return 'Identity Providers' },
                 resourceName : function() { return 'identity-provider'},
+                overwriteEnabled : function() { return true },
                 realm : function(RealmLoader) {
                     return RealmLoader();
                 }
@@ -416,6 +417,7 @@ module.config([ '$routeProvider', function($routeProvider) {
                 section : function() { return 'users' },
                 sectionName : function() { return 'Users' },
                 resourceName : function() { return 'users'},
+                overwriteEnabled : function() { return true },
                 realm : function(RealmLoader) {
                     return RealmLoader();
                 }
@@ -626,7 +628,33 @@ module.config([ '$routeProvider', function($routeProvider) {
             },
             controller : 'RoleListCtrl'
         })
-
+        .when('/export/roles/:realm', {
+            templateUrl : resourceUrl + '/templates/kc-partial-export.html',
+            resolve : {
+                section : function() { return 'roles' },
+                sectionName : function() { return 'Roles' },
+                resourceName : function() { return 'roles'},
+                propertyName : function() { return 'roles'},
+                searchEnabled : function() { return false },
+                realm : function(RealmLoader) {
+                    return RealmLoader();
+                }
+            },
+            controller : 'PartialExportCtrl'
+        })
+        .when('/import/roles/:realm', {
+            templateUrl : resourceUrl + '/templates/kc-partial-import.html',
+            resolve : {
+                section : function() { return 'roles' },
+                sectionName : function() { return 'Roles' },
+                resourceName : function() { return 'roles'},
+                overwriteEnabled : function() { return false },
+                realm : function(RealmLoader) {
+                    return RealmLoader();
+                }
+            },
+            controller : 'PartialImportCtrl'
+        })
         .when('/create/role/:realm/clients/:client', {
             templateUrl : resourceUrl + '/partials/client-role-detail.html',
             resolve : {
@@ -654,6 +682,7 @@ module.config([ '$routeProvider', function($routeProvider) {
                 section : function() { return 'clients' },
                 sectionName : function() { return 'Clients' },
                 resourceName : function() { return 'clients'},
+                overwriteEnabled : function() { return true },
                 realm : function(RealmLoader) {
                     return RealmLoader();
                 }

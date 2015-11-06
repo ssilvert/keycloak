@@ -46,7 +46,9 @@ import java.util.ArrayList;
 import java.util.List;
 import javax.ws.rs.QueryParam;
 import org.keycloak.exportimport.PartialExportUtil;
+import org.keycloak.exportimport.util.ExportUtils;
 import org.keycloak.representations.idm.PartialImport;
+import org.keycloak.representations.idm.RealmRepresentation;
 
 /**
  * Base resource class for managing a realm's clients.
@@ -71,43 +73,61 @@ public class ClientsResource {
         auth.init(RealmAuth.Resource.CLIENT);
     }
 
-    @Path("export")
+    @Path("serverExport")
     @GET
     @NoCache
     @Consumes(MediaType.APPLICATION_JSON)
-    public void exportClients(@QueryParam("search") String search,
-                            @QueryParam("fileName") String fileName,
-                            @QueryParam("condensed") boolean condensed) throws IOException {
+    public void serverExport(@QueryParam("search") String search,
+                             @QueryParam("fileName") String fileName,
+                             @QueryParam("condensed") boolean condensed) throws IOException {
         auth.requireView();
 
-        if (search == null) search = "";
-        List clients = getClients(search);
+        List clients = localExport(search);
 
-        PartialExportUtil.exportRepresentations("clients", clients, fileName, condensed, session, realm);
+        PartialExportUtil.serverExport("clients", clients, fileName, condensed, realm);
+    }
+
+    @Path("localExport")
+    @GET
+    @NoCache
+    @Consumes(MediaType.APPLICATION_JSON)
+    public List<ClientRepresentation> localExport(@QueryParam("search") String search) throws IOException {
+        auth.requireView();
+        RealmRepresentation realmModel = ExportUtils.exportRealm(session, realm, false);
+
+        List<ClientRepresentation> clients = new ArrayList<>();
+        for (ClientRepresentation rep : realmModel.getClients()) {
+            if (clientMatches(rep, search)) clients.add(rep);
+        }
+
+        return clients;
+    }
+
+    private boolean clientMatches(ClientRepresentation rep, String search) {
+        if (search == null || search.trim().isEmpty()) return true;
+
+        return rep.getClientId().contains(search);
     }
 
     /**
      * Get clients belonging to the realm
-     *
-     * @param search A string that may be a partial match for clientId.
      *
      * @return  a list of clients belonging to the realm
      */
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     @NoCache
-    public List<ClientRepresentation> getClients(@QueryParam("search") String search) {
+    public List<ClientRepresentation> getClients() {
         auth.requireAny();
+
         List<ClientRepresentation> rep = new ArrayList<>();
         List<ClientModel> clientModels = realm.getClients();
 
         boolean view = auth.hasView();
         for (ClientModel clientModel : clientModels) {
-            if (view && clientMatches(clientModel, search)) {
+            if (view) {
                 rep.add(ModelToRepresentation.toRepresentation(clientModel));
-            }
-
-            if (!view) {
+            } else {
                 ClientRepresentation client = new ClientRepresentation();
                 client.setId(clientModel.getId());
                 client.setClientId(clientModel.getClientId());
@@ -116,12 +136,6 @@ public class ClientsResource {
             }
         }
         return rep;
-    }
-
-    private boolean clientMatches(ClientModel clientModel, String search) {
-        if (search == null || search.trim().isEmpty()) return true;
-
-        return clientModel.getClientId().contains(search);
     }
 
     /**

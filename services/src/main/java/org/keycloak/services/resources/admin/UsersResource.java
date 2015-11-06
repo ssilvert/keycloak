@@ -91,7 +91,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
-import org.codehaus.jackson.map.ObjectMapper;
 import org.keycloak.common.util.Time;
 import org.keycloak.exportimport.PartialExportUtil;
 import org.keycloak.exportimport.util.ExportUtils;
@@ -669,25 +668,45 @@ public class UsersResource {
         }
     }
 
-    @Path("export")
+    @Path("serverExport")
     @GET
     @NoCache
     @Consumes(MediaType.APPLICATION_JSON)
-    public void exportUsers(@QueryParam("search") String search,
+    public void serverExportUsers(@QueryParam("search") String search,
                             @QueryParam("fileName") String fileName,
                             @QueryParam("condensed") boolean condensed) throws IOException {
         auth.requireView();
 
+        PartialExportUtil.serverExport("users", exportUsers(search), fileName, condensed, realm);
+    }
+
+    @Path("localExport")
+    @GET
+    @NoCache
+    @Consumes(MediaType.APPLICATION_JSON)
+    public List<UserRepresentation> localExportUsers(@QueryParam("search") String search) throws IOException {
+        auth.requireView();
+
+        List<UserRepresentation> users = exportUsers(search);
+
+        // remove credentials
+        for (UserRepresentation rep : users) {
+            rep.setCredentials(Collections.<CredentialRepresentation>emptyList());
+        }
+
+        return users;
+    }
+
+    private List<UserRepresentation> exportUsers(String search) {
         if (search == null) search = "";
 
         List<UserModel> userModels = session.users().searchForUser(search.trim(), realm, -1, -1);
         List<UserRepresentation> users = new ArrayList<UserRepresentation>();
         for (UserModel userModel : userModels) {
-            // exportUser includes credentials; ModelToRepresentation does not
             users.add(ExportUtils.exportUser(session, realm, userModel));
         }
 
-        PartialExportUtil.exportRepresentations("users", users, fileName, condensed, session, realm);
+        return users;
     }
 
     /**

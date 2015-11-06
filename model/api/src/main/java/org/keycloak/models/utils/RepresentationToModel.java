@@ -43,6 +43,7 @@ import org.keycloak.representations.idm.ProtocolMapperRepresentation;
 import org.keycloak.representations.idm.RealmRepresentation;
 import org.keycloak.representations.idm.RequiredActionProviderRepresentation;
 import org.keycloak.representations.idm.RoleRepresentation;
+import org.keycloak.representations.idm.RolesRepresentation;
 import org.keycloak.representations.idm.ScopeMappingRepresentation;
 import org.keycloak.representations.idm.SocialLinkRepresentation;
 import org.keycloak.representations.idm.UserConsentRepresentation;
@@ -171,47 +172,7 @@ public class RepresentationToModel {
             createClients(session, rep, newRealm);
         }
 
-        if (rep.getRoles() != null) {
-            if (rep.getRoles().getRealm() != null) { // realm roles
-                for (RoleRepresentation roleRep : rep.getRoles().getRealm()) {
-                    createRole(newRealm, roleRep);
-                }
-            }
-            if (rep.getRoles().getClient() != null) {
-                for (Map.Entry<String, List<RoleRepresentation>> entry : rep.getRoles().getClient().entrySet()) {
-                    ClientModel client = newRealm.getClientByClientId(entry.getKey());
-                    if (client == null) {
-                        throw new RuntimeException("App doesn't exist in role definitions: " + entry.getKey());
-                    }
-                    for (RoleRepresentation roleRep : entry.getValue()) {
-                        // Application role may already exists (for example if it is defaultRole)
-                        RoleModel role = roleRep.getId()!=null ? client.addRole(roleRep.getId(), roleRep.getName()) : client.addRole(roleRep.getName());
-                        role.setDescription(roleRep.getDescription());
-                        boolean scopeParamRequired = roleRep.isScopeParamRequired()==null ? false : roleRep.isScopeParamRequired();
-                        role.setScopeParamRequired(scopeParamRequired);
-                    }
-                }
-            }
-            // now that all roles are created, re-iterate and set up composites
-            if (rep.getRoles().getRealm() != null) { // realm roles
-                for (RoleRepresentation roleRep : rep.getRoles().getRealm()) {
-                    RoleModel role = newRealm.getRole(roleRep.getName());
-                    addComposites(role, roleRep, newRealm);
-                }
-            }
-            if (rep.getRoles().getClient() != null) {
-                for (Map.Entry<String, List<RoleRepresentation>> entry : rep.getRoles().getClient().entrySet()) {
-                    ClientModel client = newRealm.getClientByClientId(entry.getKey());
-                    if (client == null) {
-                        throw new RuntimeException("App doesn't exist in role definitions: " + entry.getKey());
-                    }
-                    for (RoleRepresentation roleRep : entry.getValue()) {
-                        RoleModel role = client.getRole(roleRep.getName());
-                        addComposites(role, roleRep, newRealm);
-                    }
-                }
-            }
-        }
+        importRoles(rep.getRoles(), newRealm);
 
         // Setup realm default roles
         if (rep.getDefaultRoles() != null) {
@@ -327,6 +288,56 @@ public class RepresentationToModel {
             }
         } else {
             DefaultRequiredActions.addActions(newRealm);
+        }
+    }
+
+    /**
+     * Import roles from RolesRepresentation into a RealmModel
+     *
+     * @param realmRoles
+     * @param realm
+     */
+    public static void importRoles(RolesRepresentation realmRoles, RealmModel realm) {
+        if (realmRoles == null) return;
+
+        if (realmRoles.getRealm() != null) { // realm roles
+            for (RoleRepresentation roleRep : realmRoles.getRealm()) {
+                createRole(realm, roleRep);
+            }
+        }
+        if (realmRoles.getClient() != null) {
+            for (Map.Entry<String, List<RoleRepresentation>> entry : realmRoles.getClient().entrySet()) {
+                ClientModel client = realm.getClientByClientId(entry.getKey());
+                if (client == null) {
+                    throw new RuntimeException("App doesn't exist in role definitions: " + entry.getKey());
+                }
+                for (RoleRepresentation roleRep : entry.getValue()) {
+                    // Application role may already exists (for example if it is defaultRole)
+                    RoleModel role = roleRep.getId()!=null ? client.addRole(roleRep.getId(), roleRep.getName()) : client.addRole(roleRep.getName());
+                    role.setDescription(roleRep.getDescription());
+                    boolean scopeParamRequired = roleRep.isScopeParamRequired()==null ? false : roleRep.isScopeParamRequired();
+                    role.setScopeParamRequired(scopeParamRequired);
+                }
+            }
+        }
+        // now that all roles are created, re-iterate and set up composites
+        if (realmRoles.getRealm() != null) { // realm roles
+            for (RoleRepresentation roleRep : realmRoles.getRealm()) {
+                RoleModel role = realm.getRole(roleRep.getName());
+                addComposites(role, roleRep, realm);
+            }
+        }
+        if (realmRoles.getClient() != null) {
+            for (Map.Entry<String, List<RoleRepresentation>> entry : realmRoles.getClient().entrySet()) {
+                ClientModel client = realm.getClientByClientId(entry.getKey());
+                if (client == null) {
+                    throw new RuntimeException("App doesn't exist in role definitions: " + entry.getKey());
+                }
+                for (RoleRepresentation roleRep : entry.getValue()) {
+                    RoleModel role = client.getRole(roleRep.getName());
+                    addComposites(role, roleRep, realm);
+                }
+            }
         }
     }
 
@@ -546,15 +557,15 @@ public class RepresentationToModel {
         if (rep.getAccountTheme() != null) realm.setAccountTheme(rep.getAccountTheme());
         if (rep.getAdminTheme() != null) realm.setAdminTheme(rep.getAdminTheme());
         if (rep.getEmailTheme() != null) realm.setEmailTheme(rep.getEmailTheme());
-        
+
         if (rep.isEventsEnabled() != null) realm.setEventsEnabled(rep.isEventsEnabled());
         if (rep.getEventsExpiration() != null) realm.setEventsExpiration(rep.getEventsExpiration());
         if (rep.getEventsListeners() != null) realm.setEventsListeners(new HashSet<>(rep.getEventsListeners()));
         if (rep.getEnabledEventTypes() != null) realm.setEnabledEventTypes(new HashSet<>(rep.getEnabledEventTypes()));
-        
+
         if (rep.isAdminEventsEnabled() != null) realm.setAdminEventsEnabled(rep.isAdminEventsEnabled());
         if (rep.isAdminEventsDetailsEnabled() != null) realm.setAdminEventsDetailsEnabled(rep.isAdminEventsDetailsEnabled());
-        
+
 
         if (rep.getPasswordPolicy() != null) realm.setPasswordPolicy(new PasswordPolicy(rep.getPasswordPolicy()));
         if (rep.getOtpPolicyType() != null) realm.setOTPPolicy(toPolicy(rep));

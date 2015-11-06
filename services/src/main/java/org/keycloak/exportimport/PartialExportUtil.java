@@ -20,10 +20,8 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.util.List;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.keycloak.exportimport.util.ExportUtils;
-import org.keycloak.models.KeycloakSession;
 import org.keycloak.models.RealmModel;
 import org.keycloak.util.JsonSerialization;
 
@@ -34,11 +32,10 @@ import org.keycloak.util.JsonSerialization;
  */
 public class PartialExportUtil {
 
-    public static void exportRepresentations(String representationName,
-                                             List representations,
+    public static void serverExport(String representationName,
+                                             Object representations,
                                              String fileName,
                                              boolean condensed,
-                                             KeycloakSession session,
                                              RealmModel realm) throws IOException {
         try (FileOutputStream out = PartialExportUtil.getExportStream(fileName, realm.getName())) {
 
@@ -49,7 +46,7 @@ public class PartialExportUtil {
                 mapper = JsonSerialization.prettyMapper;
             }
 
-            ExportUtils.exportToStream(session, realm, representationName, representations, mapper, out);
+            ExportUtils.exportToStream(realm, mapper, out, representationName, representations);
         }
     }
 
