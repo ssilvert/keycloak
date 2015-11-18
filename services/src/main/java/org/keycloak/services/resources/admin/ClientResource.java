@@ -64,7 +64,7 @@ public class ClientResource {
     private AdminEventBuilder adminEvent;
     protected ClientModel client;
     protected KeycloakSession session;
-    
+
     @Context
     protected UriInfo uriInfo;
 
@@ -103,11 +103,7 @@ public class ClientResource {
         auth.requireManage();
 
         try {
-            if (rep.isServiceAccountsEnabled() && !client.isServiceAccountsEnabled()) {
-                new ClientManager(new RealmManager(session)).enableServiceAccount(client);;
-            }
-
-            RepresentationToModel.updateClient(rep, client);
+            updateClientFromRep(rep, client, session);
             adminEvent.operation(OperationType.UPDATE).resourcePath(uriInfo).representation(rep).success();
             return Response.noContent().build();
         } catch (ModelDuplicateException e) {
@@ -115,6 +111,13 @@ public class ClientResource {
         }
     }
 
+    public static void updateClientFromRep(ClientRepresentation rep, ClientModel client, KeycloakSession session) throws ModelDuplicateException {
+        if ((rep.isServiceAccountsEnabled() != null) && (rep.isServiceAccountsEnabled()) && !client.isServiceAccountsEnabled()) {
+            new ClientManager(new RealmManager(session)).enableServiceAccount(client);
+        }
+
+        RepresentationToModel.updateClient(rep, client);
+    }
 
     /**
      * Get representation of the client
@@ -341,9 +344,9 @@ public class ClientResource {
         auth.requireManage();
         adminEvent.operation(OperationType.ACTION).resourcePath(uriInfo).success();
         return new ResourceAdminManager(session).pushClientRevocationPolicy(uriInfo.getRequestUri(), realm, client);
-    
+
     }
-    
+
     /**
      * Get application session count
      *

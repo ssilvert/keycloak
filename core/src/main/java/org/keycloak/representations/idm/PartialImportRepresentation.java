@@ -26,28 +26,39 @@ import org.codehaus.jackson.annotate.JsonIgnoreProperties;
  * @author Stan Silvert ssilvert@redhat.com (C) 2015 Red Hat Inc.
  */
 @JsonIgnoreProperties(ignoreUnknown=true)
-public class PartialImport {
-    protected boolean skip;
-    protected boolean overwrite;
+public class PartialImportRepresentation {
+    public enum Policy { SKIP, OVERWRITE, FAIL };
+
+    protected Policy policy = Policy.FAIL;
+    protected String ifResourceExists = "";
     protected List<UserRepresentation> users;
     protected List<ClientRepresentation> clients;
     protected List<IdentityProviderRepresentation> identityProviders;
     protected RolesRepresentation roles;
 
-    public boolean isSkip() {
-        return skip;
+    public boolean hasUsers() {
+        return (users != null) && !users.isEmpty();
     }
 
-    public void setSkip(boolean skip) {
-        this.skip = skip;
+    public boolean hasClients() {
+        return (clients != null) && !clients.isEmpty();
     }
 
-    public boolean isOverwrite() {
-        return overwrite;
+    public boolean hasIdps() {
+        return (identityProviders != null) && !identityProviders.isEmpty();
     }
 
-    public void setOverwrite(boolean overwrite) {
-        this.overwrite = overwrite;
+    public String getIfResourceExists() {
+        return ifResourceExists;
+    }
+
+    public void setIfResourceExists(String ifResourceExists) {
+        this.ifResourceExists = ifResourceExists;
+        this.policy = Policy.valueOf(ifResourceExists);
+    }
+
+    public Policy getPolicy() {
+        return this.policy;
     }
 
     public List<UserRepresentation> getUsers() {

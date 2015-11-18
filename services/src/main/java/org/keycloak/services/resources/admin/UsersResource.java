@@ -92,10 +92,10 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import org.keycloak.common.util.Time;
-import org.keycloak.exportimport.PartialExportUtil;
+import org.keycloak.exportimport.ServerExportUtil;
 import org.keycloak.exportimport.util.ExportUtils;
 import org.keycloak.models.UsernameLoginFailureModel;
-import org.keycloak.representations.idm.PartialImport;
+import org.keycloak.representations.idm.PartialImportRepresentation;
 import org.keycloak.services.managers.BruteForceProtector;
 import org.keycloak.services.managers.UserSessionManager;
 import org.keycloak.services.resources.AccountService;
@@ -172,7 +172,7 @@ public class UsersResource {
                 }
             }
 
-            updateUserFromRep(user, rep, attrsToRemove);
+            updateUserFromRep(user, rep, attrsToRemove, realm, session);
             adminEvent.operation(OperationType.UPDATE).resourcePath(uriInfo).representation(rep).success();
 
             if (session.getTransaction().isActive()) {
@@ -211,7 +211,7 @@ public class UsersResource {
         try {
             UserModel user = session.users().addUser(realm, rep.getUsername());
             Set<String> emptySet = Collections.emptySet();
-            updateUserFromRep(user, rep, emptySet);
+            updateUserFromRep(user, rep, emptySet, realm, session);
 
             adminEvent.operation(OperationType.CREATE).resourcePath(uriInfo, user.getId()).representation(rep).success();
 
@@ -238,7 +238,7 @@ public class UsersResource {
     @Path("import")
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
-    public Response importUsers(final @Context UriInfo uriInfo, PartialImport userImports) {
+    public Response importUsers(final @Context UriInfo uriInfo, PartialImportRepresentation userImports) {
         auth.requireManage();
 
         // check all constraints before mass import
@@ -274,7 +274,7 @@ public class UsersResource {
         return Response.ok().build();
     }
 
-    private void updateUserFromRep(UserModel user, UserRepresentation rep, Set<String> attrsToRemove) {
+    public static void updateUserFromRep(UserModel user, UserRepresentation rep, Set<String> attrsToRemove, RealmModel realm, KeycloakSession session) {
         if (realm.isEditUsernameAllowed()) {
             user.setUsername(rep.getUsername());
         }
@@ -677,7 +677,7 @@ public class UsersResource {
                             @QueryParam("condensed") boolean condensed) throws IOException {
         auth.requireView();
 
-        PartialExportUtil.serverExport("users", exportUsers(search), fileName, condensed, realm);
+        ServerExportUtil.serverExport("users", exportUsers(search), fileName, condensed, realm);
     }
 
     @Path("localExport")

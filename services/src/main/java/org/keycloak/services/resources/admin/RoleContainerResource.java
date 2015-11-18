@@ -32,10 +32,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import javax.ws.rs.QueryParam;
-import org.keycloak.exportimport.PartialExportUtil;
+import org.keycloak.exportimport.ServerExportUtil;
 import org.keycloak.exportimport.util.ExportUtils;
 import org.keycloak.models.utils.RepresentationToModel;
-import org.keycloak.representations.idm.PartialImport;
+import org.keycloak.representations.idm.PartialImportRepresentation;
+import org.keycloak.representations.idm.PartialImportRepresentation.Policy;
 import org.keycloak.representations.idm.RolesRepresentation;
 
 /**
@@ -67,7 +68,7 @@ public class RoleContainerResource extends RoleResource {
         auth.requireView();
 
         RolesRepresentation roles = getRolesForExport();
-        PartialExportUtil.serverExport("roles", roles, fileName, condensed, realm);
+        ServerExportUtil.serverExport("roles", roles, fileName, condensed, realm);
     }
 
     private RolesRepresentation getRolesForExport() {
@@ -95,10 +96,10 @@ public class RoleContainerResource extends RoleResource {
     @Path("import")
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
-    public Response importRoles(final @Context UriInfo uriInfo, PartialImport roleImports) {
+    public Response importRoles(final @Context UriInfo uriInfo, PartialImportRepresentation roleImports) {
         auth.requireManage();
 
-        boolean skip = roleImports.isSkip();
+        boolean skip = roleImports.getPolicy() == Policy.SKIP;
 
         // check all constraints before mass import
         RolesRepresentation rolesRep = roleImports.getRoles();

@@ -55,8 +55,9 @@ import java.util.Map;
 import javax.ws.rs.QueryParam;
 
 import static javax.ws.rs.core.Response.Status.BAD_REQUEST;
-import org.keycloak.exportimport.PartialExportUtil;
-import org.keycloak.representations.idm.PartialImport;
+import org.keycloak.exportimport.ServerExportUtil;
+import org.keycloak.representations.idm.PartialImportRepresentation;
+import org.keycloak.representations.idm.PartialImportRepresentation.Policy;
 
 /**
  * @author Pedro Igor
@@ -159,10 +160,10 @@ public class IdentityProvidersResource {
     @Path("import")
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
-    public Response importIdentityProviders(final @Context UriInfo uriInfo, PartialImport idpImports) {
+    public Response importIdentityProviders(final @Context UriInfo uriInfo, PartialImportRepresentation idpImports) {
         auth.requireManage();
 
-        boolean overwrite = idpImports.isOverwrite();
+        boolean overwrite = idpImports.getPolicy() == Policy.OVERWRITE;
 
         // check all constraints before mass import
         List<IdentityProviderRepresentation> idps = idpImports.getIdentityProviders();
@@ -208,7 +209,7 @@ public class IdentityProvidersResource {
         auth.requireView();
 
         List clients = getIdentityProviders();
-        PartialExportUtil.serverExport("identityProviders", clients, fileName, condensed, realm);
+        ServerExportUtil.serverExport("identityProviders", clients, fileName, condensed, realm);
     }
 
     /**

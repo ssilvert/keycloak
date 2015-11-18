@@ -45,9 +45,10 @@ import javax.ws.rs.core.UriInfo;
 import java.util.ArrayList;
 import java.util.List;
 import javax.ws.rs.QueryParam;
-import org.keycloak.exportimport.PartialExportUtil;
+import org.keycloak.exportimport.ServerExportUtil;
 import org.keycloak.exportimport.util.ExportUtils;
-import org.keycloak.representations.idm.PartialImport;
+import org.keycloak.representations.idm.PartialImportRepresentation;
+import org.keycloak.representations.idm.PartialImportRepresentation.Policy;
 import org.keycloak.representations.idm.RealmRepresentation;
 
 /**
@@ -84,7 +85,7 @@ public class ClientsResource {
 
         List clients = localExport(search);
 
-        PartialExportUtil.serverExport("clients", clients, fileName, condensed, realm);
+        ServerExportUtil.serverExport("clients", clients, fileName, condensed, realm);
     }
 
     @Path("localExport")
@@ -193,10 +194,10 @@ public class ClientsResource {
     @Path("import")
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
-    public Response importClients(final @Context UriInfo uriInfo, PartialImport clientImports) {
+    public Response importClients(final @Context UriInfo uriInfo, PartialImportRepresentation clientImports) {
         auth.requireManage();
 
-        boolean overwrite = clientImports.isOverwrite();
+        boolean overwrite = clientImports.getPolicy() == Policy.OVERWRITE;
 
         // check all constraints before mass import
         List<ClientRepresentation> clients = clientImports.getClients();

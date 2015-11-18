@@ -30,14 +30,14 @@ import org.keycloak.util.JsonSerialization;
  *
  * @author Stan Silvert ssilvert@redhat.com (C) 2015 Red Hat Inc.
  */
-public class PartialExportUtil {
+public class ServerExportUtil {
 
     public static void serverExport(String representationName,
                                              Object representations,
                                              String fileName,
                                              boolean condensed,
                                              RealmModel realm) throws IOException {
-        try (FileOutputStream out = PartialExportUtil.getExportStream(fileName, realm.getName())) {
+        try (FileOutputStream out = ServerExportUtil.getExportStream(fileName, realm.getName())) {
 
             ObjectMapper mapper;
             if (condensed) {
