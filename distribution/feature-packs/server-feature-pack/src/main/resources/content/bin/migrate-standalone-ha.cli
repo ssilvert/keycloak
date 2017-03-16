@@ -25,8 +25,15 @@ if (result == NONE) of /subsystem=infinispan/cache-container=keycloak/invalidati
   echo
 end-if
 
-# Migrate from 1.9.2 to 2.0.0
+# Migrate from 1.9.2 to 1.9.8
 # NO CHANGES
+
+# Migrate from 1.9.8 to 2.0.0
+if (outcome == failed) of /subsystem=keycloak-server/spi=authorizationPersister/:read-resource
+  echo Adding spi=authorizationPersister...
+  /subsystem=keycloak-server/spi=authorizationPersister/:add(default-provider=jpa)
+  echo
+end-if
 
 # Migrate from 2.0.0 to 2.1.0
 if (outcome == success) of /subsystem=infinispan/cache-container=keycloak/local-cache=realmVersions/:read-resource

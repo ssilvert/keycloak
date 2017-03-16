@@ -40,6 +40,11 @@ if (result == undefined) of /subsystem=infinispan/cache-container=keycloak/local
   /subsystem=infinispan/cache-container=keycloak/local-cache=authorization/component=eviction/:write-attribute(name=strategy,value=LRU)
   /subsystem=infinispan/cache-container=keycloak/local-cache=authorization/component=eviction/:write-attribute(name=max-entries,value=100)
 end-if
+if (outcome == failed) of /subsystem=keycloak-server/spi=authorizationPersister/:read-resource
+  echo Adding spi=authorizationPersister...
+  /subsystem=keycloak-server/spi=authorizationPersister/:add(default-provider=jpa)
+  echo
+end-if
 
 # Migrate from 2.0.0 to 2.1.0
 if (outcome == success) of /subsystem=infinispan/cache-container=keycloak/local-cache=realmVersions/:read-resource
