@@ -45,6 +45,9 @@ import { PageNotFoundComponent } from './content/page-not-found/page-not-found.c
 import { AuthenticatorPageComponent } from './content/authenticator-page/authenticator-page.component';
 import { SessionsPageComponent } from './content/sessions-page/sessions-page.component';
 import { ApplicationsPageComponent } from './content/applications-page/applications-page.component';
+import { LargeAppCardComponent } from './content/applications-page/large-app-card.component';
+import { SmallAppCardComponent } from './content/applications-page/small-app-card.component';
+import { RowAppCardComponent } from './content/applications-page/row-app-card.component';
 
 const routes: Routes = [
     { path: 'account', component: AccountPageComponent },
@@ -66,7 +69,10 @@ const decs = [
     PageNotFoundComponent,
     AuthenticatorPageComponent,
     SessionsPageComponent,
-    ApplicationsPageComponent
+    ApplicationsPageComponent,
+    LargeAppCardComponent,
+    SmallAppCardComponent,
+    RowAppCardComponent
 ];
 
 export const ORIGINAL_INCOMING_URL: Location = window.location;

@@ -107,163 +107,38 @@
             </div><!-- /col -->
         </div><!-- /row -->
     </div><!-- /container -->
-
+    
     <!------------------- CARDS --------------------------->
     <div *ngIf="activeView == 'LargeCards'" class="container-fluid container-cards-pf">
         <div class="row row-cards-pf">
-            <div class="col-xs-12 col-sm-6 col-md-4 col-lg-3"  *ngFor="let app of applications">
-                 <div class="card-pf card-pf-view card-pf-view-select card-pf-view-single-select">
-                    <div class="card-pf-body">
-                        <div class="card-pf-top-element">
-                            <!--<span class="fa fa-birthday-cake card-pf-icon-circle"></span>-->
-
-                            <div class="card-pf-heading-kebab">
-                                <div class="dropup pull-right dropdown-kebab-pf">
-                                    <button class="btn btn-link dropdown-toggle" type="button" id="dropupKebabRight3" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
-                                        <span class="fa fa-ellipsis-v"></span>
-                                    </button>
-                                    <ul class="dropdown-menu dropdown-menu-right" aria-labelledby="dropupKebabRight3">
-                                        <li *ngIf="app.effectiveUrl"><a href="{{app.effectiveUrl}}">Go to Application</a></li>
-                                        <li><a href="#">Revoke Grant</a></li>
-                                        <li><a href="#">Logout Session(s)</a></li>
-                                        <li><a href="#">Something else here</a></li>
-                                        <li role="separator" class="divider"></li>
-                                        <li><a href="#">Separated link</a></li>
-                                    </ul>
-                                </div>
-                            </div>
-                            <div class="text-center">
-                                <span *ngIf="app.icon" class="fa {{app.icon}} card-pf-icon-circle"></span>
-                            </div>
-                        </div>
-                        <h2 class="card-pf-title text-center">
-                            {{getName(app)}}
-                        </h2>
-                        <h4 *ngIf="getDescription(app)" class="text-center">
-                            {{getDescription(app)}}
-                        </h4>
-                        <div *ngIf="isSessionActive(app)" class="card-pf-items text-center">
-                            <div class="card-pf-item">
-                                <span class="pficon pficon-screen"></span>
-                                <span class="card-pf-item-text">Session Active</span>
-                                <span class="fa fa-check"></span>
-                            </div>
-                        </div>
-                        <p class="card-pf-info text-center"><strong>Created On</strong> 2015-03-01 02:00 AM <br/> Never Expires</p>
-                    </div>
-                    <div class="card-pf-view-checkbox">
-                        <input type="checkbox">
-                    </div>
-                </div>
-            </div>
+            <large-app-card *ngFor="let app of applications"
+                            class="col-xs-12 col-sm-6 col-md-4 col-lg-3"
+                            [app]="app"
+                            [sessions]="sessions">
+            </large-app-card>
         </div>
     </div>
+    
     <div *ngIf="activeView == 'SmallCards'" class="container-fluid container-cards-pf">
         <div class="row row-cards-pf">
-            <div class="col-xs-12 col-sm-3 col-md-2" *ngFor="let app of applications">
-                 <div class="card-pf card-pf-view card-pf-view-xs">
-                    <div class="card-pf-body">
-                        <div class="card-pf-heading-kebab">
-                            <div class="dropdown pull-right dropdown-kebab-pf">
-                                <button class="btn btn-link dropdown-toggle" type="button" id="dropupKebabRight2" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
-                                    <span class="fa fa-ellipsis-v"></span>
-                                </button>
-                                <ul class="dropdown-menu dropdown-menu-right" aria-labelledby="dropupKebabRight2">
-                                    <li *ngIf="app.effectiveUrl"><a href="{{app.effectiveUrl}}">Go to Application</a></li>
-                                    <li><a href="#">Revoke Grant</a></li>
-                                    <li><a href="#">Logout Session(s)</a></li>
-                                    <li><a href="#">Something else here</a></li>
-                                    <li role="separator" class="divider"></li>
-                                    <li><a href="#">Separated link</a></li>
-                                </ul>
-                            </div>
-
-                            <h2 class="card-pf-title">
-                                <span class="pficon {{app.icon}}"></span> {{getName(app)}}
-                            </h2>
-                        </div>
-                        <div class="progress-pf-legend">
-                            <div class="progress">
-                                <div class="progress-bar" role="progressbar" aria-valuenow="25" aria-valuemin="0" aria-valuemax="100" style="width: 25%;" data-toggle="tooltip" title="25% Used">
-                                    <span class="sr-only">25% Used</span>
-                                </div>
-                                <div class="progress-bar progress-bar-remaining" role="progressbar" aria-valuenow="75" aria-valuemin="0" aria-valuemax="100" style="width: 75%;" data-toggle="tooltip" title="75% Available">
-                                    <span class="sr-only">75% Available</span>
-                                </div>
-                            </div>
-                            <script>
-                                // Initialize Tooltip
-                                jQuery(document).ready(function () {
-                                    jQuery('[data-toggle="tooltip"]').tooltip();
-                                });
-                            </script>
-
-                            <p><span class="pficon pficon-warning-triangle-o"></span> <strong>10%</strong> in use</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
+            <small-app-card *ngFor="let app of applications"
+                            class="col-xs-12 col-sm-3 col-md-2"
+                            [app]="app"
+                            [sessions]="sessions">
+            </small-app-card>
         </div>
     </div>
-    <div *ngIf="activeView == 'List'">
-        <div class="container-fluid">
-            <div class="list-group list-view-pf list-view-pf-view">
-                <div class="list-group-item" *ngFor="let app of applications">
-                     <div class="list-view-pf-actions">
-                        <button class="btn btn-default">Action</button>
-                        <div class="dropdown pull-right dropdown-kebab-pf">
-                            <button class="btn btn-link dropdown-toggle" type="button" id="dropdownKebabRight9" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
-                                <span class="fa fa-ellipsis-v"></span>
-                            </button>
-                            <ul class="dropdown-menu dropdown-menu-right" aria-labelledby="dropdownKebabRight9">
-                                <li *ngIf="app.effectiveUrl"><a href="{{app.effectiveUrl}}">Go to Application</a></li>
-                                <li><a href="#">Revoke Grant</a></li>
-                                <li><a href="#">Logout Session(s)</a></li>
-                                <li><a href="#">Something else here</a></li>
-                                <li role="separator" class="divider"></li>
-                                <li><a href="#">Separated link</a></li>
-                            </ul>
-                        </div>
-
-                    </div>
-                    <div class="list-view-pf-main-info">
-                        <div class="list-view-pf-left">
-                            <span class="fa {{app.icon}} list-view-pf-icon-sm"></span>
-                            <!--<img *ngIf="app.iconSrc" type="image/svg+xml" src="{{app.iconSrc}}" alt="" width="auto" height="40px"/>
-                            <span *ngIf="app.icon" class="fa {{app.icon}} list-view-pf-icon-sm"></span>-->
-                        </div>
-                        <div class="list-view-pf-body">
-                            <div class="list-view-pf-description">
-                                <div class="list-group-item-heading">
-                                    {{getName(app)}}
-                                </div>
-                                <div class="list-group-item-text">
-                                    {{getDescription(app)}}
-                                </div>
-                            </div>
-                            <div class="list-view-pf-additional-info">
-                                <div class="list-view-pf-additional-info-item">
-                                    <span class="pficon pficon-screen"></span>
-                                    <strong>8</strong> Hosts
-                                </div>
-                                <div class="list-view-pf-additional-info-item">
-                                    <span class="pficon pficon-cluster"></span>
-                                    <strong>6</strong> Clusters
-                                </div>
-                                <div class="list-view-pf-additional-info-item">
-                                    <span class="pficon pficon-container-node"></span>
-                                    <strong>10</strong> Nodes
-                                </div>
-                                <div class="list-view-pf-additional-info-item">
-                                    <span class="pficon pficon-image"></span>
-                                    <strong>8</strong> Images
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
+    
+    <div *ngIf="activeView == 'List'" class="container-fluid">
+        <div class="list-group list-view-pf list-view-pf-view">
+            <row-app-card *ngFor="let app of applications"
+                            class="list-group-item"
+                            [app]="app"
+                            [sessions]="sessions">
+            </row-app-card>
         </div>
+    </div>
+    
         <script>
             $(function () {
                 // matchHeight the contents of each .card-pf and then the .card-pf itself

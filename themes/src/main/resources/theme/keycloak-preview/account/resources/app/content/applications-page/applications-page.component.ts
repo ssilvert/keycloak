@@ -20,6 +20,8 @@ import {Response} from '@angular/http';
 import {TranslateUtil} from '../../ngx-translate/translate.util';
 import {AccountServiceClient} from '../../account-service/account.service';
 
+import {Application} from './application';
+
 declare const resourceUrl: string;
 
 type ApplicationView = "LargeCards" | "SmallCards" | "List";
@@ -32,84 +34,58 @@ type ApplicationView = "LargeCards" | "SmallCards" | "List";
 })
 export class ApplicationsPageComponent implements OnInit {
     private activeView: ApplicationView = "LargeCards";
-    
+
     private resourceUrl: string = resourceUrl;
-    private applications: any[] = [];
+    private applications: Application[] = [];
     private sessions: any[] = [];
 
-    constructor(accountSvc: AccountServiceClient, private translateUtil: TranslateUtil ) {
+    constructor(accountSvc: AccountServiceClient, private translateUtil: TranslateUtil) {
         accountSvc.doGetRequest("/applications", (res: Response) => this.handleGetAppsResponse(res));
         accountSvc.doGetRequest("/sessions", (res: Response) => this.handleGetSessionsResponse(res));
     }
 
     private handleGetAppsResponse(res: Response) {
-      console.log('**** response from apps REST API ***');
-      console.log(JSON.stringify(res));
-      console.log('*** apps res.json() ***');
-      console.log(JSON.stringify(res.json().applications));
-      console.log('***************************************');
-      this.applications = res.json().applications;
-      
-      for (let app of this.applications) {
-          this.setIcon(app);
-      }
+        console.log('**** response from apps REST API ***');
+        console.log(JSON.stringify(res));
+        console.log('*** apps res.json() ***');
+        console.log(JSON.stringify(res.json().applications));
+        console.log('*************************************');
+
+        const newApps: Application[] = [];
+        for (let app of res.json().applications) {
+            newApps.push(new Application(app, this.translateUtil));
+        }
+        
+        // reference must change to trigger pipes
+        this.applications = newApps;
     }
-    
+
     private handleGetSessionsResponse(res: Response) {
-      console.log('**** response from sessions REST API ***');
-      console.log(JSON.stringify(res));
-      console.log('*** sessions res.json() ***');
-      console.log(JSON.stringify(res.json()));
-      console.log('***************************************');
-      this.sessions = res.json();
+        console.log('**** response from sessions REST API ***');
+        console.log(JSON.stringify(res));
+        console.log('*** sessions res.json() ***');
+        console.log(JSON.stringify(res.json()));
+        console.log('***************************************');
+        this.sessions = res.json();
     }
-    
-    private getName(application: any): string {
-        if (application.hasOwnProperty('name')) {
-            return this.translateUtil.translate(application.name);
-        }
-        
-        return application.clientId;
-    }
-    
-    private getDescription (application: any): string {
-        if (!application.hasOwnProperty('description')) return null;
-        
-        let desc: string = application.description;
-        
-        if (desc.indexOf("//icon") > -1) {
-            desc = desc.substring(0, desc.indexOf("//icon"));
-        }
-        
-        return desc;
-    }
-    
-    private isSessionActive(application: any) : boolean {
-        for (let session of this.sessions) {
-            for (let client of session.clients) {
-                if (application.clientId === client.clientId) return true;
-            }
-        }
-        return false;
-    }
-    
-    private setIcon(application: any) {
-        application.icon = "pficon-key";
-        
-        if (!application.hasOwnProperty('description')) {
-            return;
-        }
-        
-        let desc: string = application.description;
-        const iconIndex: number = desc.indexOf("//icon=");
-        if (iconIndex > -1) {
-            application.icon = desc.substring(iconIndex + 7, desc.length);
-            return;
-        }
-    }
-    
+
     private changeView(activeView: ApplicationView) {
         this.activeView = activeView;
+    }
+
+    private setIcon(app: any): void {
+        app.icon = "pficon-key";
+
+        if (!app.hasOwnProperty('description')) {
+            return;
+        }
+
+        let desc: string = app.description;
+        const iconIndex: number = desc.indexOf("//icon=");
+        if (iconIndex > -1) {
+            app.icon = desc.substring(iconIndex + 7, desc.length);
+            return;
+        }
     }
 
     ngOnInit() {
