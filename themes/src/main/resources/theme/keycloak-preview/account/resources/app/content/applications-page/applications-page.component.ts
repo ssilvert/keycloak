@@ -25,6 +25,7 @@ import {Application} from './application';
 declare const resourceUrl: string;
 
 type ApplicationView = "LargeCards" | "SmallCards" | "List";
+type SelectableProperty = "name" | "description";
 
 @Component({
     moduleId: module.id, // need this for styleUrls path to work properly with Systemjs
@@ -37,6 +38,11 @@ export class ApplicationsPageComponent implements OnInit {
 
     private resourceUrl: string = resourceUrl;
     private applications: Application[] = [];
+    private isSortAscending: boolean = true;
+    private sortBy: SelectableProperty = "name";
+    private filterBy: SelectableProperty = "name";
+    private filterText: string = "";
+    
     private sessions: any[] = [];
 
     constructor(accountSvc: AccountServiceClient, private translateUtil: TranslateUtil) {
@@ -72,22 +78,29 @@ export class ApplicationsPageComponent implements OnInit {
     private changeView(activeView: ApplicationView) {
         this.activeView = activeView;
     }
-
-    private setIcon(app: any): void {
-        app.icon = "pficon-key";
-
-        if (!app.hasOwnProperty('description')) {
-            return;
-        }
-
-        let desc: string = app.description;
-        const iconIndex: number = desc.indexOf("//icon=");
-        if (iconIndex > -1) {
-            app.icon = desc.substring(iconIndex + 7, desc.length);
-            return;
-        }
+    
+    private toggleSort() {
+        this.isSortAscending = !this.isSortAscending;
     }
-
+    
+    private changeSortByProp(prop: SelectableProperty) {
+        this.sortBy = prop;
+    }
+    
+    private changeFilterByProp(prop: SelectableProperty) {
+        this.filterBy = prop;
+        this.filterText = "";
+    }
+    
+    private capitalize(prop: SelectableProperty): string {
+        if (!prop) return prop;
+        
+        const firstChar: string = prop.charAt(0).toUpperCase();
+        if (prop.length === 1) return firstChar;
+        
+        return  firstChar + prop.substring(1);
+    }
+    
     ngOnInit() {
     }
 

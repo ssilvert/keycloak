@@ -9,30 +9,31 @@
                         <label class="sr-only" for="filter">Name</label>
                         <div class="input-group">
                             <div class="input-group-btn">
-                                <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Name <span class="caret"></span></button>
+                                <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">{{capitalize(filterBy)}} <span class="caret"></span></button>
                                 <ul class="dropdown-menu">
-                                    <li class="selected"><a href="#">Name</a></li>
-                                    <li><a href="#">Type</a></li>
-                                    <li><a href="#">Color</a></li>
+                                    <li (click)="changeFilterByProp('name')" class="selected">Name</li>
+                                    <li (click)="changeFilterByProp('description')">Description</li>
                                 </ul>
                             </div><!-- /btn-group -->
-                            <input type="text" class="form-control" id="filter" placeholder="Filter By Name...">
+                            <form #filterForm="ngForm">
+                                <input [(ngModel)]="filterText" name="filterText"  type="text" class="form-control" id="filter" placeholder="Filter By {{capitalize(filterBy)}}...">
+                            </form>
                         </div><!-- /input-group -->
                     </div>
                     <div class="form-group">
                         <div class="dropdown btn-group">
-                            <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Name <span class="caret"></span></button>
+                            <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">{{capitalize(sortBy)}} <span class="caret"></span></button>
                             <ul class="dropdown-menu">
-                                <li class="selected"><a href="#">Name</a></li>
-                                <li><a href="#">Type</a></li>
-                                <li><a href="#">Last Modified</a></li>
+                                <li (click)="changeSortByProp('name')" class="selected">Name</li>
+                                <li (click)="changeSortByProp('description')">Description</li>
                             </ul>
                         </div>
-                        <button class="btn btn-link" type="button">
-                            <span class="fa fa-sort-alpha-asc"></span>
+                        <button (click)="toggleSort()" class="btn btn-link" type="button">
+                            <span *ngIf="!isSortAscending" class="fa fa-sort-alpha-asc"></span>
+                            <span *ngIf="isSortAscending" class="fa fa-sort-alpha-desc"></span>
                         </button>
                     </div>
-                    <div class="form-group">
+                   <!-- <div class="form-group">
                         <button class="btn btn-default" type="button">Action</button>
                         <button class="btn btn-default" type="button">Action</button>
                         <div class="dropdown btn-group  dropdown-kebab-pf">
@@ -48,9 +49,9 @@
                             </ul>
                         </div>
 
-                    </div>
+                    </div>-->
                     <div class="toolbar-pf-action-right">
-                        <div class="form-group toolbar-pf-find">
+                        <!--<div class="form-group toolbar-pf-find">
                             <button class="btn btn-link btn-find" type="button">
                                 <span class="fa fa-search"></span>
                             </button>
@@ -69,7 +70,7 @@
                                     </button>
                                 </div>
                             </div>
-                        </div>
+                        </div>-->
                         <div class="form-group toolbar-pf-view-selector">
                             <button (click)="changeView('LargeCards')" class="btn btn-link "><i class="fa fa-th-large"></i></button>
                             <button (click)="changeView('SmallCards')" class="btn btn-link "><i class="fa fa-th"></i></button>
@@ -77,7 +78,7 @@
                         </div>
                     </div>
                 </form>
-                <div class="row toolbar-pf-results">
+                <!--<div class="row toolbar-pf-results">
                     <div class="col-sm-12">
                         <h5>40 Results</h5>
                         <p>Active filters:</p>
@@ -102,8 +103,8 @@
                             </li>
                         </ul>
                         <p><a href="#">Clear All Filters</a></p>
-                    </div><!-- /col -->
-                </div><!-- /row -->
+                    </div><!-- /col --
+                </div>--><!-- /row -->
             </div><!-- /col -->
         </div><!-- /row -->
     </div><!-- /container -->
@@ -111,7 +112,7 @@
     <!------------------- CARDS --------------------------->
     <div *ngIf="activeView == 'LargeCards'" class="container-fluid container-cards-pf">
         <div class="row row-cards-pf">
-            <large-app-card *ngFor="let app of applications"
+            <large-app-card *ngFor="let app of (applications | filterby:filterBy:filterText | orderby:sortBy:isSortAscending )"
                             class="col-xs-12 col-sm-6 col-md-4 col-lg-3"
                             [app]="app"
                             [sessions]="sessions">
@@ -121,7 +122,7 @@
     
     <div *ngIf="activeView == 'SmallCards'" class="container-fluid container-cards-pf">
         <div class="row row-cards-pf">
-            <small-app-card *ngFor="let app of applications"
+            <small-app-card *ngFor="let app of (applications | filterby:filterBy:filterText | orderby:sortBy:isSortAscending )"
                             class="col-xs-12 col-sm-3 col-md-2"
                             [app]="app"
                             [sessions]="sessions">
@@ -131,7 +132,7 @@
     
     <div *ngIf="activeView == 'List'" class="container-fluid">
         <div class="list-group list-view-pf list-view-pf-view">
-            <row-app-card *ngFor="let app of applications"
+            <row-app-card *ngFor="let app of (applications | filterby:filterBy:filterText | orderby:sortBy:isSortAscending )"
                             class="list-group-item"
                             [app]="app"
                             [sessions]="sessions">

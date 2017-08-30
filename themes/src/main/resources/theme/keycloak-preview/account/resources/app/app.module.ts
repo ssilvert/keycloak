@@ -49,6 +49,9 @@ import { LargeAppCardComponent } from './content/applications-page/large-app-car
 import { SmallAppCardComponent } from './content/applications-page/small-app-card.component';
 import { RowAppCardComponent } from './content/applications-page/row-app-card.component';
 
+import {OrderbyPipe} from './pipes/orderby.pipe';
+import {FilterbyPipe} from './pipes/filterby.pipe';
+
 const routes: Routes = [
     { path: 'account', component: AccountPageComponent },
     { path: 'password', component: PasswordPageComponent },
@@ -72,7 +75,9 @@ const decs = [
     ApplicationsPageComponent,
     LargeAppCardComponent,
     SmallAppCardComponent,
-    RowAppCardComponent
+    RowAppCardComponent,
+    OrderbyPipe,
+    FilterbyPipe
 ];
 
 export const ORIGINAL_INCOMING_URL: Location = window.location;
