@@ -49,6 +49,8 @@ import { LargeAppCardComponent } from './content/applications-page/large-app-car
 import { SmallAppCardComponent } from './content/applications-page/small-app-card.component';
 import { RowAppCardComponent } from './content/applications-page/row-app-card.component';
 
+import { ToolbarComponent } from './content/widgets/toolbar.component';
+
 import {OrderbyPipe} from './pipes/orderby.pipe';
 import {FilterbyPipe} from './pipes/filterby.pipe';
 
@@ -76,6 +78,7 @@ const decs = [
     LargeAppCardComponent,
     SmallAppCardComponent,
     RowAppCardComponent,
+    ToolbarComponent,
     OrderbyPipe,
     FilterbyPipe
 ];
