@@ -19,26 +19,58 @@ import {Response} from '@angular/http';
 
 import {AccountServiceClient} from '../../account-service/account.service';
 
+import {View} from '../widgets/toolbar.component';
+import {PropertyLabel} from '../widgets/property.label';
+import {ActionButton} from '../widgets/action.button';
+import {RefreshButton, Refreshable} from '../widgets/refresh.button';
+
+import {Session} from './session';
+
 @Component({
     selector: 'app-sessions-page',
     templateUrl: './sessions-page.component.html',
     styleUrls: ['./sessions-page.component.css']
 })
-export class SessionsPageComponent implements OnInit {
+export class SessionsPageComponent implements Refreshable, OnInit {
+    private filterLabels: PropertyLabel[] = [];
+    private sortLabels: PropertyLabel[] = [];
 
     private response: any[] = [];
+    private sessions: Session[] = [];
+    
+    private actionButtons: ActionButton[] = [];
     
     constructor(private accountSvc: AccountServiceClient ) {
-        accountSvc.doGetRequest("/sessions", (res: Response) => this.handleGetResponse(res));
+        this.initPropLabels();
+        this.actionButtons.push(new LogoutAllButton(accountSvc));
+        this.actionButtons.push(new RefreshButton(accountSvc,"/sessions", this));
+        accountSvc.doGetRequest("/sessions", (res: Response) => this.refresh(res));
+    }
+    
+    private initPropLabels(): void {
+        this.filterLabels.push({prop: "ipAddress", label: "IP"});
+        
+        this.sortLabels.push({prop: "ipAddress", label: "IP"});
+        this.sortLabels.push({prop: "started", label: "Started"});
+        this.sortLabels.push({prop: "lastAccess", label: "Last Access"});
+        this.sortLabels.push({prop: "expires", label: "Expires"});
     }
 
-    private handleGetResponse(res: Response) {
+    public refresh(res: Response) {
       console.log('**** response from account REST API ***');
       console.log(JSON.stringify(res));
       console.log('*** res.json() ***');
       console.log(JSON.stringify(res.json()));
       console.log('***************************************');
       this.response = res.json();
+      
+      const newSessions: Session[] = [];
+      for (let session of res.json()) {
+          newSessions.push(new Session(session));
+      }
+      
+      // reference must change to trigger pipes
+      this.sessions = newSessions;
     }
     
     private logoutAllSessions() {
@@ -57,4 +89,23 @@ export class SessionsPageComponent implements OnInit {
     ngOnInit() {
     }
 
+}
+
+class LogoutAllButton implements ActionButton {
+    public readonly label: string = "Logout All";
+    
+    constructor(private accountSvc: AccountServiceClient ) {}
+        
+    performAction(): void {
+        this.accountSvc.doDelete("/sessions", 
+                                (res: Response) => this.handleLogoutResponse(res), 
+                                {params: {current: true}},
+                                "Logging out all sessions.");
+    }
+    
+    private handleLogoutResponse(res: Response) {
+      console.log('**** response from account DELETE ***');
+      console.log(JSON.stringify(res));
+      console.log('***************************************');
+    }
 }

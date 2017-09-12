@@ -22,9 +22,13 @@ import {AccountServiceClient} from '../../account-service/account.service';
 
 import {Application} from './application';
 
+import {View} from '../widgets/toolbar.component';
+import {PropertyLabel} from '../widgets/property.label';
+import {ActionButton} from '../widgets/action.button';
+import {RefreshButton, Refreshable} from '../widgets/refresh.button';
+
 declare const resourceUrl: string;
 
-type ApplicationView = "LargeCards" | "SmallCards" | "List";
 type SelectableProperty = "name" | "description";
 
 @Component({
@@ -33,8 +37,8 @@ type SelectableProperty = "name" | "description";
     templateUrl: 'applications-page.component.html',
     styleUrls: ['applications-page.component.css']
 })
-export class ApplicationsPageComponent implements OnInit {
-    private activeView: ApplicationView = "LargeCards";
+export class ApplicationsPageComponent implements Refreshable, OnInit {
+    private activeView: View = "LargeCards";
 
     private resourceUrl: string = resourceUrl;
     private applications: Application[] = [];
@@ -43,14 +47,24 @@ export class ApplicationsPageComponent implements OnInit {
     private filterBy: SelectableProperty = "name";
     private filterText: string = "";
     
+    private propLabels: PropertyLabel[] = [];
+    private actionButtons: ActionButton[] = [];
+    
     private sessions: any[] = [];
 
     constructor(accountSvc: AccountServiceClient, private translateUtil: TranslateUtil) {
-        accountSvc.doGetRequest("/applications", (res: Response) => this.handleGetAppsResponse(res));
+        this.initPropLabels();
+        this.actionButtons.push(new RefreshButton(accountSvc,"/applications", this));
+        accountSvc.doGetRequest("/applications", (res: Response) => this.refresh(res));
         accountSvc.doGetRequest("/sessions", (res: Response) => this.handleGetSessionsResponse(res));
     }
+    
+    private initPropLabels(): void {
+        this.propLabels.push({prop: "name", label: "Name"});
+        this.propLabels.push({prop: "description", label: "Description"});
+    }
 
-    private handleGetAppsResponse(res: Response) {
+    public refresh(res: Response) {
         console.log('**** response from apps REST API ***');
         console.log(JSON.stringify(res));
         console.log('*** apps res.json() ***');
@@ -75,32 +89,6 @@ export class ApplicationsPageComponent implements OnInit {
         this.sessions = res.json();
     }
 
-    private changeView(activeView: ApplicationView) {
-        this.activeView = activeView;
-    }
-    
-    private toggleSort() {
-        this.isSortAscending = !this.isSortAscending;
-    }
-    
-    private changeSortByProp(prop: SelectableProperty) {
-        this.sortBy = prop;
-    }
-    
-    private changeFilterByProp(prop: SelectableProperty) {
-        this.filterBy = prop;
-        this.filterText = "";
-    }
-    
-    private capitalize(prop: SelectableProperty): string {
-        if (!prop) return prop;
-        
-        const firstChar: string = prop.charAt(0).toUpperCase();
-        if (prop.length === 1) return firstChar;
-        
-        return  firstChar + prop.substring(1);
-    }
-    
     ngOnInit() {
     }
 

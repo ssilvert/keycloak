@@ -43,7 +43,11 @@ import { PasswordPageComponent } from './content/password-page/password-page.com
 import { PageNotFoundComponent } from './content/page-not-found/page-not-found.component';
 
 import { AuthenticatorPageComponent } from './content/authenticator-page/authenticator-page.component';
+
 import { SessionsPageComponent } from './content/sessions-page/sessions-page.component';
+import { LargeSessionCardComponent } from './content/sessions-page/large-session-card.component';
+import { SmallSessionCardComponent } from './content/sessions-page/small-session-card.component';
+
 import { ApplicationsPageComponent } from './content/applications-page/applications-page.component';
 import { LargeAppCardComponent } from './content/applications-page/large-app-card.component';
 import { SmallAppCardComponent } from './content/applications-page/small-app-card.component';
@@ -74,6 +78,8 @@ const decs = [
     PageNotFoundComponent,
     AuthenticatorPageComponent,
     SessionsPageComponent,
+    LargeSessionCardComponent,
+    SmallSessionCardComponent,
     ApplicationsPageComponent,
     LargeAppCardComponent,
     SmallAppCardComponent,

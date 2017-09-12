@@ -16,7 +16,11 @@
  */
  import {Component, Input, OnInit} from '@angular/core';
  
- //export type View = "LargeCards" | "SmallCards" | "List";
+ import {PropertyLabel} from './property.label';
+ import {ActionButton} from './action.button';
+ import {Icon} from '../../page/icon';
+ 
+ export type View = "LargeCards" | "SmallCards" | "List";
  
  /**
  *
@@ -29,45 +33,45 @@
     styleUrls: ['toolbar.css']
 })
 export class ToolbarComponent implements OnInit {
-    @Input() selectableProps: string[];
+    @Input() filterProps: PropertyLabel[];
+    @Input() sortProps: PropertyLabel[];
+    @Input() actionButtons: ActionButton[];
     
     private isSortAscending: boolean = true;
-    private sortBy: string = "";
-    private filterBy: string = "";
+    private sortBy: PropertyLabel;
+    private filterBy: PropertyLabel;
     private filterText: string = "";
     
-    public activeView: string = "LargeCards";
+    public activeView: View = "LargeCards";
     
     ngOnInit() {
-        if (this.selectableProps && this.selectableProps.length > 0) {
-            this.sortBy = this.selectableProps[0];
-            this.filterBy = this.selectableProps[0];
+        if (this.filterProps && this.filterProps.length > 0) {
+            this.filterBy = this.filterProps[0];
         }
+        
+        if (this.sortProps && this.sortProps.length > 0) {
+            this.sortBy = this.sortProps[0];
+        }
+    }
+    
+    private changeView(activeView: View) {
+        this.activeView = activeView;
     }
     
     private toggleSort() {
         this.isSortAscending = !this.isSortAscending;
     }
     
-    private changeSortByProp(prop: string) {
+    private changeSortByProp(prop: PropertyLabel) {
         this.sortBy = prop;
     }
     
-    private changeFilterByProp(prop: string) {
+    private changeFilterByProp(prop: PropertyLabel) {
         this.filterBy = prop;
         this.filterText = "";
     }
     
-    private capitalize(prop: string): string {
-        if (!prop) return prop;
-        
-        const firstChar: string = prop.charAt(0).toUpperCase();
-        if (prop.length === 1) return firstChar;
-        
-        return  firstChar + prop.substring(1);
-    }
-    
-    private selectedFilterClass(prop: string): string {
+    private selectedFilterClass(prop: PropertyLabel): string {
         if (this.filterBy === prop) {
             return "selected";
         } else {
@@ -75,12 +79,16 @@ export class ToolbarComponent implements OnInit {
         }
     }
     
-    private selectedSortByClass(prop: string): string {
+    private selectedSortByClass(prop: PropertyLabel): string {
         if (this.sortBy === prop) {
             return "selected";
         } else {
             return "";
         }
+    }
+    
+    isIconButton(button: ActionButton): boolean {
+        return button.label instanceof Icon;
     }
 }
 
