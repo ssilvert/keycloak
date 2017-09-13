@@ -37,6 +37,11 @@ export class ToolbarComponent implements OnInit {
     @Input() sortProps: PropertyLabel[];
     @Input() actionButtons: ActionButton[];
     
+    // TODO: localize in constructor
+    readonly sortByTooltip: string = "Sort by...";
+    readonly sortAscendingTooltip: string = "Sort Ascending";
+    readonly sortDescendingTooltip: string = "Sort Descending";
+    
     private isSortAscending: boolean = true;
     private sortBy: PropertyLabel;
     private filterBy: PropertyLabel;

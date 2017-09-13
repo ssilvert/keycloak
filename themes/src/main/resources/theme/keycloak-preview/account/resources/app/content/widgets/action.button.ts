@@ -23,6 +23,7 @@ import {Icon} from '../../page/icon';
  */
 export interface ActionButton {
     readonly label: string | Icon;
+    readonly tooptip?: string;
     
     performAction(): void;
     

@@ -29,6 +29,7 @@ import {AccountServiceClient} from '../../account-service/account.service';
 export class RefreshButton implements ActionButton {
 
     readonly label:Icon = new Icon('fa', 'refresh');
+    readonly tooltip:string = 'Refresh';  //TODO: localize in constructor
     
     constructor(private accountSvc: AccountServiceClient, 
                 private request: string, 

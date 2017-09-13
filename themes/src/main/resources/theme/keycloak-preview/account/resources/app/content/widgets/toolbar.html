@@ -18,24 +18,49 @@
                 </div>
                 <div *ngIf="sortProps" class="form-group">
                     <div class="dropdown btn-group">
-                        <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">{{sortBy.label}} <span class="caret"></span></button>
+                        <button type="button" 
+                                class="btn btn-default dropdown-toggle" 
+                                data-toggle="tooltip"
+                                data-toggle="dropdown"
+                                data-placement="top"
+                                title="{{sortByTooltip}}"
+                                aria-haspopup="true" 
+                                aria-expanded="false">{{sortBy.label}} <span class="caret"></span></button>
                         <ul class="dropdown-menu">
                             <li *ngFor="let prop of sortProps" (click)="changeSortByProp(prop)" class="{{selectedSortByClass(prop)}}"><a>{{prop.label}}</a></li>
                         </ul>
                     </div>
                     <button (click)="toggleSort()" class="btn btn-link" type="button">
-                        <span *ngIf="!isSortAscending" class="fa fa-sort-alpha-asc"></span>
-                        <span *ngIf="isSortAscending" class="fa fa-sort-alpha-desc"></span>
+                        <span *ngIf="!isSortAscending" 
+                              class="fa fa-sort-alpha-asc" 
+                              data-toggle="toltip" 
+                              data-placement="top" 
+                              title="{{sortAscendingTooltip}}"></span>
+                        <span *ngIf="isSortAscending" 
+                              class="fa fa-sort-alpha-desc"
+                              data-toggle="toltip" 
+                              data-placement="top" 
+                              title="{{sortDescendingTooltip}}"></span>
                     </button>
                 </div>
                 <div *ngIf="actionButtons">
-                    <span *ngFor="let action of actionButtons">
-                        <div class="form-group">
-                            <button *ngIf="!isIconButton(action)" (click)="action.performAction()" class="btn btn-default" type="button">{{action.label}}</button>
-                            <button *ngIf="isIconButton(action)" (click)="action.performAction()" class="btn btn-link" type="button">
-                                <span class="{{action.label.getClasses()}}"></span>
-                            </button>
-                        </div>
+                    <span class="form-group" *ngFor="let action of actionButtons">
+                        <button *ngIf="!isIconButton(action)" 
+                                (click)="action.performAction()" 
+                                data-toggle="tooltip" 
+                                data-placement="top" 
+                                title="{{action.tooltip}}" 
+                                class="btn btn-default" 
+                                type="button">{{action.label}}</button>
+                        <button *ngIf="isIconButton(action)" 
+                                (click)="action.performAction()" 
+                                data-toggle="tooltip" 
+                                data-placement="top" 
+                                title="{{action.tooltip}}" 
+                                class="btn btn-link" 
+                                type="button">
+                            <span class="{{action.label.getClasses()}}"></span>
+                        </button>
                     </span>
                     <!--<button class="btn btn-default" type="button">Action</button>
                     <div class="dropdown btn-group  dropdown-kebab-pf">

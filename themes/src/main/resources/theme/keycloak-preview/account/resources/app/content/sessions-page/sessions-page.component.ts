@@ -18,6 +18,7 @@ import {Component, OnInit} from '@angular/core';
 import {Response} from '@angular/http';
 
 import {AccountServiceClient} from '../../account-service/account.service';
+ import {TranslateUtil} from '../../ngx-translate/translate.util';
 
 import {View} from '../widgets/toolbar.component';
 import {PropertyLabel} from '../widgets/property.label';
@@ -40,9 +41,9 @@ export class SessionsPageComponent implements Refreshable, OnInit {
     
     private actionButtons: ActionButton[] = [];
     
-    constructor(private accountSvc: AccountServiceClient ) {
+    constructor(private accountSvc: AccountServiceClient, private translateUtil: TranslateUtil ) {
         this.initPropLabels();
-        this.actionButtons.push(new LogoutAllButton(accountSvc));
+        this.actionButtons.push(new LogoutAllButton(accountSvc, translateUtil));
         this.actionButtons.push(new RefreshButton(accountSvc,"/sessions", this));
         accountSvc.doGetRequest("/sessions", (res: Response) => this.refresh(res));
     }
@@ -92,9 +93,12 @@ export class SessionsPageComponent implements Refreshable, OnInit {
 }
 
 class LogoutAllButton implements ActionButton {
-    public readonly label: string = "Logout All";
+    public readonly label: string = "Logout All"; //TODO: localize in constructor
+    public readonly tooltip: string;
     
-    constructor(private accountSvc: AccountServiceClient ) {}
+    constructor(private accountSvc: AccountServiceClient, translateUtil: TranslateUtil ) {
+        this.tooltip = translateUtil.translate('doLogOutAllSessions');
+    }
         
     performAction(): void {
         this.accountSvc.doDelete("/sessions", 
