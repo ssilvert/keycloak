@@ -32,6 +32,7 @@ import javax.json.Json;
 import javax.json.JsonObjectBuilder;
 import javax.json.JsonWriter;
 import org.jboss.logging.Logger;
+import org.keycloak.events.EventStoreProvider;
 import org.keycloak.models.ClientModel;
 import org.keycloak.protocol.oidc.utils.RedirectUtils;
 import org.keycloak.services.managers.RealmManager;
@@ -60,6 +61,8 @@ public class AccountConsole {
     private final Theme theme;
 
     private Auth auth;
+    
+    private EventStoreProvider eventStore;
 
     public AccountConsole(RealmModel realm, ClientModel client, Theme theme) {
         this.realm = realm;
@@ -69,6 +72,8 @@ public class AccountConsole {
     }
 
     public void init() {
+        eventStore = session.getProvider(EventStoreProvider.class);
+        
         AuthenticationManager.AuthResult authResult = authManager.authenticateIdentityCookie(session, realm);
         if (authResult != null) {
             auth = new Auth(realm, authResult.getToken(), authResult.getUser(), client, authResult.getSession(), true);
@@ -93,6 +98,9 @@ public class AccountConsole {
             map.put("realm", realm.getName());
             map.put("resourceUrl", Urls.themeRoot(baseUri) + "/account/" + theme.getName());
             map.put("resourceVersion", Version.RESOURCES_VERSION);
+            map.put("passwordUpdateSupported", true);
+            map.put("identityFederationEnabled", realm.isIdentityFederationEnabled());
+            map.put("eventsEnabled", eventStore != null && realm.isEventsEnabled());
             
             String[] referrer = getReferrer();
             if (referrer != null) {
@@ -211,5 +219,5 @@ public class AccountConsole {
 
         return null;
     }
-
+    
 }

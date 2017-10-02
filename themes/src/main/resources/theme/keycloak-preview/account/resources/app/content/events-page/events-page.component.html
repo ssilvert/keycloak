@@ -1,0 +1,39 @@
+<div class="cards-pf">
+    <toolbar #toolbar [filterProps]="filterLabels" 
+                      [sortProps]="sortLabels" 
+                      [actionButtons]="actionButtons"
+                      [views]="['List']"></toolbar>
+
+    <!--
+    <div *ngIf="toolbar.activeView === 'LargeCards'" class="container-fluid container-cards-pf">
+        <div class="row row-cards-pf">
+            Large Cards
+            <large-session-card *ngFor="let session of (sessions | filterby:toolbar.filterBy.prop:toolbar.filterText | orderby:toolbar.sortBy.prop:toolbar.isSortAscending )"
+                    class="col-xs-12 col-sm-6 col-md-4 col-lg-3"
+                    [session]="session">
+            </large-session-card>
+        </div>
+    </div>
+
+    <div *ngIf="toolbar.activeView === 'SmallCards'" class="container-fluid container-cards-pf">
+        <div class="row row-cards-pf">
+            Small Cards
+            <small-session-card *ngFor="let session of (sessions | filterby:toolbar.filterBy.prop:toolbar.filterText | orderby:toolbar.sortBy.prop:toolbar.isSortAscending )"
+                    class="col-xs-12 col-sm-3 col-md-2"
+                    [session]="session">
+            </small-session-card>
+        </div>
+    </div>
+    -->
+
+    <div *ngIf="toolbar.activeView === 'List'" class="container-fluid">
+        <div class="list-group list-view-pf list-view-pf-view">
+            <row-event-card *ngFor="let event of (events | filterby:toolbar.filterBy.prop:toolbar.filterText | orderby:toolbar.sortBy.prop:toolbar.isSortAscending ); let i = index"
+                            class="list-group-item"
+                            [event]="event"
+                            [index]="i">
+            </row-event-card>
+        </div>
+    </div>
+
+</div>

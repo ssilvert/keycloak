@@ -53,6 +53,9 @@ import { LargeAppCardComponent } from './content/applications-page/large-app-car
 import { SmallAppCardComponent } from './content/applications-page/small-app-card.component';
 import { RowAppCardComponent } from './content/applications-page/row-app-card.component';
 
+import { EventsPageComponent } from './content/events-page/events-page.component';
+import { RowEventCardComponent } from './content/events-page/row-event-card.component';
+
 import { ToolbarComponent } from './content/widgets/toolbar.component';
 
 import {OrderbyPipe} from './pipes/orderby.pipe';
@@ -64,6 +67,7 @@ const routes: Routes = [
     { path: 'authenticator', component: AuthenticatorPageComponent },
     { path: 'sessions', component: SessionsPageComponent },
     { path: 'applications', component: ApplicationsPageComponent },
+    { path: 'events', component: EventsPageComponent },
     { path: '', redirectTo: '/account', pathMatch: 'full' },
     { path: '**', component: PageNotFoundComponent}
 ];
@@ -84,6 +88,8 @@ const decs = [
     LargeAppCardComponent,
     SmallAppCardComponent,
     RowAppCardComponent,
+    EventsPageComponent,
+    RowEventCardComponent,
     ToolbarComponent,
     OrderbyPipe,
     FilterbyPipe

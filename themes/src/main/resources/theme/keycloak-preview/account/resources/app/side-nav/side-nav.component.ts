@@ -25,6 +25,10 @@ import {ResponsivenessService, SideNavClasses, MenuClickListener} from "../respo
 import {Media} from "../responsiveness-service/media";
 import {Referrer} from "../page/referrer";
 
+declare const passwordUpdateSupported: boolean;
+declare const identityFederationEnabled: boolean;
+declare const eventsEnabled: boolean;
+
 @Component({
     selector: 'app-side-nav',
     templateUrl: './side-nav.component.html',
@@ -36,20 +40,14 @@ export class SideNavComponent implements OnInit, MenuClickListener {
     private sideNavClasses: SideNavClasses = this.respSvc.calcSideNavWidthClasses();
     private isFirstRouterEvent: boolean = true;
     
-    public navItems: SideNavItem[];
+    public navItems: SideNavItem[] = [];
     
     constructor(private router: Router, 
                 private translateUtil: TranslateUtil, 
                 private respSvc: ResponsivenessService,
                 private keycloakService: KeycloakService) {
         this.referrer = new Referrer(translateUtil);
-        this.navItems = [
-            this.makeSideNavItem("account", new Icon("pficon", "user"), "active"),
-            this.makeSideNavItem("password", new Icon("pficon", "key")),
-            this.makeSideNavItem("authenticator", new Icon("pficon", "cloud-security")),
-            this.makeSideNavItem("sessions", new Icon("fa", "clock-o")),
-            this.makeSideNavItem("applications", new Icon("fa", "th"))
-        ];
+        this.initSideNavItems();
 
         this.router.events.subscribe(value => {
             if (value instanceof NavigationEnd) {
@@ -67,7 +65,27 @@ export class SideNavComponent implements OnInit, MenuClickListener {
         
         this.respSvc.addMenuClickListener(this);
     }
-
+    
+    private initSideNavItems(): void {
+        this.navItems.push(this.makeSideNavItem("account", new Icon("pficon", "user"), "active"));
+        
+        if (passwordUpdateSupported) {
+             this.navItems.push(this.makeSideNavItem("password", new Icon("pficon", "key")));
+        }
+        
+        this.navItems.push(this.makeSideNavItem("authenticator", new Icon("pficon", "cloud-security")));
+        
+        // if (identityFederationEnabled) {
+        // }
+        
+        this.navItems.push(this.makeSideNavItem("sessions", new Icon("fa", "clock-o")));
+        this.navItems.push(this.makeSideNavItem("applications", new Icon("fa", "th")));
+        
+        if (eventsEnabled) {
+            this.navItems.push(this.makeSideNavItem("events", new Icon("fa", "bell")));
+        }
+    }
+    
     // use itemName for translate key, link, and tooltip
     private makeSideNavItem(itemName: string, icon: Icon, active?: Active): SideNavItem {
         const localizedName: string = this.translateUtil.translate(itemName);

@@ -36,6 +36,7 @@ export class ToolbarComponent implements OnInit {
     @Input() filterProps: PropertyLabel[];
     @Input() sortProps: PropertyLabel[];
     @Input() actionButtons: ActionButton[];
+    @Input() views: View[] = ["LargeCards", "SmallCards", "List"];  // all by default
     
     // TODO: localize in constructor
     readonly sortByTooltip: string = "Sort by...";
@@ -50,6 +51,12 @@ export class ToolbarComponent implements OnInit {
     public activeView: View = "LargeCards";
     
     ngOnInit() {
+        if (this.views.length === 0) {
+            throw new Error("Toolbar must contain at least one view.");
+        }
+        
+        this.activeView = this.views[0];
+        
         if (this.filterProps && this.filterProps.length > 0) {
             this.filterBy = this.filterProps[0];
         }

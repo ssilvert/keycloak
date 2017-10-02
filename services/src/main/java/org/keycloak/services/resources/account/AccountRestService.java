@@ -16,6 +16,10 @@
  */
 package org.keycloak.services.resources.account;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
 import org.jboss.resteasy.annotations.cache.NoCache;
 import org.jboss.resteasy.spi.HttpRequest;
 import org.keycloak.common.ClientConnection;
@@ -54,6 +58,11 @@ import javax.ws.rs.core.UriInfo;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import org.jboss.resteasy.spi.BadRequestException;
+import org.keycloak.events.Event;
+import org.keycloak.events.EventQuery;
+import org.keycloak.models.utils.ModelToRepresentation;
+import org.keycloak.representations.idm.EventRepresentation;
 
 /**
  * @author <a href="mailto:sthorger@redhat.com">Stian Thorgersen</a>
@@ -266,5 +275,81 @@ public class AccountRestService {
     // TODO Federated identities
     // TODO Applications
     // TODO Logs
+    
+    @Path("events")
+    @GET
+    @NoCache
+    @Produces(MediaType.APPLICATION_JSON)
+    public List<EventRepresentation> getEvents(@QueryParam("type") List<String> types, @QueryParam("client") String client,
+                                               @QueryParam("user") String user, @QueryParam("dateFrom") String dateFrom, @QueryParam("dateTo") String dateTo,
+                                               @QueryParam("ipAddress") String ipAddress, @QueryParam("first") Integer firstResult,
+                                               @QueryParam("max") Integer maxResults) {
+        //auth.realm().requireViewEvents();
+        UserSessionModel userSession = auth.getSession();
+        user = userSession.getUser().getId();
+
+        EventStoreProvider eventStore = session.getProvider(EventStoreProvider.class);
+
+        EventQuery query = eventStore.createQuery().realm(realm.getId());
+        if (client != null) {
+            query.client(client);
+        }
+
+        if (types != null && !types.isEmpty()) {
+            EventType[] t = new EventType[types.size()];
+            for (int i = 0; i < t.length; i++) {
+                t[i] = EventType.valueOf(types.get(i));
+            }
+            query.type(t);
+        }
+
+       // if (user != null) {
+            query.user(user);
+       // }
+
+        if(dateFrom != null) {
+            SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd");
+            Date from = null;
+            try {
+                from = df.parse(dateFrom);
+            } catch (ParseException e) {
+                throw new BadRequestException("Invalid value for 'Date(From)', expected format is yyyy-MM-dd");
+            }
+            query.fromDate(from);
+        }
+
+        if(dateTo != null) {
+            SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd");
+            Date to = null;
+            try {
+                to = df.parse(dateTo);
+            } catch (ParseException e) {
+                throw new BadRequestException("Invalid value for 'Date(To)', expected format is yyyy-MM-dd");
+            }
+            query.toDate(to);
+        }
+
+        if (ipAddress != null) {
+            query.ipAddress(ipAddress);
+        }
+        if (firstResult != null) {
+            query.firstResult(firstResult);
+        }
+        if (maxResults != null) {
+            query.maxResults(maxResults);
+        } else {
+            query.maxResults(org.keycloak.models.Constants.DEFAULT_MAX_RESULTS);
+        }
+
+        return toEventListRep(query.getResultList());
+    }
+
+    private List<EventRepresentation> toEventListRep(List<Event> events) {
+        List<EventRepresentation> reps = new ArrayList<>();
+        for (Event event : events) {
+            reps.add(ModelToRepresentation.toRepresentation(event));
+        }
+        return reps;
+    }
 
 }

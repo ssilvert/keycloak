@@ -8,6 +8,9 @@
             var baseUrl = '${baseUrl}';
             var realm = '${realm}';
             var resourceUrl = '${resourceUrl}';
+            var passwordUpdateSupported = ${passwordUpdateSupported?c};
+            var identityFederationEnabled = ${identityFederationEnabled?c};
+            var eventsEnabled = ${eventsEnabled?c};
             
             <#if referrer??>
                 var referrer = '${referrer}';

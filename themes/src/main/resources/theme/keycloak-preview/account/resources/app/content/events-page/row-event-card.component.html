@@ -1,0 +1,90 @@
+<div class="list-group-item list-view-pf-stacked list-view-pf-top-align">
+    <div class="list-view-pf-main-info">
+        <div class="list-view-pf-left">
+            <span class="fa fa-bell list-view-pf-icon-sm"></span>
+        </div>
+        <div class="list-view-pf-stacked">
+            <div class="list-view-pf-body">
+                <div class="list-view-pf-description">
+                    <div class="list-group-item-heading">
+                        {{event.clientId}}
+                    </div>
+                    <div class="list-group-item-text">
+                        This text needs to explain what the {{event.type}} event type means.
+                    </div>
+                </div>
+                <div class="list-view-pf-additional-info">
+                    <div class="list-view-pf-additional-info-item">
+                        <strong>Time: </strong> {{event.time | date:'medium'}}
+                    </div>
+                    <div class="list-view-pf-additional-info-item">
+                        <strong>IP Address: </strong> {{event.ipAddress}}
+                    </div>
+                    <div class="list-view-pf-additional-info-item">
+                        <strong>Session Id: </strong> {{event.sessionId}}
+                    </div>
+                </div>
+            </div>
+            <div class="list-view-pf-body">
+                <div class="list-view-pf-stacked">
+                    <div class="list-view-pf-body">
+                        <a href="#event-{{index}}" data-toggle="collapse">Collapsible</a>
+                    </div>
+                    <div class="list-view-pf-body">
+                        <div id="event-{{index}}" class="collapse">
+                        Lorem ipsum dolor text....
+                        </div>
+                    </div> 
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!--
+<div class="list-view-pf-main-info">
+    <div class="list-view-pf-left">
+        <span class="fa fa-bell list-view-pf-icon-sm"></span>
+    </div>
+    <div class="list-view-pf-body">
+        <div class="list-view-pf-description">
+            <div class="list-group-item-heading">
+                {{event.clientId}}
+            </div>
+            <div class="list-group-item">
+                <strong>Type: </strong> {{event.type}}
+            </div>
+            <div class="list-group-item">
+                <strong>Timestamp: </strong> {{event.time}}
+            </div>
+            <div class="list-group-item">
+                <strong>IP Address: </strong> {{event.ipAddress}}
+            </div>
+            <div class="list-group-item">
+                <strong>Session Id: </strong> {{event.sessionId}}
+            </div>
+            
+        </div>
+        <div class="list-view-pf-additional-info">
+            <div class="list-group-item-text">
+            The following snippet of text is <a href="#">rendered as link text</a>.
+            </div>
+        </div>-->
+
+<!-- <div class="list-view-pf-additional-info">
+     <div class="list-view-pf-additional-info-item">
+         <span class="pficon pficon-screen"></span>
+         <strong>8</strong> Hosts
+     </div>
+     <div class="list-view-pf-additional-info-item">
+         <span class="pficon pficon-cluster"></span>
+         <strong>6</strong> Clusters
+     </div>
+     <div class="list-view-pf-additional-info-item">
+         <span class="pficon pficon-container-node"></span>
+         <strong>10</strong> Nodes
+     </div>
+     <div class="list-view-pf-additional-info-item">
+         <span class="pficon pficon-image"></span>
+         <strong>8</strong> Images
+     </div>
+ </div>-->

@@ -20,13 +20,16 @@ import {Response} from '@angular/http';
 import {AccountServiceClient} from '../../account-service/account.service';
  import {TranslateUtil} from '../../ngx-translate/translate.util';
 
-import {View} from '../widgets/toolbar.component';
 import {PropertyLabel} from '../widgets/property.label';
 import {ActionButton} from '../widgets/action.button';
 import {RefreshButton, Refreshable} from '../widgets/refresh.button';
 
 import {Session} from './session';
 
+/**
+ *
+ * @author Stan Silvert ssilvert@redhat.com (C) 2017 Red Hat Inc.
+ */
 @Component({
     selector: 'app-sessions-page',
     templateUrl: './sessions-page.component.html',
@@ -36,7 +39,9 @@ export class SessionsPageComponent implements Refreshable, OnInit {
     private filterLabels: PropertyLabel[] = [];
     private sortLabels: PropertyLabel[] = [];
 
+    // this won't be needed when we fix the list view
     private response: any[] = [];
+    
     private sessions: Session[] = [];
     
     private actionButtons: ActionButton[] = [];
@@ -49,6 +54,7 @@ export class SessionsPageComponent implements Refreshable, OnInit {
     }
     
     private initPropLabels(): void {
+        //TODO: localize the labels
         this.filterLabels.push({prop: "ipAddress", label: "IP"});
         
         this.sortLabels.push({prop: "ipAddress", label: "IP"});

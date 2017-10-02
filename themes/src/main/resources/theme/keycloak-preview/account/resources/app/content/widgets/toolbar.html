@@ -98,10 +98,10 @@
                             </div>
                         </div>
                     </div>-->
-                    <div class="form-group toolbar-pf-view-selector">
-                        <button (click)="changeView('LargeCards')" class="btn btn-link "><i class="fa fa-th-large"></i></button>
-                        <button (click)="changeView('SmallCards')" class="btn btn-link "><i class="fa fa-th"></i></button>
-                        <button (click)="changeView('List')" class="btn btn-link "><i class="fa fa-th-list"></i></button>
+                    <div *ngIf="views.length > 1" class="form-group toolbar-pf-view-selector">
+                        <button *ngIf="views.indexOf('LargeCards') != -1" (click)="changeView('LargeCards')" class="btn btn-link "><i class="fa fa-th-large"></i></button>
+                        <button *ngIf="views.indexOf('SmallCards') != -1" (click)="changeView('SmallCards')" class="btn btn-link "><i class="fa fa-th"></i></button>
+                        <button *ngIf="views.indexOf('List') != -1" (click)="changeView('List')" class="btn btn-link "><i class="fa fa-th-list"></i></button>
                     </div>
                 </div>
             </div>
