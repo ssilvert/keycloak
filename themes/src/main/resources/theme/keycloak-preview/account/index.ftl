@@ -173,7 +173,7 @@
                             <hr/>
                             <h3><a href="${baseUrl}/#/authenticator">Authenticator</a></h3>
                             <hr/>
-                            <h3><a href="${baseUrl}/#/sessions">Device activity</a></h3>
+                            <h3><a href="${baseUrl}/#/device-activity">Device activity</a></h3>
                             <hr/>
                             <h3><a href="${baseUrl}/#/account">Federated identities</a></h3>
                         </div>
