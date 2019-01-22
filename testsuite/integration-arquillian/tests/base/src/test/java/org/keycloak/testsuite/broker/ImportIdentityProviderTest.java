@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 Red Hat, Inc. and/or its affiliates
+ * Copyright 2019 Red Hat, Inc. and/or its affiliates
  * and other contributors as indicated by the @author tags.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,7 +16,15 @@
  */
 package org.keycloak.testsuite.broker;
 
+import java.io.IOException;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 import org.junit.Assert;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 import org.junit.Test;
 import org.keycloak.broker.oidc.OAuth2IdentityProviderConfig;
 import org.keycloak.broker.oidc.OIDCIdentityProvider;
@@ -26,57 +34,62 @@ import org.keycloak.broker.saml.SAMLIdentityProvider;
 import org.keycloak.broker.saml.SAMLIdentityProviderConfig;
 import org.keycloak.broker.saml.SAMLIdentityProviderFactory;
 import org.keycloak.models.IdentityProviderModel;
+import org.keycloak.models.KeycloakSession;
 import org.keycloak.models.RealmModel;
 import org.keycloak.models.utils.DefaultAuthenticationFlows;
+import org.keycloak.models.utils.ModelToRepresentation;
 import org.keycloak.representations.idm.RealmRepresentation;
 import org.keycloak.social.facebook.FacebookIdentityProvider;
 import org.keycloak.social.facebook.FacebookIdentityProviderFactory;
 import org.keycloak.social.github.GitHubIdentityProvider;
 import org.keycloak.social.github.GitHubIdentityProviderFactory;
-import org.keycloak.social.paypal.PayPalIdentityProvider;
-import org.keycloak.social.paypal.PayPalIdentityProviderFactory;
-import org.keycloak.social.paypal.PayPalIdentityProviderConfig;
 import org.keycloak.social.google.GoogleIdentityProvider;
 import org.keycloak.social.google.GoogleIdentityProviderFactory;
 import org.keycloak.social.linkedin.LinkedInIdentityProvider;
 import org.keycloak.social.linkedin.LinkedInIdentityProviderFactory;
-import org.keycloak.social.openshift.OpenshiftV3IdentityProviderConfig;
 import org.keycloak.social.openshift.OpenshiftV3IdentityProvider;
+import org.keycloak.social.openshift.OpenshiftV3IdentityProviderConfig;
 import org.keycloak.social.openshift.OpenshiftV3IdentityProviderFactory;
+import org.keycloak.social.paypal.PayPalIdentityProvider;
+import org.keycloak.social.paypal.PayPalIdentityProviderConfig;
+import org.keycloak.social.paypal.PayPalIdentityProviderFactory;
 import org.keycloak.social.stackoverflow.StackOverflowIdentityProviderConfig;
 import org.keycloak.social.stackoverflow.StackoverflowIdentityProvider;
 import org.keycloak.social.stackoverflow.StackoverflowIdentityProviderFactory;
 import org.keycloak.social.twitter.TwitterIdentityProvider;
 import org.keycloak.social.twitter.TwitterIdentityProviderFactory;
+import org.keycloak.testsuite.AbstractKeycloakTest;
+import org.keycloak.testsuite.admin.AbstractAdminTest;
+import org.keycloak.testsuite.arquillian.annotation.ModelTest;
 
-import java.io.IOException;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
 
 /**
+ * Migrated from old testsuite.  Previous version by Pedro Igor.
+ * 
+ * @author Stan Silvert ssilvert@redhat.com (C) 2019 Red Hat Inc.
  * @author pedroigor
  */
-public class ImportIdentityProviderTest extends AbstractIdentityProviderModelTest {
+public class ImportIdentityProviderTest extends AbstractKeycloakTest {
 
+    @Override
+    public void addTestRealms(List<RealmRepresentation> testRealms) {
+        RealmRepresentation realmRepresentation = AbstractAdminTest.loadJson(getClass().getResourceAsStream("/broker-test/test-realm-with-broker.json"), RealmRepresentation.class);
+        testRealms.add(realmRepresentation);
+    }
+    
     @Test
-    public void testInstallation() throws Exception {
-        RealmModel realm = installTestRealm();
-
-        assertIdentityProviderConfig(realm, realm.getIdentityProviders());
+    @ModelTest
+    public void testInstallation(KeycloakSession session) throws Exception {
+        RealmModel realm = session.realms().getRealm("realm-with-broker");
+        assertIdentityProviderConfig(realm, realm.getIdentityProviders(), session);
 
         assertTrue(realm.isIdentityFederationEnabled());
-        this.realmManager.removeRealm(realm);
     }
-
+    
     @Test
-    public void testUpdateIdentityProvider() throws Exception {
-        RealmModel realm = installTestRealm();
+    @ModelTest
+    public void testUpdateIdentityProvider(KeycloakSession session) throws Exception {
+        RealmModel realm = session.realms().getRealm("realm-with-broker");
         List<IdentityProviderModel> identityProviders = realm.getIdentityProviders();
 
         assertFalse(identityProviders.isEmpty());
@@ -94,9 +107,7 @@ public class ImportIdentityProviderTest extends AbstractIdentityProviderModelTes
 
         realm.updateIdentityProvider(identityProviderModel);
 
-        commit();
-
-        realm = this.realmManager.getRealm(realm.getId());
+        realm = session.realms().getRealm(realm.getId());
 
         identityProviderModel = realm.getIdentityProviderByAlias(identityProviderId);
 
@@ -115,47 +126,44 @@ public class ImportIdentityProviderTest extends AbstractIdentityProviderModelTes
 
         realm.updateIdentityProvider(identityProviderModel);
 
-        commit();
-
-        realm = this.realmManager.getRealm(realm.getId());
+        realm = session.realms().getRealm(realm.getId());
         identityProviderModel = realm.getIdentityProviderByAlias(identityProviderId);
 
         assertFalse(identityProviderModel.getConfig().containsKey("config-added"));
         assertTrue(identityProviderModel.isEnabled());
         assertFalse(identityProviderModel.isTrustEmail());
         assertFalse(identityProviderModel.isAuthenticateByDefault());
-        this.realmManager.removeRealm(realm);
     }
 
-    private void assertIdentityProviderConfig(RealmModel realm, List<IdentityProviderModel> identityProviders) {
+    private void assertIdentityProviderConfig(RealmModel realm, List<IdentityProviderModel> identityProviders, KeycloakSession session) {
         assertFalse(identityProviders.isEmpty());
 
-        Set<String> checkedProviders = new HashSet<String>(getExpectedProviders());
+        Set<String> checkedProviders = new HashSet<>(ExpectedProviders.get());
 
         for (IdentityProviderModel identityProvider : identityProviders) {
             if (identityProvider.getAlias().startsWith("model-")) {
                 String providerId = identityProvider.getProviderId();
 
                 if (SAMLIdentityProviderFactory.PROVIDER_ID.equals(providerId)) {
-                    assertSamlIdentityProviderConfig(identityProvider);
+                    assertSamlIdentityProviderConfig(identityProvider, session);
                 } else if (GoogleIdentityProviderFactory.PROVIDER_ID.equals(providerId)) {
-                    assertGoogleIdentityProviderConfig(identityProvider);
+                    assertGoogleIdentityProviderConfig(identityProvider, session);
                 } else if (OIDCIdentityProviderFactory.PROVIDER_ID.equals(providerId)) {
-                    assertOidcIdentityProviderConfig(identityProvider);
+                    assertOidcIdentityProviderConfig(identityProvider, session);
                 } else if (FacebookIdentityProviderFactory.PROVIDER_ID.equals(providerId)) {
-                    assertFacebookIdentityProviderConfig(realm, identityProvider);
+                    assertFacebookIdentityProviderConfig(realm, identityProvider, session);
                 } else if (GitHubIdentityProviderFactory.PROVIDER_ID.equals(providerId)) {
-                    assertGitHubIdentityProviderConfig(realm, identityProvider);
+                    assertGitHubIdentityProviderConfig(realm, identityProvider, session);
                 } else if (PayPalIdentityProviderFactory.PROVIDER_ID.equals(providerId)) {
-                    assertPayPalIdentityProviderConfig(realm, identityProvider);
+                    assertPayPalIdentityProviderConfig(realm, identityProvider, session);
                 } else if (TwitterIdentityProviderFactory.PROVIDER_ID.equals(providerId)) {
-                    assertTwitterIdentityProviderConfig(identityProvider);
+                    assertTwitterIdentityProviderConfig(identityProvider, session);
                 } else if (LinkedInIdentityProviderFactory.PROVIDER_ID.equals(providerId)) {
-                    assertLinkedInIdentityProviderConfig(identityProvider);
+                    assertLinkedInIdentityProviderConfig(identityProvider, session);
                 } else if (StackoverflowIdentityProviderFactory.PROVIDER_ID.equals(providerId)) {
-                    assertStackoverflowIdentityProviderConfig(identityProvider);
+                    assertStackoverflowIdentityProviderConfig(identityProvider, session);
                 } else if (OpenshiftV3IdentityProviderFactory.PROVIDER_ID.equals(providerId)) {
-                    assertOpenshiftIdentityProviderConfig(identityProvider);
+                    assertOpenshiftIdentityProviderConfig(identityProvider, session);
                 } else {
                     continue;
                 }
@@ -167,7 +175,7 @@ public class ImportIdentityProviderTest extends AbstractIdentityProviderModelTes
         assertTrue(checkedProviders.isEmpty());
     }
 
-    private void assertGoogleIdentityProviderConfig(IdentityProviderModel identityProvider) {
+    private void assertGoogleIdentityProviderConfig(IdentityProviderModel identityProvider, KeycloakSession session) {
         GoogleIdentityProvider googleIdentityProvider = new GoogleIdentityProviderFactory().create(session, identityProvider);
         OIDCIdentityProviderConfig config = googleIdentityProvider.getConfig();
 
@@ -185,7 +193,7 @@ public class ImportIdentityProviderTest extends AbstractIdentityProviderModelTes
 
     }
 
-    private void assertSamlIdentityProviderConfig(IdentityProviderModel identityProvider) {
+    private void assertSamlIdentityProviderConfig(IdentityProviderModel identityProvider, KeycloakSession session) {
         SAMLIdentityProvider samlIdentityProvider = new SAMLIdentityProviderFactory().create(session, identityProvider);
         SAMLIdentityProviderConfig config = samlIdentityProvider.getConfig();
 
@@ -206,7 +214,7 @@ public class ImportIdentityProviderTest extends AbstractIdentityProviderModelTes
         assertEquals(false, config.isAddExtensionsElementWithKeyInfo());
     }
 
-    private void assertOidcIdentityProviderConfig(IdentityProviderModel identityProvider) {
+    private void assertOidcIdentityProviderConfig(IdentityProviderModel identityProvider, KeycloakSession session) {
         OIDCIdentityProvider googleIdentityProvider = new OIDCIdentityProviderFactory().create(session, identityProvider);
         OIDCIdentityProviderConfig config = googleIdentityProvider.getConfig();
 
@@ -220,7 +228,7 @@ public class ImportIdentityProviderTest extends AbstractIdentityProviderModelTes
         assertEquals("clientSecret", config.getClientSecret());
     }
 
-    private void assertFacebookIdentityProviderConfig(RealmModel realm, IdentityProviderModel identityProvider) {
+    private void assertFacebookIdentityProviderConfig(RealmModel realm, IdentityProviderModel identityProvider, KeycloakSession session) {
         FacebookIdentityProvider facebookIdentityProvider = new FacebookIdentityProviderFactory().create(session, identityProvider);
         OAuth2IdentityProviderConfig config = facebookIdentityProvider.getConfig();
 
@@ -239,7 +247,7 @@ public class ImportIdentityProviderTest extends AbstractIdentityProviderModelTes
         assertEquals(FacebookIdentityProvider.PROFILE_URL, config.getUserInfoUrl());
     }
 
-    private void assertGitHubIdentityProviderConfig(RealmModel realm, IdentityProviderModel identityProvider) {
+    private void assertGitHubIdentityProviderConfig(RealmModel realm, IdentityProviderModel identityProvider, KeycloakSession session) {
         GitHubIdentityProvider gitHubIdentityProvider = new GitHubIdentityProviderFactory().create(session, identityProvider);
         OAuth2IdentityProviderConfig config = gitHubIdentityProvider.getConfig();
 
@@ -258,7 +266,7 @@ public class ImportIdentityProviderTest extends AbstractIdentityProviderModelTes
         assertEquals(GitHubIdentityProvider.PROFILE_URL, config.getUserInfoUrl());
     }
 
-    private void assertPayPalIdentityProviderConfig(RealmModel realm, IdentityProviderModel identityProvider) {
+    private void assertPayPalIdentityProviderConfig(RealmModel realm, IdentityProviderModel identityProvider, KeycloakSession session) {
         PayPalIdentityProvider payPalIdentityProvider = new PayPalIdentityProviderFactory().create(session, identityProvider);
         PayPalIdentityProviderConfig config = payPalIdentityProvider.getConfig();
 
@@ -278,7 +286,7 @@ public class ImportIdentityProviderTest extends AbstractIdentityProviderModelTes
         assertEquals(PayPalIdentityProvider.BASE_URL + PayPalIdentityProvider.PROFILE_RESOURCE, config.getUserInfoUrl());
     }
 
-    private void assertLinkedInIdentityProviderConfig(IdentityProviderModel identityProvider) {
+    private void assertLinkedInIdentityProviderConfig(IdentityProviderModel identityProvider, KeycloakSession session) {
         LinkedInIdentityProvider liIdentityProvider = new LinkedInIdentityProviderFactory().create(session, identityProvider);
         OAuth2IdentityProviderConfig config = liIdentityProvider.getConfig();
 
@@ -295,7 +303,7 @@ public class ImportIdentityProviderTest extends AbstractIdentityProviderModelTes
         assertEquals(LinkedInIdentityProvider.PROFILE_URL, config.getUserInfoUrl());
     }
 
-    private void assertStackoverflowIdentityProviderConfig(IdentityProviderModel identityProvider) {
+    private void assertStackoverflowIdentityProviderConfig(IdentityProviderModel identityProvider, KeycloakSession session) {
         StackoverflowIdentityProvider soIdentityProvider = new StackoverflowIdentityProviderFactory().create(session, identityProvider);
         StackOverflowIdentityProviderConfig config = soIdentityProvider.getConfig();
 
@@ -313,7 +321,7 @@ public class ImportIdentityProviderTest extends AbstractIdentityProviderModelTes
         assertEquals(StackoverflowIdentityProvider.PROFILE_URL, config.getUserInfoUrl());
     }
 
-    private void assertOpenshiftIdentityProviderConfig(IdentityProviderModel identityProvider) {
+    private void assertOpenshiftIdentityProviderConfig(IdentityProviderModel identityProvider, KeycloakSession session) {
         OpenshiftV3IdentityProvider osoIdentityProvider = new OpenshiftV3IdentityProviderFactory().create(session, identityProvider);
         OpenshiftV3IdentityProviderConfig config = osoIdentityProvider.getConfig();
 
@@ -328,7 +336,7 @@ public class ImportIdentityProviderTest extends AbstractIdentityProviderModelTes
         assertEquals("clientSecret", config.getClientSecret());
     }
 
-    private void assertTwitterIdentityProviderConfig(IdentityProviderModel identityProvider) {
+    private void assertTwitterIdentityProviderConfig(IdentityProviderModel identityProvider, KeycloakSession session) {
         TwitterIdentityProvider twitterIdentityProvider = new TwitterIdentityProviderFactory().create(session, identityProvider);
         OAuth2IdentityProviderConfig config = twitterIdentityProvider.getConfig();
 
@@ -340,26 +348,5 @@ public class ImportIdentityProviderTest extends AbstractIdentityProviderModelTes
         assertEquals(true, config.isStoreToken());
         assertEquals("clientId", config.getClientId());
         assertEquals("clientSecret", config.getClientSecret());
-    }
-
-    private RealmModel installTestRealm() throws IOException {
-        RealmRepresentation realmRepresentation = loadJson("broker-test/test-realm-with-broker.json");
-
-        assertNotNull(realmRepresentation);
-        assertEquals("realm-with-broker", realmRepresentation.getRealm());
-
-        RealmModel realmModel = this.realmManager.getRealm("realm-with-broker");
-
-        if (realmModel == null) {
-            realmModel = this.realmManager.importRealm(realmRepresentation);
-
-            commit();
-
-            realmModel = this.realmManager.getRealm(realmModel.getId());
-
-            assertNotNull(realmModel);
-        }
-
-        return realmModel;
-    }
+    }   
 }

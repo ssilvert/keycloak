@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 Red Hat, Inc. and/or its affiliates
+ * Copyright 2019 Red Hat, Inc. and/or its affiliates
  * and other contributors as indicated by the @author tags.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,47 +16,59 @@
  */
 package org.keycloak.testsuite.broker;
 
+import java.util.List;
+import java.util.Set;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import org.junit.Test;
 import org.keycloak.broker.provider.IdentityProvider;
 import org.keycloak.broker.provider.IdentityProviderFactory;
 import org.keycloak.broker.social.SocialIdentityProvider;
 import org.keycloak.broker.social.SocialIdentityProviderFactory;
 import org.keycloak.models.IdentityProviderModel;
+import org.keycloak.models.KeycloakSession;
+import org.keycloak.representations.idm.RealmRepresentation;
+import org.keycloak.testsuite.AbstractKeycloakTest;
+import org.keycloak.testsuite.Assert;
+import org.keycloak.testsuite.arquillian.annotation.ModelTest;
 import org.keycloak.testsuite.broker.provider.CustomIdentityProvider;
 import org.keycloak.testsuite.broker.provider.CustomIdentityProviderFactory;
 import org.keycloak.testsuite.broker.provider.social.CustomSocialProvider;
 import org.keycloak.testsuite.broker.provider.social.CustomSocialProviderFactory;
 
-import java.util.Set;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
 
 /**
+ * Migrated from old testsuite.  Previous version by Pedro Igor.
+ * 
+ * @author Stan Silvert ssilvert@redhat.com (C) 2019 Red Hat Inc.
  * @author pedroigor
  */
-public class IdentityProviderRegistrationTest extends AbstractIdentityProviderModelTest {
+public class IdentityProviderRegistrationTest extends AbstractKeycloakTest {
 
+    @Override
+    public void addTestRealms(List<RealmRepresentation> testRealms) {
+    }
+    
     @Test
-    public void testIdentityProviderRegistration() {
-        Set<String> installedProviders = getInstalledProviders();
+    @ModelTest
+    public void testIdentityProviderRegistration(KeycloakSession session) {
+        Set<String> installedProviders = getInstalledProviders(session);
 
-        for (String providerId : getExpectedProviders()) {
+        for (String providerId : ExpectedProviders.get()) {
             if (!installedProviders.contains(providerId)) {
-                fail("Provider [" + providerId + "] not installed ");
+                Assert.fail("Provider [" + providerId + "] not installed ");
             }
         }
     }
-
+    
     @Test
-    public void testCustomSocialProviderRegistration() {
+    @ModelTest
+    public void testCustomSocialProviderRegistration(KeycloakSession session) {
         String providerId = CustomSocialProviderFactory.PROVIDER_ID;
 
-        assertTrue(getInstalledProviders().contains(providerId));
+        Assert.assertTrue(getInstalledProviders(session).contains(providerId));
 
-        SocialIdentityProviderFactory<CustomSocialProvider> providerFactory = (SocialIdentityProviderFactory) this.session.getKeycloakSessionFactory().getProviderFactory(SocialIdentityProvider.class, providerId);
+        SocialIdentityProviderFactory<CustomSocialProvider> providerFactory = (SocialIdentityProviderFactory) session.getKeycloakSessionFactory().getProviderFactory(SocialIdentityProvider.class, providerId);
 
         assertNotNull(providerFactory);
 
@@ -64,7 +76,7 @@ public class IdentityProviderRegistrationTest extends AbstractIdentityProviderMo
 
         identityProviderModel.setAlias("custom-provider");
 
-        CustomSocialProvider customSocialProvider = providerFactory.create(this.session, identityProviderModel);
+        CustomSocialProvider customSocialProvider = providerFactory.create(session, identityProviderModel);
 
         assertNotNull(customSocialProvider);
         IdentityProviderModel config = customSocialProvider.getConfig();
@@ -72,14 +84,15 @@ public class IdentityProviderRegistrationTest extends AbstractIdentityProviderMo
         assertNotNull(config);
         assertEquals("custom-provider", config.getAlias());
     }
-
+    
     @Test
-    public void testCustomIdentityProviderRegistration() {
+    @ModelTest
+    public void testCustomIdentityProviderRegistration(KeycloakSession session) {
         String providerId = CustomIdentityProviderFactory.PROVIDER_ID;
 
-        assertTrue(getInstalledProviders().contains(providerId));
+        Assert.assertTrue(getInstalledProviders(session).contains(providerId));
 
-        IdentityProviderFactory<CustomIdentityProvider> providerFactory = (IdentityProviderFactory) this.session.getKeycloakSessionFactory().getProviderFactory(IdentityProvider.class, providerId);
+        IdentityProviderFactory<CustomIdentityProvider> providerFactory = (IdentityProviderFactory) session.getKeycloakSessionFactory().getProviderFactory(IdentityProvider.class, providerId);
 
         assertNotNull(providerFactory);
 
@@ -87,7 +100,7 @@ public class IdentityProviderRegistrationTest extends AbstractIdentityProviderMo
 
         identityProviderModel.setAlias("custom-provider");
 
-        CustomIdentityProvider provider = providerFactory.create(this.session, identityProviderModel);
+        CustomIdentityProvider provider = providerFactory.create(session, identityProviderModel);
 
         assertNotNull(provider);
         IdentityProviderModel config = provider.getConfig();
@@ -95,12 +108,13 @@ public class IdentityProviderRegistrationTest extends AbstractIdentityProviderMo
         assertNotNull(config);
         assertEquals("custom-provider", config.getAlias());
     }
+    
+    private Set<String> getInstalledProviders(KeycloakSession session) {
+        Set<String> installedProviders = session.listProviderIds(IdentityProvider.class);
 
-    private Set<String> getInstalledProviders() {
-        Set<String> installedProviders = this.session.listProviderIds(IdentityProvider.class);
-
-        installedProviders.addAll(this.session.listProviderIds(SocialIdentityProvider.class));
+        installedProviders.addAll(session.listProviderIds(SocialIdentityProvider.class));
 
         return installedProviders;
     }
+        
 }
