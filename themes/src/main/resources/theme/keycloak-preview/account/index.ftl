@@ -127,13 +127,8 @@
                     document.getElementById("landingSignOutLink").style.display='inline';
                 }
 
-                loadjs("/node_modules/systemjs/dist/system.src.js", function() {
-                    loadjs("/systemjs.config.js", function() {
-                        System.import('${resourceUrl}/Main.js').catch(function (err) {
-                            console.error(err);
-                        });
-                    });
-                });
+                loadjs("/app/Main.js");
+
             }).error(function() {
                 alert('failed to initialize keycloak');
             });
