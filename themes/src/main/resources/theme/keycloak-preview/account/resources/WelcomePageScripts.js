@@ -29,29 +29,17 @@ var toggleReact = function () {
         if (reactScreen) reactScreen.style.display = 'block';
         if (reactScreen) reactScreen.style.height = '100%';
     } else if (!isWelcomePage() && isReactLoading) {
-        loadPatternFly();
         if (welcomeScreen) welcomeScreen.style.display = 'none';
         if (reactScreen) reactScreen.style.display = 'none';
         if (spinnerScreen) spinnerScreen.style.display = 'block';
         if (spinnerScreen) spinnerScreen.style.height = '100%';
     } else {
-        loadPatternFly();
         if (reactScreen) reactScreen.style.display = 'none';
         if (spinnerScreen) spinnerScreen.style.display = 'none';
         if (welcomeScreen) welcomeScreen.style.display = 'block';
         if (welcomeScreen) welcomeScreen.style.height = '100%';
     }
 };
-
-var patternFlyHasLoaded = false;
-var loadPatternFly = function () {
-    if (patternFlyHasLoaded) return;
-    const link = document.createElement("link");
-    link.rel="stylesheet";
-    link.href=resourceUrl + "/node_modules/@patternfly/patternfly/patternfly.min.css";
-    document.head.appendChild(link);
-    patternFlyHasLoaded = true;
-}
 
 var loadjs = function (url, loadListener) {
     const script = document.createElement("script");
