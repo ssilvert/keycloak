@@ -97,7 +97,6 @@ public class ClientSettingsTest extends AbstractClientTest {
     }
 
     @Test
-    @EnableFeature(value = Profile.Feature.ACCOUNT2, skipRestart = true)
     public void alwaysDisplayInAccountConsole() {
         refreshPageAndWaitForLoad();
 

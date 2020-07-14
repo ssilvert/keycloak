@@ -80,7 +80,9 @@ import java.util.Scanner;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
+import org.keycloak.common.Profile;
 import static org.keycloak.testsuite.admin.Users.setPasswordFor;
+import org.keycloak.testsuite.arquillian.annotation.DisableFeature;
 import static org.keycloak.testsuite.util.ServerURLs.AUTH_SERVER_HOST;
 import static org.keycloak.testsuite.util.ServerURLs.AUTH_SERVER_PORT;
 import static org.keycloak.testsuite.util.ServerURLs.AUTH_SERVER_SCHEME;
@@ -95,6 +97,7 @@ import static org.keycloak.testsuite.util.ServerURLs.removeDefaultPorts;
  */
 @RunWith(KcArquillian.class)
 @RunAsClient
+@DisableFeature(value = Profile.Feature.ACCOUNT2, skipRestart = true)
 public abstract class AbstractKeycloakTest {
     protected static final String ENGLISH_LOCALE_NAME = "English";
 
