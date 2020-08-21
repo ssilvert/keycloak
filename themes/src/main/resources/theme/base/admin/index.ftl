@@ -39,8 +39,8 @@
     <script src="${resourceCommonUrl}/node_modules/angular-translate-loader-url/angular-translate-loader-url.min.js"></script>
     <script src="${resourceCommonUrl}/node_modules/angular-ui-select2/src/select2.js" type="text/javascript"></script>
     <script src="${resourceCommonUrl}/node_modules/autofill-event/autofill-event.js"></script>
-    
-    
+
+
     <!-- Unminimized versions
     <script src="${resourceCommonUrl}/node_modules/jquery/dist/jquery.js" type="text/javascript"></script>
     <script src="${resourceCommonUrl}/node_modules/select2/select2.js" type="text/javascript"></script>
@@ -56,7 +56,7 @@
     -->
 
     <!-- Libraries not managed by yarn -->
-    <script src="${resourceCommonUrl}/lib/angular/ui-bootstrap-tpls-0.11.0.js"></script>
+    <script src="${resourceCommonUrl}/lib/angular/ui-bootstrap-tpls-0.14.3.js"></script>
     <script src="${resourceCommonUrl}/lib/angular/treeview/angular.treeview.js"></script>
     <script src="${resourceCommonUrl}/lib/fileupload/angular-file-upload.min.js"></script>
     <script src="${resourceCommonUrl}/lib/filesaver/FileSaver.js"></script>
