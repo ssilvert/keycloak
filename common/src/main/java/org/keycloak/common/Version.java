@@ -45,7 +45,6 @@ public class Version {
             Version.NAME_FULL = props.getProperty("name-full");
             Version.NAME_HTML = props.getProperty("name-html");
             Version.DEFAULT_PROFILE = props.getProperty("default-profile");
-            Version.DEFAULT_THEME = props.getProperty("default-theme");
             Version.VERSION = props.getProperty("version");
             Version.VERSION_KEYCLOAK = props.getProperty("version-keycloak");
             Version.BUILD_TIME = props.getProperty("build-time");

@@ -45,6 +45,7 @@ import org.keycloak.common.Profile;
 public class DefaultThemeManager implements ThemeManager {
 
     private static final Logger log = Logger.getLogger(DefaultThemeManager.class);
+    private static final boolean isAccount2Enabled = Profile.isFeatureEnabled(Profile.Feature.ACCOUNT2);
 
     private final DefaultThemeManagerFactory factory;
     private final KeycloakSession session;
@@ -54,7 +55,7 @@ public class DefaultThemeManager implements ThemeManager {
     public DefaultThemeManager(DefaultThemeManagerFactory factory, KeycloakSession session) {
         this.factory = factory;
         this.session = session;
-        this.defaultTheme = Config.scope("theme").get("default", Version.DEFAULT_THEME.toLowerCase());
+        this.defaultTheme = Config.scope("theme").get("default", Version.NAME.toLowerCase());
     }
 
     @Override
@@ -63,6 +64,14 @@ public class DefaultThemeManager implements ThemeManager {
         return getTheme(name, type);
     }
 
+    private String typeBasedDefault(Theme.Type type) {
+        if ((type == Theme.Type.ACCOUNT) && isAccount2Enabled) {
+            return "keycloak.v2";
+        }
+        
+        return "keycloak";
+    }
+    
     @Override
     public Theme getTheme(String name, Theme.Type type) {
         if (name == null) {
@@ -73,7 +82,7 @@ public class DefaultThemeManager implements ThemeManager {
         if (theme == null) {
             theme = loadTheme(name, type);
             if (theme == null) {
-                theme = loadTheme("keycloak.v2", type);
+                theme = loadTheme(typeBasedDefault(type), type);
                 if (theme == null) {
                     theme = loadTheme("base", type);
                 }
@@ -83,7 +92,6 @@ public class DefaultThemeManager implements ThemeManager {
             }
         }
         
-        final boolean isAccount2Enabled = Profile.isFeatureEnabled(Profile.Feature.ACCOUNT2);
         if (!isAccount2Enabled && theme.getName().equals("keycloak.v2")) {
             theme = loadTheme("keycloak", type);
         }

@@ -25,11 +25,7 @@ import java.util.Map;
  * @author Vaclav Muzikar <vmuzikar@redhat.com>
  */
 public enum AccountRestApiVersion {
-<<<<<<< HEAD
     V1_ALPHA1("v1alpha1");
-=======
-    V1("v1alpha1");
->>>>>>> KEYCLOAK-14547: Make New Account Console the default
 
     public static final AccountRestApiVersion DEFAULT = V1_ALPHA1;
     private static final Map<String,AccountRestApiVersion> ENUM_MAP;
