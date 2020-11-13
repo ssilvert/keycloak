@@ -35,6 +35,7 @@ public class Version {
     public static String RESOURCES_VERSION;
     public static String BUILD_TIME;
     public static String DEFAULT_PROFILE;
+    public static String DEFAULT_THEME;
 
     static {
         try (InputStream is = Version.class.getResourceAsStream("/keycloak-version.properties")) {
