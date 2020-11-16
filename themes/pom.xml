@@ -126,7 +126,7 @@
                     <!-- Remove once rcue stops shipping this file -->
                     <exclude>**/git-Logo.svg</exclude>
                     
-                    <exclude>${dir.account2}/account/src/**</exclude>
+                    <exclude>**/keycloak.v2/account/src/**</exclude>
                 </excludes>
             </resource>
         </resources>
