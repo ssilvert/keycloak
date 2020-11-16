@@ -29,6 +29,7 @@ import java.security.MessageDigest;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.function.Consumer;
 
@@ -62,6 +63,7 @@ import org.keycloak.events.EventType;
 import org.keycloak.jose.jws.Algorithm;
 import org.keycloak.models.utils.KeycloakModelUtils;
 import org.keycloak.protocol.oidc.OIDCAdvancedConfigWrapper;
+import org.keycloak.protocol.oidc.OIDCConfigAttributes;
 import org.keycloak.protocol.oidc.OIDCLoginProtocol;
 import org.keycloak.protocol.oidc.utils.OIDCResponseType;
 import org.keycloak.representations.AccessToken;
@@ -78,14 +80,19 @@ import org.keycloak.services.Urls;
 import org.keycloak.services.clientpolicy.ClientPolicyException;
 import org.keycloak.services.clientpolicy.ClientPolicyProvider;
 import org.keycloak.services.clientpolicy.DefaultClientPolicyProviderFactory;
+import org.keycloak.services.clientpolicy.condition.ClientIpAddressConditionFactory;
 import org.keycloak.services.clientpolicy.condition.ClientPolicyConditionProvider;
 import org.keycloak.services.clientpolicy.condition.ClientUpdateContextConditionFactory;
 import org.keycloak.services.clientpolicy.condition.ClientRolesConditionFactory;
+import org.keycloak.services.clientpolicy.condition.ClientScopesConditionFactory;
 import org.keycloak.services.clientpolicy.executor.ClientPolicyExecutorProvider;
 import org.keycloak.services.clientpolicy.executor.SecureClientAuthEnforceExecutorFactory;
+import org.keycloak.services.clientpolicy.executor.PKCEEnforceExecutorFactory;
 import org.keycloak.services.clientpolicy.executor.SecureRequestObjectExecutor;
 import org.keycloak.services.clientpolicy.executor.SecureRequestObjectExecutorFactory;
 import org.keycloak.services.clientpolicy.executor.SecureResponseTypeExecutorFactory;
+import org.keycloak.services.clientpolicy.executor.SecureSessionEnforceExecutorFactory;
+import org.keycloak.services.clientpolicy.executor.SecureSigningAlgorithmEnforceExecutorFactory;
 import org.keycloak.testsuite.AbstractKeycloakTest;
 import org.keycloak.testsuite.AssertEvents;
 import org.keycloak.testsuite.admin.ApiUtil;
@@ -94,7 +101,6 @@ import org.keycloak.testsuite.client.resources.TestApplicationResourceUrls;
 import org.keycloak.testsuite.client.resources.TestOIDCEndpointsApplicationResource;
 import org.keycloak.testsuite.rest.resource.TestingOIDCEndpointsApplicationResource.AuthorizationEndpointRequestObject;
 import org.keycloak.testsuite.services.clientpolicy.condition.TestRaiseExeptionConditionFactory;
-import org.keycloak.testsuite.services.clientpolicy.executor.TestPKCEEnforceExecutorFactory;
 import org.keycloak.testsuite.util.OAuthClient;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -324,55 +330,7 @@ public class ClientPolicyBasicsTest extends AbstractKeycloakTest {
             clientRep.setDefaultRoles(Arrays.asList("sample-client-role").toArray(new String[1]));
         });
 
-        oauth.clientId(response.getClientId());
-        String codeVerifier = "1a345A7890123456r8901c3456789012b45K7890l23"; // 43
-        String codeChallenge = generateS256CodeChallenge(codeVerifier);
-        oauth.codeChallenge(codeChallenge);
-        oauth.codeChallengeMethod(OAuth2Constants.PKCE_METHOD_S256);
-        oauth.nonce("bjapewiziIE083d");
-
-        oauth.doLogin(userName, userPassword);
-
-        EventRepresentation loginEvent = events.expectLogin().client(response.getClientId()).assertEvent();
-        String sessionId = loginEvent.getSessionId();
-        String codeId = loginEvent.getDetails().get(Details.CODE_ID);
-        String code = oauth.getCurrentQuery().get(OAuth2Constants.CODE);
-
-        oauth.codeVerifier(codeVerifier);
-
-        OAuthClient.AccessTokenResponse res = oauth.doAccessTokenRequest(code, clientSecret);
-
-        assertEquals(200, res.getStatusCode());
-        events.expectCodeToToken(codeId, sessionId).client(response.getClientId()).assertEvent();
-
-        AccessToken token = oauth.verifyToken(res.getAccessToken());
-
-        String userId = findUserByUsername(adminClient.realm(REALM_NAME), userName).getId();
-        assertEquals(userId, token.getSubject());
-        Assert.assertNotEquals(userName, token.getSubject());
-        assertEquals(sessionId, token.getSessionState());
-        assertEquals(response.getClientId(), token.getIssuedFor());
-
-        String refreshTokenString = res.getRefreshToken();
-        RefreshToken refreshToken = oauth.parseRefreshToken(refreshTokenString);
-        assertEquals(sessionId, refreshToken.getSessionState());
-        assertEquals(response.getClientId(), refreshToken.getIssuedFor());
-
-        OAuthClient.AccessTokenResponse refreshResponse = oauth.doRefreshTokenRequest(refreshTokenString, clientSecret);
-        assertEquals(200, refreshResponse.getStatusCode());
-
-        AccessToken refreshedToken = oauth.verifyToken(refreshResponse.getAccessToken());
-        RefreshToken refreshedRefreshToken = oauth.parseRefreshToken(refreshResponse.getRefreshToken());
-        assertEquals(sessionId, refreshedToken.getSessionState());
-        assertEquals(sessionId, refreshedRefreshToken.getSessionState());
-
-        assertEquals(findUserByUsername(adminClient.realm(REALM_NAME), userName).getId(), refreshedToken.getSubject());
-
-        events.expectRefresh(refreshToken.getId(), sessionId).client(response.getClientId()).assertEvent();
-
-        doIntrospectAccessToken(refreshResponse, userName, clientId, clientSecret);
-
-        doTokenRevoke(refreshResponse.getRefreshToken(), clientId, clientSecret, userId, false);
+        successfulLoginAndLogoutWithPKCE(response.getClientId(), clientSecret, userName, userPassword);
     }
 
     @Test
@@ -409,11 +367,11 @@ public class ClientPolicyBasicsTest extends AbstractKeycloakTest {
         createPolicy(policyName, DefaultClientPolicyProviderFactory.PROVIDER_ID, null, null, null);
         logger.info("... Created Policy : " + policyName);
 
-        createExecutor("TestPKCEEnforceExecutor", TestPKCEEnforceExecutorFactory.PROVIDER_ID, null, (ComponentRepresentation provider) -> {
+        createExecutor("PKCEEnforceExecutor", PKCEEnforceExecutorFactory.PROVIDER_ID, null, (ComponentRepresentation provider) -> {
             setExecutorAugmentActivate(provider);
         });
-        registerExecutor("TestPKCEEnforceExecutor", policyName);
-        logger.info("... Registered Executor : TestPKCEEnforceExecutor");
+        registerExecutor("PKCEEnforceExecutor", policyName);
+        logger.info("... Registered Executor : PKCEEnforceExecutor");
 
         String clientId = "Zahlungs-App";
         String clientSecret = "secret";
@@ -477,15 +435,15 @@ public class ClientPolicyBasicsTest extends AbstractKeycloakTest {
         try {
             successfulLoginAndLogout(clientId, clientSecret);
  
-            createExecutor("TestPKCEEnforceExecutor", TestPKCEEnforceExecutorFactory.PROVIDER_ID, null, (ComponentRepresentation provider) -> {
+            createExecutor("PKCEEnforceExecutor", PKCEEnforceExecutorFactory.PROVIDER_ID, null, (ComponentRepresentation provider) -> {
                 setExecutorAugmentDeactivate(provider);
             });
-            registerExecutor("TestPKCEEnforceExecutor", policyName);
-            logger.info("... Registered Executor : TestPKCEEnforceExecutor");
+            registerExecutor("PKCEEnforceExecutor", policyName);
+            logger.info("... Registered Executor : PKCEEnforceExecutor");
 
             failLoginByNotFollowingPKCE(clientId);
 
-            updateExecutor("TestPKCEEnforceExecutor", (ComponentRepresentation provider) -> {
+            updateExecutor("PKCEEnforceExecutor", (ComponentRepresentation provider) -> {
                setExecutorAugmentActivate(provider);
             });
 
@@ -495,8 +453,8 @@ public class ClientPolicyBasicsTest extends AbstractKeycloakTest {
             assertEquals(false, getClientByAdmin(cid).isServiceAccountsEnabled());
             assertEquals(OAuth2Constants.PKCE_METHOD_S256, OIDCAdvancedConfigWrapper.fromClientRepresentation(getClientByAdmin(cid)).getPkceCodeChallengeMethod());
 
-            deleteExecutor("TestPKCEEnforceExecutor", policyName);
-            logger.info("... Deleted Executor : TestPKCEEnforceExecutor");
+            deleteExecutor("PKCEEnforceExecutor", policyName);
+            logger.info("... Deleted Executor : PKCEEnforceExecutor");
 
             updateClientByAdmin(cid, (ClientRepresentation clientRep) -> {
                 OIDCAdvancedConfigWrapper.fromClientRepresentation(clientRep).setPkceCodeChallengeMethod(null);
@@ -547,11 +505,11 @@ public class ClientPolicyBasicsTest extends AbstractKeycloakTest {
         registerCondition(CLIENTROLES_CONDITION_BETA_NAME, policyBetaName);
         logger.info("... Registered Condition : " + CLIENTROLES_CONDITION_BETA_NAME);
 
-        createExecutor("TestPKCEEnforceExecutor-beta", TestPKCEEnforceExecutorFactory.PROVIDER_ID, null, (ComponentRepresentation provider) -> {
+        createExecutor("PKCEEnforceExecutor-beta", PKCEEnforceExecutorFactory.PROVIDER_ID, null, (ComponentRepresentation provider) -> {
             setExecutorAugmentActivate(provider);
         });
-        registerExecutor("TestPKCEEnforceExecutor-beta", policyBetaName);
-        logger.info("... Registered Executor : TestPKCEEnforceExecutor-beta");
+        registerExecutor("PKCEEnforceExecutor-beta", policyBetaName);
+        logger.info("... Registered Executor : PKCEEnforceExecutor-beta");
 
         String clientAlphaId = "Alpha-App";
         String clientAlphaSecret = "secretAlpha";
@@ -774,6 +732,252 @@ public class ClientPolicyBasicsTest extends AbstractKeycloakTest {
 
     }
 
+    @Test
+    public void testClientIpAddressCondition() throws ClientRegistrationException, ClientPolicyException {
+        String policyName = "MyPolicy";
+        createPolicy(policyName, DefaultClientPolicyProviderFactory.PROVIDER_ID, null, null, null);
+        logger.info("... Created Policy : " + policyName);
+
+        createCondition("ClientIpAddressCondition", ClientIpAddressConditionFactory.PROVIDER_ID, null, (ComponentRepresentation provider) -> {
+            setConditionClientIpAddress(provider, new ArrayList<>(Arrays.asList("0.0.0.0", "127.0.0.1")));
+        });
+        registerCondition("ClientIpAddressCondition", policyName);
+        logger.info("... Registered Condition : ClientIpAddressCondition");
+
+        createExecutor("PKCEEnforceExecutor", PKCEEnforceExecutorFactory.PROVIDER_ID, null, (ComponentRepresentation provider) -> {
+            setExecutorAugmentDeactivate(provider);
+        });
+        registerExecutor("PKCEEnforceExecutor", policyName);
+        logger.info("... Registered Executor : PKCEEnforceExecutor");
+
+        String clientId = "Zahlungs-App";
+        String clientSecret = "secret";
+        String cid = createClientByAdmin(clientId, (ClientRepresentation clientRep) -> {
+            clientRep.setSecret(clientSecret);
+        });
+
+        try { 
+            failTokenRequestByNotFollowingPKCE(clientId, clientSecret);
+
+            updateCondition("ClientIpAddressCondition", (ComponentRepresentation provider) -> {
+                setConditionClientIpAddress(provider, new ArrayList<>(Arrays.asList("10.255.255.255")));
+            });
+
+            successfulLoginAndLogout(clientId, clientSecret);
+        } finally {
+            deleteClientByAdmin(cid);
+        }
+    }
+
+    @Test
+    public void testSecureSessionEnforceExecutor() throws ClientRegistrationException, ClientPolicyException {
+        String policyBetaName = "MyPolicy-beta";
+        createPolicy(policyBetaName, DefaultClientPolicyProviderFactory.PROVIDER_ID, null, null, null);
+        logger.info("... Created Policy : " + policyBetaName);
+
+        createCondition("ClientRolesCondition-beta", ClientRolesConditionFactory.PROVIDER_ID, null, (ComponentRepresentation provider) -> {
+            setConditionClientRoles(provider, new ArrayList<>(Arrays.asList("sample-client-role-beta")));
+        });
+        registerCondition("ClientRolesCondition-beta", policyBetaName);
+        logger.info("... Registered Condition : ClientRolesCondition-beta");
+
+        createExecutor("SecureSessionEnforceExecutor-beta", SecureSessionEnforceExecutorFactory.PROVIDER_ID, null, (ComponentRepresentation provider) -> {
+        });
+        registerExecutor("SecureSessionEnforceExecutor-beta", policyBetaName);
+        logger.info("... Registered Executor : SecureSessionEnforceExecutor-beta");
+
+        String clientAlphaId = "Alpha-App";
+        String clientAlphaSecret = "secretAlpha";
+        String cAlphaId = createClientByAdmin(clientAlphaId, (ClientRepresentation clientRep) -> {
+            clientRep.setDefaultRoles((String[]) Arrays.asList("sample-client-role-alpha").toArray(new String[1]));
+            clientRep.setSecret(clientAlphaSecret);
+        });
+
+        String clientBetaId = "Beta-App";
+        String clientBetaSecret = "secretBeta";
+        String cBetaId = createClientByAdmin(clientBetaId, (ClientRepresentation clientRep) -> {
+            clientRep.setDefaultRoles((String[]) Arrays.asList("sample-client-role-beta").toArray(new String[1]));
+            clientRep.setSecret(clientBetaSecret);
+        });
+
+        try {
+            successfulLoginAndLogout(clientAlphaId, clientAlphaSecret);
+
+            oauth.openid(false);
+            successfulLoginAndLogout(clientAlphaId, clientAlphaSecret);
+
+            oauth.openid(true);
+            failLoginWithoutSecureSessionParameter(clientBetaId, "Missing parameter: nonce");
+
+            oauth.nonce("yesitisnonce");
+            successfulLoginAndLogout(clientBetaId, clientBetaSecret);
+
+            oauth.openid(false);
+            oauth.stateParamHardcoded(null);
+            failLoginWithoutSecureSessionParameter(clientBetaId, "Missing parameter: state");
+
+            oauth.stateParamRandom();
+            successfulLoginAndLogout(clientBetaId, clientBetaSecret);
+        } finally {
+            deleteClientByAdmin(cAlphaId);
+            deleteClientByAdmin(cBetaId);
+        }
+    }
+
+    @Test
+    public void testClientScopesCondition() throws ClientRegistrationException, ClientPolicyException {
+        String policyName = "MyPolicy";
+        createPolicy(policyName, DefaultClientPolicyProviderFactory.PROVIDER_ID, null, null, null);
+        logger.info("... Created Policy : " + policyName);
+
+        createCondition("ClientScopesCondition", ClientScopesConditionFactory.PROVIDER_ID, null, (ComponentRepresentation provider) -> {
+            setConditionClientScopes(provider, new ArrayList<>(Arrays.asList("offline_access", "microprofile-jwt")));
+        });
+        registerCondition("ClientScopesCondition", policyName);
+        logger.info("... Registered Condition : ClientScopesCondition");
+
+        createExecutor("PKCEEnforceExecutor", PKCEEnforceExecutorFactory.PROVIDER_ID, null, (ComponentRepresentation provider) -> {
+            setExecutorAugmentActivate(provider);
+        });
+        registerExecutor("PKCEEnforceExecutor", policyName);
+        logger.info("... Registered Executor : PKCEEnforceExecutor");
+
+        String clientAlphaId = "Alpha-App";
+        String clientAlphaSecret = "secretAlpha";
+        String cAlphaId = createClientByAdmin(clientAlphaId, (ClientRepresentation clientRep) -> {
+            clientRep.setSecret(clientAlphaSecret);
+        });
+
+        try {
+            oauth.scope("address" + " " + "phone");
+            successfulLoginAndLogout(clientAlphaId, clientAlphaSecret);
+
+            oauth.scope("microprofile-jwt" + " " + "profile");
+            failLoginByNotFollowingPKCE(clientAlphaId);
+
+            successfulLoginAndLogoutWithPKCE(clientAlphaId, clientAlphaSecret, "test-user@localhost", "password");
+        } catch (Exception e) {
+            fail();
+        } finally {
+            deleteClientByAdmin(cAlphaId);
+        }
+    }
+
+    @Test
+    public void testSecureSigningAlgorithmEnforceExecutor() throws ClientRegistrationException, ClientPolicyException {
+        String policyName = "MyPolicy";
+        createPolicy(policyName, DefaultClientPolicyProviderFactory.PROVIDER_ID, null, null, null);
+        logger.info("... Created Policy : " + policyName);
+
+        createCondition("ClientUpdateContextCondition", ClientUpdateContextConditionFactory.PROVIDER_ID, null, (ComponentRepresentation provider) -> {
+            setConditionRegistrationMethods(provider, new ArrayList<>(Arrays.asList(
+                    ClientUpdateContextConditionFactory.BY_AUTHENTICATED_USER,
+                    ClientUpdateContextConditionFactory.BY_INITIAL_ACCESS_TOKEN,
+                    ClientUpdateContextConditionFactory.BY_REGISTRATION_ACCESS_TOKEN)));
+        });
+        registerCondition("ClientUpdateContextCondition", policyName);
+        logger.info("... Registered Condition : ClientUpdateContextConditionFactory");
+
+        createExecutor("SecureSigningAlgorithmEnforceExecutor", SecureSigningAlgorithmEnforceExecutorFactory.PROVIDER_ID, null, (ComponentRepresentation provider) -> {
+        });
+        registerExecutor("SecureSigningAlgorithmEnforceExecutor", policyName);
+        logger.info("... Registered Executor : SecureSigningAlgorithmEnforceExecutor");
+
+        String cAppAdminId = null;
+        String cAppDynamicId = null;
+        try {
+
+            // create by Admin REST API - fail
+            try {
+                createClientByAdmin("App-by-Admin", (ClientRepresentation clientRep) -> {
+                    clientRep.setDefaultRoles((String[]) Arrays.asList("sample-client-role-beta").toArray(new String[1]));
+                    clientRep.setSecret("secretBeta");
+                    clientRep.setAttributes(new HashMap<>());
+                    clientRep.getAttributes().put(OIDCConfigAttributes.USER_INFO_RESPONSE_SIGNATURE_ALG, Algorithm.none.name());
+                });
+                fail();
+            } catch (ClientPolicyException e) {
+                assertEquals(Errors.INVALID_REGISTRATION, e.getMessage());
+            }
+
+            // create by Admin REST API - success
+            cAppAdminId = createClientByAdmin("App-by-Admin", (ClientRepresentation clientRep) -> {
+                clientRep.setAttributes(new HashMap<>());
+                clientRep.getAttributes().put(OIDCConfigAttributes.USER_INFO_RESPONSE_SIGNATURE_ALG, Algorithm.PS256.name());
+                clientRep.getAttributes().put(OIDCConfigAttributes.REQUEST_OBJECT_SIGNATURE_ALG, Algorithm.ES256.name());
+                clientRep.getAttributes().put(OIDCConfigAttributes.ID_TOKEN_SIGNED_RESPONSE_ALG, Algorithm.ES256.name());
+                clientRep.getAttributes().put(OIDCConfigAttributes.TOKEN_ENDPOINT_AUTH_SIGNING_ALG, Algorithm.ES256.name());
+                clientRep.getAttributes().put(OIDCConfigAttributes.ACCESS_TOKEN_SIGNED_RESPONSE_ALG, Algorithm.ES256.name());
+            });
+
+            // update by Admin REST API - fail
+            try {
+            updateClientByAdmin(cAppAdminId, (ClientRepresentation clientRep) -> {
+                clientRep.setAttributes(new HashMap<>());
+                clientRep.getAttributes().put(OIDCConfigAttributes.ACCESS_TOKEN_SIGNED_RESPONSE_ALG, Algorithm.RS512.name());
+            });
+            } catch (Exception e) {
+                assertEquals("HTTP 400 Bad Request", e.getMessage());
+            }
+            ClientRepresentation cRep = getClientByAdmin(cAppAdminId);
+            assertEquals(Algorithm.ES256.name(), cRep.getAttributes().get(OIDCConfigAttributes.ACCESS_TOKEN_SIGNED_RESPONSE_ALG));
+
+            // update by Admin REST API - success
+            updateClientByAdmin(cAppAdminId, (ClientRepresentation clientRep) -> {
+                clientRep.setAttributes(new HashMap<>());
+                clientRep.getAttributes().put(OIDCConfigAttributes.ACCESS_TOKEN_SIGNED_RESPONSE_ALG, Algorithm.PS384.name());
+            });
+            cRep = getClientByAdmin(cAppAdminId);
+            assertEquals(Algorithm.PS384.name(), cRep.getAttributes().get(OIDCConfigAttributes.ACCESS_TOKEN_SIGNED_RESPONSE_ALG));
+
+            // create dynamically - fail
+            try {
+                createClientByAdmin("App-in-Dynamic", (ClientRepresentation clientRep) -> {
+                    clientRep.setDefaultRoles((String[]) Arrays.asList("sample-client-role-beta").toArray(new String[1]));
+                    clientRep.setSecret("secretBeta");
+                    clientRep.setAttributes(new HashMap<>());
+                    clientRep.getAttributes().put(OIDCConfigAttributes.USER_INFO_RESPONSE_SIGNATURE_ALG, Algorithm.RS384.name());
+                });
+                fail();
+            } catch (ClientPolicyException e) {
+                assertEquals(Errors.INVALID_REGISTRATION, e.getMessage());
+            }
+
+            // create dynamically - success
+            cAppDynamicId = createClientDynamically("App-in-Dynamic", (OIDCClientRepresentation clientRep) -> {
+                clientRep.setUserinfoSignedResponseAlg(Algorithm.ES256.name());
+                clientRep.setRequestObjectSigningAlg(Algorithm.ES256.name());
+                clientRep.setIdTokenSignedResponseAlg(Algorithm.PS256.name());
+                clientRep.setTokenEndpointAuthSigningAlg(Algorithm.PS256.name());
+            });
+            events.expect(EventType.CLIENT_REGISTER).client(cAppDynamicId).user(Matchers.isEmptyOrNullString()).assertEvent();
+            getClientDynamically(cAppDynamicId);
+
+            // update dynamically - fail
+            try {
+                 updateClientDynamically(cAppDynamicId, (OIDCClientRepresentation clientRep) -> {
+                     clientRep.setIdTokenSignedResponseAlg(Algorithm.RS256.name());
+                 });
+                fail();
+            } catch (ClientRegistrationException e) {
+                assertEquals("Failed to send request", e.getMessage());
+            }
+            OIDCClientRepresentation oidcCRep = getClientDynamically(cAppDynamicId);
+            assertEquals(Algorithm.PS256.name(), oidcCRep.getIdTokenSignedResponseAlg());
+
+            // update dynamically - success
+            updateClientDynamically(cAppDynamicId, (OIDCClientRepresentation clientRep) -> {
+                clientRep.setIdTokenSignedResponseAlg(Algorithm.ES384.name());
+            });
+            oidcCRep = getClientDynamically(cAppDynamicId);
+            assertEquals(Algorithm.ES384.name(), oidcCRep.getIdTokenSignedResponseAlg());
+
+        } finally {
+            deleteClientByAdmin(cAppAdminId);
+            deleteClientDynamically(cAppDynamicId);
+        }
+    }
+
     private AuthorizationEndpointRequestObject createValidRequestObjectForSecureRequestObjectExecutor(String clientId) throws URISyntaxException {
         AuthorizationEndpointRequestObject requestObject = new AuthorizationEndpointRequestObject();
         requestObject.id(KeycloakModelUtils.generateId());
@@ -872,11 +1076,11 @@ public class ClientPolicyBasicsTest extends AbstractKeycloakTest {
         registerExecutor("SecureClientAuthEnforceExecutor", policyName);
         logger.info("... Registered Executor : SecureClientAuthEnforceExecutor");
 
-        createExecutor("TestPKCEEnforceExecutor", TestPKCEEnforceExecutorFactory.PROVIDER_ID, null, (ComponentRepresentation provider) -> {
+        createExecutor("PKCEEnforceExecutor", PKCEEnforceExecutorFactory.PROVIDER_ID, null, (ComponentRepresentation provider) -> {
             setExecutorAugmentActivate(provider);
         });
-        registerExecutor("TestPKCEEnforceExecutor", policyName);
-        logger.info("... Registered Executor : TestPKCEEnforceExecutor");
+        registerExecutor("PKCEEnforceExecutor", policyName);
+        logger.info("... Registered Executor : PKCEEnforceExecutor");
 
     }
 
@@ -896,11 +1100,89 @@ public class ClientPolicyBasicsTest extends AbstractKeycloakTest {
         events.expectLogout(sessionId).client(clientId).clearDetails().assertEvent();
     }
 
+    private void successfulLoginAndLogoutWithPKCE(String clientId, String clientSecret, String userName, String userPassword) throws Exception {
+        oauth.clientId(clientId);
+        String codeVerifier = "1a345A7890123456r8901c3456789012b45K7890l23"; // 43
+        String codeChallenge = generateS256CodeChallenge(codeVerifier);
+        oauth.codeChallenge(codeChallenge);
+        oauth.codeChallengeMethod(OAuth2Constants.PKCE_METHOD_S256);
+        oauth.nonce("bjapewiziIE083d");
+
+        oauth.doLogin(userName, userPassword);
+
+        EventRepresentation loginEvent = events.expectLogin().client(clientId).assertEvent();
+        String sessionId = loginEvent.getSessionId();
+        String codeId = loginEvent.getDetails().get(Details.CODE_ID);
+        String code = oauth.getCurrentQuery().get(OAuth2Constants.CODE);
+
+        oauth.codeVerifier(codeVerifier);
+
+        OAuthClient.AccessTokenResponse res = oauth.doAccessTokenRequest(code, clientSecret);
+
+        assertEquals(200, res.getStatusCode());
+        events.expectCodeToToken(codeId, sessionId).client(clientId).assertEvent();
+
+        AccessToken token = oauth.verifyToken(res.getAccessToken());
+
+        String userId = findUserByUsername(adminClient.realm(REALM_NAME), userName).getId();
+        assertEquals(userId, token.getSubject());
+        Assert.assertNotEquals(userName, token.getSubject());
+        assertEquals(sessionId, token.getSessionState());
+        assertEquals(clientId, token.getIssuedFor());
+
+        String refreshTokenString = res.getRefreshToken();
+        RefreshToken refreshToken = oauth.parseRefreshToken(refreshTokenString);
+        assertEquals(sessionId, refreshToken.getSessionState());
+        assertEquals(clientId, refreshToken.getIssuedFor());
+
+        OAuthClient.AccessTokenResponse refreshResponse = oauth.doRefreshTokenRequest(refreshTokenString, clientSecret);
+        assertEquals(200, refreshResponse.getStatusCode());
+
+        AccessToken refreshedToken = oauth.verifyToken(refreshResponse.getAccessToken());
+        RefreshToken refreshedRefreshToken = oauth.parseRefreshToken(refreshResponse.getRefreshToken());
+        assertEquals(sessionId, refreshedToken.getSessionState());
+        assertEquals(sessionId, refreshedRefreshToken.getSessionState());
+
+        assertEquals(findUserByUsername(adminClient.realm(REALM_NAME), userName).getId(), refreshedToken.getSubject());
+
+        events.expectRefresh(refreshToken.getId(), sessionId).client(clientId).assertEvent();
+
+        doIntrospectAccessToken(refreshResponse, userName, clientId, clientSecret);
+
+        doTokenRevoke(refreshResponse.getRefreshToken(), clientId, clientSecret, userId, false);
+    }
+
     private void failLoginByNotFollowingPKCE(String clientId) {
         oauth.clientId(clientId);
         oauth.openLoginForm();
         assertEquals(OAuthErrorException.INVALID_REQUEST, oauth.getCurrentQuery().get(OAuth2Constants.ERROR));
         assertEquals("Missing parameter: code_challenge_method", oauth.getCurrentQuery().get(OAuth2Constants.ERROR_DESCRIPTION));
+    }
+
+    private void failTokenRequestByNotFollowingPKCE(String clientId, String clientSecret) {
+        oauth.clientId(clientId);
+        oauth.doLogin("test-user@localhost", "password");
+
+        EventRepresentation loginEvent = events.expectLogin().client(clientId).assertEvent();
+        String sessionId = loginEvent.getSessionId();
+        String codeId = loginEvent.getDetails().get(Details.CODE_ID);
+        String code = oauth.getCurrentQuery().get(OAuth2Constants.CODE);
+        OAuthClient.AccessTokenResponse res = oauth.doAccessTokenRequest(code, clientSecret);
+
+        assertEquals(OAuthErrorException.INVALID_GRANT, res.getError());
+        assertEquals("PKCE code verifier not specified", res.getErrorDescription());
+        events.expect(EventType.CODE_TO_TOKEN_ERROR).client(clientId).session(sessionId).clearDetails().error(Errors.CODE_VERIFIER_MISSING).assertEvent();
+
+        oauth.openLogout();
+
+        events.expectLogout(sessionId).clearDetails().assertEvent();
+    }
+
+    private void failLoginWithoutSecureSessionParameter(String clientId, String errorDescription) {
+        oauth.clientId(clientId);
+        oauth.openLoginForm();
+        assertEquals(OAuthErrorException.INVALID_REQUEST, oauth.getCurrentQuery().get(OAuth2Constants.ERROR));
+        assertEquals(errorDescription, oauth.getCurrentQuery().get(OAuth2Constants.ERROR_DESCRIPTION));
     }
 
     private String generateS256CodeChallenge(String codeVerifier) throws Exception {
@@ -1140,6 +1422,14 @@ public class ClientPolicyBasicsTest extends AbstractKeycloakTest {
         provider.getConfig().put(ClientRolesConditionFactory.ROLES, clientRoles);
     }
 
+    private void setConditionClientIpAddress(ComponentRepresentation provider, List<String> clientIpAddresses) {
+        provider.getConfig().put(ClientIpAddressConditionFactory.IPADDR, clientIpAddresses);
+    }
+
+    private void setConditionClientScopes(ComponentRepresentation provider, List<String> clientScopes) {
+        provider.getConfig().put(ClientScopesConditionFactory.SCOPES, clientScopes);
+    }
+
     private void setExecutorAugmentActivate(ComponentRepresentation provider) {
         provider.getConfig().putSingle("is-augment", Boolean.TRUE.toString());
     }
@@ -1155,5 +1445,4 @@ public class ClientPolicyBasicsTest extends AbstractKeycloakTest {
     private void setExecutorAugmentedClientAuthMethod(ComponentRepresentation provider, String augmentedClientAuthMethod) {
         provider.getConfig().putSingle(SecureClientAuthEnforceExecutorFactory.CLIENT_AUTHNS_AUGMENT, augmentedClientAuthMethod);
     }
-
 }

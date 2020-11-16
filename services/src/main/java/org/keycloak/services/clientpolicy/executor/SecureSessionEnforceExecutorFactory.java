@@ -15,8 +15,9 @@
  * limitations under the License.
  */
 
-package org.keycloak.testsuite.services.clientpolicy.executor;
+package org.keycloak.services.clientpolicy.executor;
 
+import java.util.Collections;
 import java.util.List;
 
 import org.keycloak.Config.Scope;
@@ -24,16 +25,14 @@ import org.keycloak.component.ComponentModel;
 import org.keycloak.models.KeycloakSession;
 import org.keycloak.models.KeycloakSessionFactory;
 import org.keycloak.provider.ProviderConfigProperty;
-import org.keycloak.services.clientpolicy.executor.AbstractAugumentingClientRegistrationPolicyExecutorFactory;
-import org.keycloak.services.clientpolicy.executor.ClientPolicyExecutorProvider;
 
-public class TestPKCEEnforceExecutorFactory extends AbstractAugumentingClientRegistrationPolicyExecutorFactory {
+public class SecureSessionEnforceExecutorFactory implements ClientPolicyExecutorProviderFactory {
 
-    public static final String PROVIDER_ID = "test-pkce-enforce-executor";
+    public static final String PROVIDER_ID = "secure-session-enforce-executor";
 
     @Override
     public ClientPolicyExecutorProvider create(KeycloakSession session, ComponentModel model) {
-        return new TestPKCEEnforceExecutor(session, model);
+        return new SecureSessionEnforceExecutor(session, model);
     }
 
     @Override
@@ -55,12 +54,12 @@ public class TestPKCEEnforceExecutorFactory extends AbstractAugumentingClientReg
 
     @Override
     public String getHelpText() {
-        return null;
+        return "To prevent CSRF, it refuses the client's authorization request which lacks nonce in OIDC flow or state in OAuth2 grant.";
     }
 
     @Override
     public List<ProviderConfigProperty> getConfigProperties() {
-        return super.getConfigProperties();
+        return Collections.emptyList();
     }
 
 }
