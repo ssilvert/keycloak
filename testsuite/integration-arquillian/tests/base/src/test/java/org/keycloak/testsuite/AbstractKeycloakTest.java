@@ -255,19 +255,13 @@ public abstract class AbstractKeycloakTest {
     }
 
     public void deleteAllCookiesForMasterRealm() {
-        deleteAllCookiesForRealm(accountPage);
-    }
-
-    protected void deleteAllCookiesForRealm(Account realmAccountPage) {
-        // masterRealmPage.navigateTo();
-        realmAccountPage.navigateTo(); // Because IE webdriver freezes when loading a JSON page (realm page), we need to use this alternative
-        log.info("deleting cookies in '" + realmAccountPage.getAuthRealm() + "' realm");
-        driver.manage().deleteAllCookies();
+        deleteAllCookiesForRealm(MASTER);
     }
 
     protected void deleteAllCookiesForRealm(String realmName) {
-        // masterRealmPage.navigateTo();
-        navigateToUri(accountPage.getAuthRoot() + "/realms/" + realmName + "/account"); // Because IE webdriver freezes when loading a JSON page (realm page), we need to use this alternative
+        // we can't use /auth/realms/{realmName} because some browsers (e.g. Chrome) apparently don't send cookies
+        // to JSON pages and therefore can't delete realms cookies there; a non existing page will do just fine
+        navigateToUri(accountPage.getAuthRoot() + "/realms/" + realmName + "/super-random-page");
         log.info("deleting cookies in '" + realmName + "' realm");
         driver.manage().deleteAllCookies();
     }
