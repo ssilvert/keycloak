@@ -21,7 +21,7 @@
     <repositories>
         <repository>
             <id>github</id>
-            <url>https://jonkoops:&#103;hp_GtT2DU3BaguolityrkxEcyxibcdd8T2Y1uSc@maven.pkg.github.com/keycloak/keycloak-admin-ui</url>
+            <url>https://keycloak-packages:&#103;hp_tSeU74eZVGTSupVCap28N8TX0M88YJ06kua9@maven.pkg.github.com/keycloak/keycloak-admin-ui</url>
             <snapshots>
                 <enabled>true</enabled>
             </snapshots>
