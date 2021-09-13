@@ -22,8 +22,12 @@
         <repository>
             <id>github</id>
             <url>https://keycloak-packages:&#103;hp_tSeU74eZVGTSupVCap28N8TX0M88YJ06kua9@maven.pkg.github.com/keycloak/keycloak-admin-ui</url>
+            <releases>
+                <enabled>false</enabled>
+            </releases>
             <snapshots>
                 <enabled>true</enabled>
+                <updatePolicy>always</updatePolicy>
             </snapshots>
         </repository>
     </repositories>
