@@ -238,8 +238,8 @@ class UserPermissions implements UserPermissionEvaluator, UserPermissionManageme
             return true;
         }
 
-        if (!root.isAdminSameRealm()) {
-            return false;
+        if (root.isAdminSameRealm()) {
+            return true;
         }
 
         return hasPermission(MgmtPermissions.MANAGE_SCOPE);
